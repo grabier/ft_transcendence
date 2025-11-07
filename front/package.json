@@ -1,0 +1,12 @@
+{
+  "name": "front",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "npx vite"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
+  }
+}
