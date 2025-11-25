@@ -1,3 +1,4 @@
+import { loadGame } from './game.js';
 function createElement(
     tag: string, 
     className: string = "", 
@@ -80,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const login_email = (document.getElementById("login-email") as HTMLInputElement).value;
             const login_password = (document.getElementById("login-password") as HTMLInputElement).value;
             console.log("LOGIN DATA: ", login_email, login_password);
+			loadGame();
         });
 
         const new_account = document.getElementById("create-account")!;
