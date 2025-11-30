@@ -1,21 +1,28 @@
 // Create square
 const square = {
-	x: 10,
-	y: 10,
+	x: -10,
+	y: -10,
 	width: 18,
 	height: 18,
 	speedX: 0,
 	speedY: 0
 };
 
-const Velocity = 400;//ball initial velocity
 let gameState = 'menu';
+let gameMode: 'pvp' | 'ai' = 'pvp';
 let winningScore = 5;
-const MaxAngle = 60;//angle when u hit the ball whit the border of the paddle
+let aiInterval : number | null = null;
+let aiKeys = {up: false, down: false};
 
 // Variables for canvas and context
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
+
+// Ajustes de física
+const BASE_SPEED = 500;
+const MAX_SPEED_LIMIT = 1200;
+const MAX_BOUNCE_ANGLE = 55 * (Math.PI / 180);
+const SPEED_BONUS = 0.8;
 
 // Create paddles
 const paddleLeft = {
@@ -59,7 +66,7 @@ function draw() {
 	context.fillRect((canvas.width / 2) - 2, 0, 4, canvas.height);
 
 	// Ball
-	context.fillStyle = 'green';
+	context.fillStyle = 'white';
 	context.fillRect(square.x, square.y, square.width, square.height);
 
 	// Left paddle
@@ -76,14 +83,20 @@ function getRandomAngle(): number {
 }
 
 function resetBall() {
-	square.x = canvas.width / 2;
-	square.y = canvas.height / 2;
-	
-	let sign = Math.random() > 0.5 ? 1 : -1;
-	let angle = getRandomAngle();
-	
-	square.speedX = sign * Velocity * Math.cos(angle);
-	square.speedY = Velocity * Math.sin(angle);
+	square.x = (canvas.width / 2) - square.width / 2;
+	square.y = (canvas.height / 2) - square.width / 2;
+	square.speedX = 0;
+	square.speedY = 0;
+
+	setTimeout(() => {
+		if (gameState === 'playing') {
+			let sign = Math.random() > 0.5 ? 1 : -1;
+			let angle = getRandomAngle();
+
+			square.speedX = sign * BASE_SPEED * Math.cos(angle);
+			square.speedY = BASE_SPEED * Math.sin(angle);
+		}
+	}, 1000);
 }
 
 function update(dt: number) {
@@ -96,9 +109,22 @@ function update(dt: number) {
 		paddleLeft.y -= paddleLeft.speed * dt;
 	if (keysPressed['s'])
 		paddleLeft.y += paddleLeft.speed * dt;
-	if (keysPressed['ArrowUp'])
+
+
+	let moveUp = false;
+	let moveDown = false;
+
+	if (gameMode === 'pvp') {
+		moveUp = keysPressed['ArrowUp'];
+		moveDown = keysPressed['ArrowDown'];
+	} else {
+		moveUp = aiKeys.up;
+		moveDown = aiKeys.down;
+	}
+
+	if (moveUp)
 		paddleRight.y -= paddleRight.speed * dt;
-	if (keysPressed['ArrowDown'])
+	if (moveDown)
 		paddleRight.y += paddleRight.speed * dt;
 
 	// Paddle constraints (stay inside canvas)
@@ -119,6 +145,7 @@ function update(dt: number) {
 		square.x < paddleRight.x + paddleRight.width &&
 		square.y + square.height > paddleRight.y &&
 		square.y < paddleRight.y + paddleRight.height) {
+		
 		let paddleCenter = paddleRight.y + paddleRight.height / 2;
 		let ballCenter = square.y + square.height / 2;
 		let offset = (ballCenter - paddleCenter) / (paddleRight.height / 2);
@@ -126,12 +153,14 @@ function update(dt: number) {
 		if (offset > 1) offset = 1;
 		if (offset < -1) offset = -1;
 
-		let angle = offset * (MaxAngle * Math.PI / 180);
-		let speedMult = 1;
-		if (Math.abs(square.speedX) < 1000)
-			speedMult = 1.5 + Math.abs(offset);
-		square.speedX = -Velocity * speedMult * Math.cos(angle);
-		square.speedY = Velocity * speedMult * Math.sin(angle);
+		let angle = offset * MAX_BOUNCE_ANGLE;
+
+		let newSpeed = BASE_SPEED * (1 + Math.abs(offset) * SPEED_BONUS);
+
+		newSpeed = Math.min(newSpeed, MAX_SPEED_LIMIT);
+
+		square.speedX = -newSpeed * Math.cos(angle);
+		square.speedY = newSpeed * Math.sin(angle);
 
 		//sticky paddles
 		square.x = paddleRight.x - square.width;
@@ -140,6 +169,7 @@ function update(dt: number) {
 		scoreLeft++;
 		if (scoreLeft == winningScore) {
 			gameState = 'ended';
+			stopAiLogic();
 			const endLayer = document.getElementById('endLayer');
 			const winnerText = document.getElementById('winnerText');
 			if (endLayer && winnerText) {
@@ -164,13 +194,13 @@ function update(dt: number) {
 		if (offset > 1) offset = 1;
 		if (offset < -1) offset = -1;
 
-		let angle = offset * (MaxAngle * Math.PI / 180);
-		let speedMult = 1;
-		if (Math.abs(square.speedX) < 1000)
-			speedMult = 1.5 + Math.abs(offset);
+		let angle = offset * MAX_BOUNCE_ANGLE;
+		let newSpeed = BASE_SPEED * (1 + Math.abs(offset) * SPEED_BONUS);
 
-		square.speedX = Velocity * speedMult * Math.cos(angle);
-		square.speedY = Velocity * speedMult * Math.sin(angle);
+		newSpeed = Math.min(newSpeed, MAX_SPEED_LIMIT);
+
+		square.speedX = newSpeed * Math.cos(angle);
+		square.speedY = newSpeed * Math.sin(angle);
 
 		//to avoid sticky paddles
 		square.x = paddleLeft.x + paddleLeft.width;
@@ -179,6 +209,7 @@ function update(dt: number) {
 		scoreRight++;
 		if (scoreRight == winningScore) {
 			gameState = 'ended';
+			stopAiLogic();
 			const endLayer = document.getElementById('endLayer');
 			const winnerText = document.getElementById('winnerText');
 			if (endLayer && winnerText) {
@@ -240,7 +271,52 @@ function createElement(
 	return element;
 }
 
-// 2. LA FUNCIÓN PRINCIPAL
+
+//ai algo : trivial now but will improve it eventually, right now the ai follows the 
+//y coordinate of the ball, and it only works if the interval is small(1000 ms makes for a stupid ai)
+function startAiLogic() {
+	if (aiInterval) clearInterval(aiInterval);
+
+	aiInterval = window.setInterval(() => {
+		if (gameState !== 'playing') return;
+
+		const targetY = square.y;
+		const paddleCenter = paddleRight.y + paddleRight.height / 2;
+
+		const distance = Math.abs(targetY - paddleCenter);
+
+		const timeNeededMs = (distance / paddleRight.speed) * 1000;
+
+		aiKeys.up = false;
+		aiKeys.down = false;
+
+		const tolerance = 5;
+
+		//we only move if distance > tolerance, otherwise the paddle would never keep stil
+		if (distance > tolerance) {
+			if (targetY < paddleCenter) {
+				aiKeys.up = true;
+				setTimeout(() => { aiKeys.up = false; }, timeNeededMs);
+				//we use setTimeout to make the paddle able to stop mid movement, otherwise it 
+				//would keep moving even if past the destined position
+			} else {
+				aiKeys.down = true;
+				setTimeout(() => { aiKeys.down = false; }, timeNeededMs);
+			}
+		}
+
+	}, 300);
+}
+
+function stopAiLogic() {
+	if (aiInterval) {
+		clearInterval(aiInterval);
+		aiInterval = null;
+	}
+	aiKeys = { up: false, down: false };
+}
+
+
 export function loadGame() {
 	const app = document.getElementById('app')!;
 	app.innerHTML = ''; // clean login
@@ -265,7 +341,10 @@ export function loadGame() {
 		createElement('h1', '', {}, ['Pong Transcendence']),
 		createElement('label', '', {}, ['Points to win:']),
 		createElement('input', '', { type: 'number', id: 'scoreInput', value: '5', min: '1' }),
-		createElement('button', '', { id: 'startBtn' }, ['START GAME'])
+		createElement('div', '', { style: 'display: flex; gap: 20px; justify-content: center;' }, [
+			createElement('button', '', { id: 'btnPvp' }, ['VS PLAYER']),
+			createElement('button', '', { id: 'btnAi' }, ['VS AI'])
+		])
 	]);
 
 	const endLayer = createElement('div', 'overlay-menu', { id: 'endLayer', style: 'display: none;' }, [
@@ -291,16 +370,11 @@ export function loadGame() {
 	app.appendChild(gameContainer);
 
 
-	// --- LÓGICA DEL JUEGO ---
-
-	// Capturamos las referencias necesarias
-	// NOTA: Como hemos creado los elementos arriba, podríamos usar las variables 'menuLayer' 
-	// directamente, pero para input y canvas necesitamos castearlos o buscarlos por ID.
-
-	canvas = gameCanvas as HTMLCanvasElement; // Usamos la variable directa
+	canvas = gameCanvas as HTMLCanvasElement; 
 	context = canvas.getContext('2d')!;
 
-	const startBtn = document.getElementById('startBtn')!;
+	const btnPvp = document.getElementById('btnPvp')!;
+	const btnAi = document.getElementById('btnAi')!;
 	const restartBtn = document.getElementById('restartBtn')!;
 	const continueBtn = document.getElementById('continueBtn')!;
 	const scoreInput = document.getElementById('scoreInput') as HTMLInputElement;
@@ -315,14 +389,22 @@ export function loadGame() {
 		draw();
 	});
 
-	startBtn.addEventListener('click', () => {
+	const startGame = (mode: 'pvp' | 'ai') => {
 		winningScore = parseInt(scoreInput.value);
 		menuLayer.style.display = 'none';
 		gameState = 'playing';
+		gameMode = mode;
 		scoreLeft = 0;
 		scoreRight = 0;
 		resetBall();
-	});
+
+		if (mode === 'ai') {
+			startAiLogic();
+		}
+	};
+
+	btnPvp.addEventListener('click', () => startGame('pvp'));
+	btnAi.addEventListener('click', () => startGame('ai'));
 
 	continueBtn.addEventListener('click', () => {
 		gameState = 'playing';
