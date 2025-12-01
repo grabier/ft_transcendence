@@ -1,33 +1,43 @@
-import { Router } from 'express';
+import { FastifyPluginAsync } from 'fastify';
 import { db } from '../../db/database.js';
 
-// Nuestra api de todo lo relacionado con el usuario
-// con todos sus endpoints (y sus urls)
-const userApi = Router();
+// Definimos la "forma" que tendrán los parámetros de la URL
+interface UserParams {
+	id: string;
+}
 
-userApi.get('/', (req, res) => {
-  try {
-    const users = db.prepare('SELECT id, username, email, created_at FROM users').all();
-    res.json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-});
+const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-userApi.get('/:id', (req, res) => {
-  try {
-    const user = db.prepare('SELECT id, username, email, created_at FROM users WHERE id = ?').get(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
-});
+	// GET / (Listar todos)
+	fastify.get('/', async (request, reply) => {
+		try {
+			const users = db.prepare('SELECT id, username, email, created_at FROM users').all();
+			// EN FASTIFY: No usas res.json(users). Simplemente retornas el objeto.
+			return users;
+		} catch (error) {
+			request.log.error(error); // Usamos el logger de Fastify
+			return reply.code(500).send({ error: 'Failed to fetch users' });
+		}
+	});
 
-export default userApi;
+	// GET /:id (Buscar uno)
+	// Fíjate en <{ Params: UserParams }>, es para que TS sepa que 'id' existe
+	fastify.get<{ Params: UserParams }>('/:id', async (request, reply) => {
+		try {
+			const { id } = request.params; // Ahora TS sabe que 'id' es un string
+
+			const user = db.prepare('SELECT id, username, email, created_at FROM users WHERE id = ?').get(id);
+
+			if (!user) {
+				return reply.code(404).send({ error: 'User not found' });
+			}
+
+			return user;
+		} catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ error: 'Failed to fetch user' });
+		}
+	});
+};
+
+export default userRoutes;

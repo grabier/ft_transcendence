@@ -1,17 +1,25 @@
-import { Router } from 'express';  // ← Importas Router, NO app
+import { FastifyPluginAsync } from 'fastify';
 
-// Nuestra api de todo lo relacionado con el login y logout
-// con todos sus endpoints (y sus urls)
-const authApi = Router();  // ← Creas un router
+// Definimos el plugin. Fastify pasa la instancia 'server' (o fastify) como primer argumento
+const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-authApi.post('/register', (req, res) => {
-  // tu código
-});
+	// POST /register (Nota el async/await, Fastify lo ama)
+	fastify.post('/register', async (request, reply) => {
+		// Tu lógica de registro aquí
+		return { message: "Register endpoint" };
+	});
 
-authApi.post('/login', (req, res) => {
-  // tu código
-});
+	// POST /login
+	fastify.post('/login', async (request, reply) => {
+		// Tu lógica de login aquí
+		return { message: "Login endpoint" };
+	});
 
-// faltaría aquí el logout
+	// Logout
+	fastify.post('/logout', async (request, reply) => {
+		// Lógica logout
+		return { message: "Logout endpoint" };
+	});
+};
 
-export default authApi;  // ← Exportas el router
+export default authRoutes;
