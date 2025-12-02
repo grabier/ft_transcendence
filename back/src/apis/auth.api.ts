@@ -1,24 +1,48 @@
 import { FastifyPluginAsync } from 'fastify';
+import { db } from '../../db/database.js';
+import bcrypt from 'bcrypt';
 
-// Definimos el plugin. Fastify pasa la instancia 'server' (o fastify) como primer argumento
+interface RegisterBody {
+	username: string;
+	email: string;
+	password: string;
+}
+
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-	// POST /register (Nota el async/await, Fastify lo ama)
-	fastify.post('/register', async (request, reply) => {
-		// Tu lógica de registro aquí
-		return { message: "Register endpoint" };
+	fastify.post<{ Body: RegisterBody }>('/register', async (request, reply) => {
+		const { username, email, password } = request.body;
+
+		if (!username || !email || !password) {
+			return reply.code(400).send({ error: 'Faltan campos (username, email, password)' });
+		}
+		try {
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(password, salt);
+			const stmt = db.prepare(`
+        INSERT INTO users (username, email, password) 
+        VALUES (?, ?, ?)
+      	`);
+			const info = stmt.run(username, email, hashedPassword);
+			return reply.code(201).send({
+				message: 'Usuario creado con éxito',
+				userId: info.lastInsertRowid
+			});
+		} catch (error: any) {
+			request.log.error(error);
+
+			// Si el error es de restricción única (ej: usuario ya existe)
+			if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+				return reply.code(409).send({ error: 'El usuario o email ya existe' });
+			}
+			// Si el error es de PERMISOS (Read-only), saldrá aquí un 500
+			return reply.code(500).send({ error: 'Error interno del servidor', details: error.message });
+		}
 	});
 
-	// POST /login
+	// POST /login (Dejamos el dummy por ahora)
 	fastify.post('/login', async (request, reply) => {
-		// Tu lógica de login aquí
-		return { message: "Login endpoint" };
-	});
-
-	// Logout
-	fastify.post('/logout', async (request, reply) => {
-		// Lógica logout
-		return { message: "Logout endpoint" };
+		return { message: "Login endpoint (TODO)" };
 	});
 };
 

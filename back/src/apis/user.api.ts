@@ -20,8 +20,6 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 	});
 
-	// GET /:id (Buscar uno)
-	// Fíjate en <{ Params: UserParams }>, es para que TS sepa que 'id' existe
 	fastify.get<{ Params: UserParams }>('/:id', async (request, reply) => {
 		try {
 			const { id } = request.params; // Ahora TS sabe que 'id' es un string
@@ -31,7 +29,6 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (!user) {
 				return reply.code(404).send({ error: 'User not found' });
 			}
-
 			return user;
 		} catch (error) {
 			request.log.error(error);

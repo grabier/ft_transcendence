@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
 // Funciones para conectar y desconectar de la base de datos.
 // El objeto db es lo que usaremos en nuestro código.
 const __filename = fileURLToPath(import.meta.url);
