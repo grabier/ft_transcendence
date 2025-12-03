@@ -11,17 +11,19 @@
 		"test": "vitest noseque"
 	},
 	"dependencies": {
+		"@fastify/cookie": "^11.0.2",
+		"@fastify/cors": "^11.1.0",
+		"@fastify/websocket": "^11.2.0",
 		"bcrypt": "^6.0.0",
 		"better-sqlite3": "^12.4.1",
 		"dotenv": "^17.2.3",
-		"express": "^5.1.0",
+		"fastify": "^5.6.2",
 		"jsonwebtoken": "^9.0.2",
 		"tsx": "^4.20.6"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^6.0.0",
 		"@types/better-sqlite3": "^7.6.13",
-		"@types/express": "^5.0.5",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^24.10.0",
 		"typescript": "^5.9.3"
