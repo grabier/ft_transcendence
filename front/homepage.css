@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@layer components {
+
+    .grid-background {
+        @apply min-h-screen bg-[#fffff7];
+        background-image: none;
+    }
+    
+    .grid-layout {
+        @apply grid gap-6 p-4 max-w-7xl mx-auto;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .marquee-container {
+        @apply overflow-hidden whitespace-nowrap relative w-full;
+    }
+
+    .marquee-track {
+        @apply flex;
+        animation: marquee 40s linear infinite;
+    }
+
+    .marquee-content {
+        @apply shrink-0;
+    }
+
+    .product-card {
+        @apply bg-white border-2 border-black flex flex-col transition-transform duration-200 cursor-pointer rounded;
+    }
+
+    .product-card:hover {
+        @apply md:-translate-y-0.5 transition-colors duration-500 hover:bg-black hover:text-white;
+    }
+
+    .product-image {
+        @apply w-full object-cover border-b-2 border-black ;
+        aspect-ratio: 3/4;
+    }
+
+   .product-title {
+        @apply p-4 text-center font-black uppercase text-xl;
+        font-family: 'Archivo Black', sans-serif;
+    }
+
+    .mode-selector-container {
+        @apply flex flex-wrap justify-center gap-4 mb-8 w-full max-w-4xl mx-auto px-4;
+    }
+
+    .dev-button
+    {
+        @apply absolute top-4 right-4 bg-red-500 text-white text-xs p-2 rounded z-50
+    }
+    .mode-tab {
+        @apply px-6 py-3 text-sm md:text-base border-2 border-black font-black uppercase tracking-wider cursor-pointer transition-all duration-200;
+        font-family: 'Archivo Black', sans-serif;
+        background-color: white;
+        color: black;
+        box-shadow: 4px 4px 0px 0px #000;
+    }
+
+    .mode-tab:hover {
+        @apply -translate-y-1;
+    }
+
+    .mode-tab:active {
+        @apply translate-y-1;
+        box-shadow: 0px 0px 0px 0px #000;
+    }
+
+    .mode-tab.active {
+        @apply bg-black text-[#fffff7];
+        box-shadow: none;
+        transform: translate(4px, 4px);
+    }
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}

@@ -1,3 +1,5 @@
+import { createElement } from "./tools.js";
+
 // Create square
 const square = {
 	x: -10,
@@ -248,27 +250,6 @@ function gameLoop(currentTime: number) {
 		update(dt);
 	draw();
 	requestAnimationFrame(gameLoop); // Call gameloop recursively every frame. This is the loop
-}
-
-function createElement(
-	tag: string,
-	className: string = "",
-	attributes: Record<string, string> = {},
-	children: (HTMLElement | string)[] = []
-): HTMLElement {
-	const element = document.createElement(tag);
-	if (className) element.className = className;
-	Object.entries(attributes).forEach(([key, value]) => {
-		element.setAttribute(key, value);
-	});
-	children.forEach(child => {
-		if (typeof child === 'string') {
-			element.appendChild(document.createTextNode(child));
-		} else {
-			element.appendChild(child);
-		}
-	});
-	return element;
 }
 
 

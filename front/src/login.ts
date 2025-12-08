@@ -1,40 +1,9 @@
 import { loadGame } from './game.js';
-function createElement(
-	tag: string,
-	className: string = "",
-	attributes: Record<string, string> = {},
-	children: (HTMLElement | SVGElement | string)[] = []
-): HTMLElement {
-	const element = document.createElement(tag);
-	if (className) element.className = className;
-	Object.entries(attributes).forEach(([key, value]) => {
-		element.setAttribute(key, value);
-	});
-	children.forEach(child => {
-		if (typeof child === 'string') {
-			element.appendChild(document.createTextNode(child));
-		} else {
-			element.appendChild(child);
-		}
-	});
-	return element;
-}
+import { Homepage } from './homepage.js';
+import { createElement } from './tools.js';
+import { createIcon } from './tools.js';
 
-function createIcon(iconId: string, className: string = "w-5 h-5"): SVGElement {
-	const svgNS = "http://www.w3.org/2000/svg";
-	const svg = document.createElementNS(svgNS, "svg");
-
-	if (className) svg.setAttribute("class", className);
-
-	const use = document.createElementNS(svgNS, "use");
-	use.setAttribute("href", `./assets/sprites.svg#${iconId}`);
-
-	svg.appendChild(use);
-	return svg;
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () =>	{
 	const app = document.getElementById("app")!;
 
 	function Login() {
@@ -51,6 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
 					createIcon('icon-google'),
 					'Continue with Google'
 				]),
+
+				createElement('button', 'dev-button', { id: 'dev-homepage-btn', type: 'button'}, ['Dev Button Homepage']),
 
 				createElement('button', 'btn-oauth-dark mt-4 mb-6', { id: 'github-login', type: 'button' }, [
 					createIcon('icon-github'),
@@ -84,14 +55,15 @@ document.addEventListener("DOMContentLoaded", () => {
 			loadGame();
 		});
 
-		const new_account = document.getElementById("create-account")!;
-		new_account.addEventListener("click", (e) => {
-			e.preventDefault();
-			SignUp();
-		});
-	}
+		const devBtn = document.getElementById("dev-homepage-btn");
+		if (devBtn) {
+			devBtn.addEventListener("click", (e) => {
+				e.preventDefault();
+				Homepage();
+			});
+		}
 
-	function SignUp() {
+		function SignUp() {
 		app.innerHTML = '';
 
 		const createContainer = createElement('div', 'create-container', {}, [
@@ -140,6 +112,12 @@ document.addEventListener("DOMContentLoaded", () => {
 				Login();
 			});
 		}
+	}
+		const new_account = document.getElementById("create-account")!;
+		new_account.addEventListener("click", (e) => {
+			e.preventDefault();
+			SignUp(); //import
+		});
 	}
 	Login();
 });
