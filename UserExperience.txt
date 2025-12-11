@@ -1,0 +1,47 @@
+1 Entrar al Login o a la homepage? (a gabri no le gusta loguear)
+									
+									WEB                                   INFO (foot)             SESION(head?)       
+2 Definir la homepage . (HOME - GAMES - PROFILE - RANKINGS - SOCIAL)   (WHO ARE WE - CONTACT) -   [LOG IN - REGISTER]  
+
+3 RUTAS: Home -> game 1 OR game 2 -> mode (IA, 1v1, Tournament)
+               -> PROFILE
+			   -> RANKINGS -> Segun el juego. Con 2 tablas (Top players) | My Stats
+
+GAMES{
+
+IA  : EASY MEDIUM HARD
+			
+VERSUS : LOCAL  (NO REGISTER NEEDED)
+	     ONLINE (REGISTER NEEDED) RANKED
+
+TOURNAMENT      KNOCKOUT | PUNTOS
+}
+
+PROFILE{
+	Picture - lapiz
+	Username - l
+	Email
+	Change Password
+	Friends
+	Blocked
+	Points DEPENDIENDO del modo / dificultad ?
+	(micro transaction SHOP)
+
+}
+RANKINGS{
+	HIGH SCORES : ONLINE | TOURNAMENTS
+	MY STATS :    ONLINE | TOURNAMENTS
+	ACHIEVMENTS?
+}
+SOCIAL{
+	FRIEND LIST
+	CHAT
+	*QUICK CHALLENGE BUTTON* (game->Online->InviteFriend)
+}
+REGISTER / LOG IN{
+	Username
+	Email
+	Choose Password x2
+}
+
+
