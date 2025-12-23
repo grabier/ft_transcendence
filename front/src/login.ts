@@ -47,12 +47,37 @@ document.addEventListener("DOMContentLoaded", () =>	{
 		app.appendChild(loginContainer);
 
 		const form = document.getElementById("login-form")!;
-		form.addEventListener("submit", (e) => {
+		form.addEventListener("submit", async (e) => {
 			e.preventDefault();
 			const login_email = (document.getElementById("login-email") as HTMLInputElement).value;
 			const login_password = (document.getElementById("login-password") as HTMLInputElement).value;
 			console.log("LOGIN DATA: ", login_email, login_password);
-			loadGame();
+
+			try {
+				const response = await fetch("http://localhost:3000/api/auth/login", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ email: login_email, password: login_password }),
+				});
+				
+				const data = await response.json();
+				console.log("DATA: ", data);
+				if (response.ok) {
+					// ✅ Login exitoso - navegar al juego
+					console.log("Login exitoso:", data.user);
+					loadGame();
+				} else {
+					// ⚠️ Error del servidor (401, 400, etc.)
+					alert(data.error || "Error al iniciar sesión");
+				}
+			} catch (error) {
+				// ❌ Error de red/conexión (servidor caído, sin internet, etc.)
+				console.error("Error al iniciar sesión:", error);
+				alert("Error de conexión. Verifica que el servidor esté activo.");
+			}
+		
 		});
 
 		const devBtn = document.getElementById("dev-homepage-btn");

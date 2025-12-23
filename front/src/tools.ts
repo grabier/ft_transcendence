@@ -1,4 +1,4 @@
-export function  createElement(
+export function createElement(
 	tag: string,
 	className: string = "",
 	attributes: Record<string, string> = {},
@@ -26,7 +26,7 @@ export function createIcon(iconId: string, className: string = "w-5 h-5"): SVGEl
 	if (className) svg.setAttribute("class", className);
 
 	const use = document.createElementNS(svgNS, "use");
-	use.setAttribute("href", `./assets/sprites.svg#${iconId}`);
+	use.setAttribute("href", `/assets/sprites.svg#${iconId}`);
 
 	svg.appendChild(use);
 	return svg;
