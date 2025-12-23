@@ -101,7 +101,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		try {
 			// Buscar usuario por email
 			const [rows] = await pool.execute(
-				'SELECT id, username, email, password FROM users WHERE email = ?',
+				'SELECT id, username, email, password FROM users WHERE email = ?', 	
 				[email]
 			);
 
@@ -152,3 +152,4 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 };
 
 export default authRoutes;
+
