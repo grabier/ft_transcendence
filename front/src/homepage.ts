@@ -33,24 +33,24 @@ const GAME_MODES: Record<GameMode, GameOption[]> = {
 //Modos de juego
 // Dificultad del juego
 // color de bola, invitar amigos
- //Modes{ GameModes, Dificultad, Interfaz Amigos }
- // GameModes {SinglePlayer, Multiplayer, Tournament}
- // Dificultad{Easy, Medium, Hard}
- // Interfaz Amigos{Invitar, Enviar Mensaje, Eliminar}
+//Modes{ GameModes, Dificultad, Interfaz Amigos }
+// GameModes {SinglePlayer, Multiplayer, Tournament}
+// Dificultad{Easy, Medium, Hard}
+// Interfaz Amigos{Invitar, Enviar Mensaje, Eliminar}
 
 function createModeSelector(
     currentMode: GameMode,
-    onModeChange: (mode: GameMode)  => void)
+    onModeChange: (mode: GameMode) => void)
     : HTMLElement {
     const container = createElement('div', 'mode-selector-container');
     const modes = Object.keys(GAME_MODES) as GameMode[];
 
     modes.forEach((mode) => {
         const isActive = mode === currentMode;
-       
+
         const className = `mode-tab ${isActive ? 'active' : ''}`;
         const btn = createElement('button', className, {}, [mode]);
-        
+
         btn.addEventListener('click', () => {
             if (currentMode !== mode) {
                 onModeChange(mode);
@@ -74,7 +74,7 @@ export function Homepage() {
     const header = createElement('header', 'fixed top-0 left-0 w-full z-50 bg-white border-b-2 border-black flex h-12', {}, [
         // Logo Section (Left)
         createElement('div', 'h-full border-r-2 border-black w-32 flex justify-center items-center bg-black shrink-0', {}, [
-            createElement('img', 'h-8 w-auto block object-contain invert', { src: './assets/lyrics-logo.png', alt: 'Transcendence' })
+            createElement('img', 'h-8 w-auto block object-contain invert', { src: '/assets/lyrics-logo.png', alt: 'Transcendence' })
         ]),
 
         // Marquee Section (Middle - Flex Grow)
@@ -125,7 +125,7 @@ export function Homepage() {
         const options = GAME_MODES[currentMode];
         options.forEach(opt => {
             const card = createElement('div', 'product-card cursor-pointer', {}, [
-                createElement('div', 'bg-gray-200 w-full aspect-[3/4] flex items-center justify-center border-b-2 border-black', {}, [
+                createElement('div', 'bg-[#fffff7] w-full aspect-[3/4] flex items-center justify-center border-b-2 border-black', {}, [
                     createElement('div', 'text-6xl', {}, [opt.icon])
                 ]),
                 createElement('div', 'product-title', {}, [opt.title])
@@ -147,7 +147,7 @@ export function Homepage() {
     // Footer
     const footer = createElement('footer', 'bg-black text-[#fffff7] py-12 px-4 mt-auto', {}, [
         createElement('div', 'max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8', {}, [
-            createElement('img', 'h-8 w-auto block object-contain invert', { src: './assets/lyrics-logo.png', alt: 'Transcendence' }),
+            createElement('img', 'h-8 w-auto block object-contain invert', { src: '/assets/lyrics-logo.png', alt: 'Transcendence' }),
             createElement('div', 'font-mono text-sm', {}, ['© 2026 All Rights Reserved']),
         ])
     ]);

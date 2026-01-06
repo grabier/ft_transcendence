@@ -115,6 +115,7 @@ const Header = () => {
             <AppBar
                 position="fixed"
                 sx={{
+
                     bgcolor: "primary.dark",
                     borderTop: "2px solid",
                     borderBottom: "2px solid",
@@ -122,16 +123,16 @@ const Header = () => {
                     boxShadow: "none",
                 }}
             >
-                <Toolbar sx={{ minHeight: 48, px: 0, gap: 0 }}>
+                <Toolbar disableGutters sx={{ minHeight: 48, px: 0, gap: 0 }}>
                     {/* Logo */}
                     <Box
                         component="img"
-                        src="./assets/lyrics-logo.png"
+                        src="/assets/lyrics-logo.png"
                         alt="Transcendence"
                         sx={{
                             filter: "invert(1)",
-                            width: 290,
-                            height: 80,
+                            width: 145,
+                            height: 36,
                             bgcolor: "secondary.main",
                             borderRight: "2px solid",
                             borderColor: "secondary.main",
@@ -148,12 +149,12 @@ const Header = () => {
                             <MarqueeContent>
                                 Pong Tournament • Join the Arena • Win • Glory •
                                 Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory • 
+                                Pong Tournament • Join the Arena • Win • Glory •
                             </MarqueeContent>
                             <MarqueeContent>
                                 Pong Tournament • Join the Arena • Win • Glory •
                                 Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory • 
+                                Pong Tournament • Join the Arena • Win • Glory •
                             </MarqueeContent>
                         </MarqueeTrack>
                     </MarqueeContainer>
@@ -164,9 +165,8 @@ const Header = () => {
                         sx={{
                             width: 48,
                             height: "100%",
-                            bgcolor: "secondary.main",
+                            bgcolor: "primary.main",
                             borderLeft: "2px solid",
-                            borderColor: "background.default",
                             borderRadius: 0,
                             "&:hover": {
                                 bgcolor: "grey.900",

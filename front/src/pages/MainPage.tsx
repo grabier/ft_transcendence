@@ -5,10 +5,10 @@ import Footer from "../components/Footer";
 
 const MainPage = () => {
     return (
-        <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", bgcolor: "secondary.main" }}>
             <Header />
             <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-                <Box sx={{ flex: 1, overflowY: "auto", pt: 6 }}>
+                <Box sx={{ flex: 1, overflowY: "auto", pt: 6, bgcolor: "secondary.main" }}>
                     <Outlet />
                 </Box>
             </Box>

@@ -5,35 +5,35 @@ import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 
 declare module '@mui/material/styles' {
-    interface Palette {
-        accent: {
-            yellow: string;
-            yellowHover: string;
-            yellowDark: string;
-        };
-    }
-    interface PaletteOptions {
-        accent?: {
-            yellow?: string;
-            yellowHover?: string;
-            yellowDark?: string;
-        };
-    }
-    interface TypographyVariants {
-        displayTitle: React.CSSProperties;
-        authSubtitle: React.CSSProperties;
-    }
-    interface TypographyVariantsOptions {
-        displayTitle?: React.CSSProperties;
-        authSubtitle?: React.CSSProperties;
-    }
+	interface Palette {
+		accent: {
+			yellow: string;
+			yellowHover: string;
+			yellowDark: string;
+		};
+	}
+	interface PaletteOptions {
+		accent?: {
+			yellow?: string;
+			yellowHover?: string;
+			yellowDark?: string;
+		};
+	}
+	interface TypographyVariants {
+		displayTitle: React.CSSProperties;
+		authSubtitle: React.CSSProperties;
+	}
+	interface TypographyVariantsOptions {
+		displayTitle?: React.CSSProperties;
+		authSubtitle?: React.CSSProperties;
+	}
 }
 
 declare module '@mui/material/Typography' {
-    interface TypographyPropsVariantOverrides {
-        displayTitle: true;
-        authSubtitle: true;
-    }
+	interface TypographyPropsVariantOverrides {
+		displayTitle: true;
+		authSubtitle: true;
+	}
 }
 
 const sharedTypography = {
@@ -62,21 +62,21 @@ const sharedTypography = {
 		letterSpacing: "0%",
 		textTransform: "none" as const,
 	},
-    displayTitle: {
-        fontFamily: "'Archivo Black', sans-serif",
-        fontWeight: 900,
-        fontSize: "2.25rem",
-        textTransform: "uppercase" as const,
-        lineHeight: 0.85,
-        letterSpacing: "-0.05em",
-    },
-    authSubtitle: {
-        fontFamily: "Montserrat, sans-serif",
-        fontWeight: 700,
-        fontSize: "0.875rem",
-        textTransform: "uppercase" as const,
-        letterSpacing: "0.3em",
-    },
+	displayTitle: {
+		fontFamily: "'Archivo Black', sans-serif",
+		fontWeight: 900,
+		fontSize: "2.25rem",
+		textTransform: "uppercase" as const,
+		lineHeight: 0.85,
+		letterSpacing: "-0.05em",
+	},
+	authSubtitle: {
+		fontFamily: "Montserrat, sans-serif",
+		fontWeight: 700,
+		fontSize: "0.875rem",
+		textTransform: "uppercase" as const,
+		letterSpacing: "0.3em",
+	},
 };
 
 // Shared palette colors
@@ -117,11 +117,11 @@ const sharedPaletteColors = {
 		dark: "#911C33",
 		contrastText: "#FFFFFF",
 	},
-    accent: {
-        yellow: "#FACC15",
-        yellowHover: "#fde047",
-        yellowDark: "#ca8a04",
-    },
+	accent: {
+		yellow: "#FACC15",
+		yellowHover: "#fde047",
+		yellowDark: "#ca8a04",
+	},
 };
 
 const theme: ThemeOptions = {
@@ -129,51 +129,52 @@ const theme: ThemeOptions = {
 		mode: "light",
 		...sharedPaletteColors,
 		primary: {
-			main: "#000dffff",
-			light: "#fbe607ff",
-			dark: "#97074aff",
-			contrastText: "#706f6fff",
+			main: "#000000",
+			light: "#333333",
+			dark: "#000000",
+			contrastText: "#fffff7",
 		},
 		background: {
 			default: "#FFFFFF",
-			paper: "#F3F3F3",
+			paper: "#fffff7",
 		},
 		secondary: {
-			main: "#000000",
-			light: "#F3F3F3",
-			dark: "#747474",
+			main: "#fffff7",
+			light: "#FFFFFF",
+			dark: "#e6e6df",
+			contrastText: "#000000",
 		},
 		text: {
 			primary: "#000000",
-			secondary: "#747474",
+			secondary: "#545454",
 			disabled: "#B4B4B4",
 		},
 	},
 	typography: sharedTypography,
-    components: {
-        MuiButton: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 0,
-                    textTransform: 'none',
-                },
-            },
-        },
-        MuiDialog: {
-            styleOverrides: {
-                paper: {
-                    borderRadius: 0,
-                },
-            },
-        },
-        MuiAlert: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 0,
-                },
-            },
-        },
-    },
+	components: {
+		MuiButton: {
+			styleOverrides: {
+				root: {
+					borderRadius: 0,
+					textTransform: 'none',
+				},
+			},
+		},
+		MuiDialog: {
+			styleOverrides: {
+				paper: {
+					borderRadius: 0,
+				},
+			},
+		},
+		MuiAlert: {
+			styleOverrides: {
+				root: {
+					borderRadius: 0,
+				},
+			},
+		},
+	},
 };
 
 export const muiTheme = createTheme(theme);
