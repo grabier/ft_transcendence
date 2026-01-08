@@ -117,13 +117,12 @@ const Header = () => {
                 sx={{
 
                     bgcolor: "primary.dark",
-                    borderTop: "2px solid",
                     borderBottom: "2px solid",
                     borderColor: "secondary.main",
                     boxShadow: "none",
                 }}
             >
-                <Toolbar disableGutters sx={{ minHeight: 48, px: 0, gap: 0 }}>
+                <Toolbar disableGutters variant="dense" sx={{ minHeight: 48,  px: 0, gap: 0 }}>
                     {/* Logo */}
                     <Box
                         component="img"

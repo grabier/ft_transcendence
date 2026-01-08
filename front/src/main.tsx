@@ -5,10 +5,10 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { muiTheme } from "./style/theme";
 import Frontend from "./Frontend";
+
+// Importa tus páginas
 import MainPage from "./pages/MainPage";
-// import ProfilePage from "./pages/ProfilePage";
-// import SinglePlayerPage from "./pages/SinglePlayerPage";
-// import OneOnOnePage from "./pages/OneOnOnePage";
+import Homepage from "./pages/Homepage"; // <--- IMPORTANTE: Importa el archivo de las cartas
 
 const AppWithTheme = () => {
     return (
@@ -22,26 +22,18 @@ const AppWithTheme = () => {
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Frontend />,
+        element: <Frontend />, // Capa 1: Base
         children: [
             {
-                index: true,
-                element: <MainPage />,
-            //     children: [
-            //         {
-            //             path: 'singlePlayer',
-            //             element: <SinglePlayerPage />,
-            //         },
-            //         {
-            //             path: 'oneOnOne',
-            //             element: <OneOnOnePage />,
-            //         },
-            //     ],
-            // },
-        //     {
-        //         path: "profile",
-        //         element: <ProfilePage />,
-        //     },
+                path: "/", 
+                element: <MainPage />, // Capa 2: Layout (Header + Outlet + Footer)
+                children: [
+                    {
+                        index: true, // <--- ESTO ES LA CLAVE
+                        element: <Homepage />, // Capa 3: Contenido inicial (Tus cartas)
+                    },
+                  
+                ],
             },
         ],
     },
