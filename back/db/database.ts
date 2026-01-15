@@ -7,14 +7,6 @@
  */
 
 import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Configurar dotenv para buscar en back/src/.env si no estamos en Docker
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../src/.env') });
 
 // ============================================================================
 // CONFIGURACIÓN
@@ -25,11 +17,11 @@ dotenv.config({ path: path.resolve(__dirname, '../src/.env') });
  * Estos valores deben estar definidos en el archivo .env
  */
 const dbConfig = {
-	host: process.env.DB_HOST || 'localhost',
-	port: Number(process.env.DB_PORT) || 3306,
-	user: process.env.DB_USER || 'root',
-	password: process.env.DB_PASSWORD || 'toor',
-	database: process.env.DB_NAME || 'db_name',
+	host: process.env.DB_HOST,
+	port: Number(process.env.DB_PORT),
+	user: process.env.DB_USER,
+	password: process.env.DB_PASSWORD,
+	database: process.env.DB_NAME,
 	waitForConnections: true,       // Espera si no hay conexiones disponibles
 	connectionLimit: 10,            // Máximo de conexiones simultáneas
 	queueLimit: 0                   // Sin límite en la cola de espera

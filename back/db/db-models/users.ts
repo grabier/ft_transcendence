@@ -17,11 +17,11 @@ export interface DbUser {
 	id: number;                     // ID único autoincremental
 	username: string;               // Nombre de usuario único
 	email: string;                  // Email único para login
-	password: string | null;        // Contraseña hasheada (NULL si usa OAuth)
-	avatar_url: string | null;      // URL de la foto de perfil
+	password?: string;        // Contraseña hasheada (NULL si usa OAuth)
+	avatar_url?: string;      // URL de la foto de perfil
 	is_online: boolean;             // Estado actual del usuario
 	created_at: Date;               // Fecha de registro
-	last_login: Date | null;        // Última conexión
+	last_login?: Date;        // Última conexión
 }
 
 // ============================================================================

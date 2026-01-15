@@ -7,9 +7,10 @@
  * Todas las funciones son async porque mysql2 trabaja con promesas.
  */
 
+import { RowDataPacket } from 'mysql2';
 import { pool } from '../../db/database.js';
 import { DbUser, PublicUser, NewUser } from '../../db/db-models/users.js';
-import { RowDataPacket } from 'mysql2';
+import { ResultSetHeader } from 'mysql2';
 
 // ============================================================================
 // QUERIES DE LECTURA
@@ -52,6 +53,19 @@ export const findByUsername = async (username: string): Promise<PublicUser | nul
 		[username]
 	);
 	return rows.length > 0 ? rows[0] as PublicUser : null;
+};
+
+/**
+ * Crea un nuevo usuario en la base de datos
+ * @param userData - Datos del nuevo usuario
+ * @returns El ID del usuario creado
+ */
+export const create = async (userData: NewUser): Promise<number> => {
+    const [result] = await pool.execute<ResultSetHeader>(
+        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+        [userData.username, userData.email, userData.password]
+    );
+    return result.insertId;
 };
 
 /**

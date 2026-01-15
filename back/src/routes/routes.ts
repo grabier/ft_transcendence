@@ -35,8 +35,8 @@ export const API_ROUTES = {
  * NOTA: Las variables DB_* se usan directamente en database.ts
  */
 export const ENV = {
-	PORT: process.env.PORT || '3000',
-	NODE_ENV: process.env.NODE_ENV || 'development',
+	PORT: process.env.PORT,
+	NODE_ENV: process.env.NODE_ENV,
 
 	// Variables de MariaDB (para referencia, se usan en database.ts)
 	// DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME

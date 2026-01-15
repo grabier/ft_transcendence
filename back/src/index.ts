@@ -4,9 +4,10 @@
  * Inicializa la conexión a MariaDB y arranca el servidor Fastify.
  */
 
-import { createAPIServer } from './server.js';
-import { ENV } from './routes/routes.js';
 import { connect } from '../db/database.js';
+import { seedDatabase } from '../db/seed-data.js';
+import { ENV } from './routes/routes.js';
+import { createAPIServer } from './server.js';
 
 /**
  * Función principal que arranca la aplicación.
@@ -19,6 +20,7 @@ const start = async () => {
 		// Conectar a MariaDB primero
 		// La función connect() crea las tablas automáticamente si no existen
 		await connect();
+		await seedDatabase();
 
 		// Crear el servidor Fastify con todas las rutas
 		const app = await createAPIServer();

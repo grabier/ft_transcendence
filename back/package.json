@@ -6,6 +6,7 @@
 	"scripts": {
 		"start": "tsx src/index.ts",
 		"build": "tsc",
+		"seed": "tsx src/seed-data.ts",
 		"serve": "node dist/server.js",
 		"test": "vitest noseque"
 	},

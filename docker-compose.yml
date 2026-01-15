@@ -18,11 +18,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./back/data:/app/data
       - ./back/src:/app/src
       - /app/node_modules
     env_file:
-      - ./back/src/.env # Carga las variables desde back/src/.env
+      - ./back/.env # Carga las variables desde back/.env
     environment:
       - NODE_ENV=development
     restart: on-failure
@@ -31,6 +30,8 @@ services:
 
   mariadb:
     image: mariadb:latest
+    ports:
+      - "3306:3306"
     container_name: mariadb
     restart: always
     environment:
