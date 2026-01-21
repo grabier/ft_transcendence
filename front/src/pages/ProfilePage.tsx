@@ -1,4 +1,4 @@
-/*import { useContext, useState, type FC } from "react";
+import { useContext, useState, type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Box,
@@ -220,4 +220,4 @@ const ProfilePage = () => {
     );
 };
 
-export default ProfilePage;*/
+export default ProfilePage;

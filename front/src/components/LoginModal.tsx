@@ -6,6 +6,7 @@ import {
     CircularProgress,
     Alert,
     Link,
+	Button,
 } from "@mui/material";
 import {
     StyledDialog,
@@ -83,18 +84,21 @@ const LoginModal = ({
                 </Box>
 
                 {/* OAuth Buttons */}
-                <Stack spacing={2} sx={{ mb: 3 }}>
-                    <OAuthButton startIcon={<span>G</span>}>
-                        <Typography variant="subtitle1">
-                            Continue with Google
-                        </Typography>
-                    </OAuthButton>
-                    <OAuthButton startIcon={<span>🐙</span>}>
-                        <Typography variant="subtitle1">
-                            Continue with Github
-                        </Typography>
-                    </OAuthButton>
-                </Stack>
+				<Stack spacing={2} sx={{ mb: 3 }}>
+					<Button 
+						component="a" 
+						href="http://localhost:3000/api/auth/google" 
+					>
+						<Typography variant="subtitle1">Continue with Google</Typography>
+					</Button>
+
+					<Button 
+						component="a" 
+						href="http://localhost:3000/api/auth/github" 
+					>
+						<Typography variant="subtitle1">Continue with Github</Typography>
+					</Button>
+				</Stack>
 
                 {/* Error Alert */}
                 {error && (
