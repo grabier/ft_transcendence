@@ -15,9 +15,12 @@ import {
     MarqueeTrack,
     MarqueeContent,
 } from "../style/MarqueeStyle";
+
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import ResetPasswordModal from "./ResetPasswordModal";
+import AuthErrorNotification from "./AuthErrorNotification";
+
 
 const Header = () => {
     const navigate = useNavigate();
@@ -27,6 +30,9 @@ const Header = () => {
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [registerModalOpen, setRegisterModalOpen] = useState(false);
     const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
+	// Esto guarda si el error se ve y qué dice
+	const [errorMessage, setErrorMessage] = useState("");
+	const [showError, setShowError] = useState(false);
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -87,20 +93,28 @@ const Header = () => {
                     password: password
                 })
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error desconocido en el servidor');
-            }
-
-            const data = await response.json();
-            console.log('✅ Usuario registrado:', data);
-            handleSwitchToLogin();
-            return data;
-
-        } catch (error: any) { // Añadido :any para evitar quejas de TS
-            console.error('❌ Fallo en la matrix:', error.message);
+			if (response.status === 409) {
+            // AQUÍ PONES EL MENSAJE
+            setErrorMessage("Username or email already exists");
+            setShowError(true);
+            return; // Salimos de la función
         }
+
+        if (!response.ok) {
+            setErrorMessage("Error desconocido en el servidor");
+            setShowError(true);
+            return;
+        }
+
+        // Si todo va bien...
+		console.log(response.ok);
+		setRegisterModalOpen(false);
+        handleSwitchToLogin();
+
+    } catch (error: any) {
+        setErrorMessage("Fallo de conexión con la Matrix");
+        setShowError(true);
+    }
     };
 
     const handleResetPassword = async (email: string) => {
@@ -309,6 +323,11 @@ const Header = () => {
                 onClose={() => setResetPasswordModalOpen(false)}
                 onResetPassword={handleResetPassword}
                 onSwitchToLogin={handleSwitchToLogin}
+            />
+			<AuthErrorNotification 
+                open={showError} 
+                message={errorMessage} 
+                onClose={() => setShowError(false)} 
             />
         </>
     );

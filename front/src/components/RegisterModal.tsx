@@ -12,7 +12,7 @@ import {
     StyledTextField,
     PrimaryAuthButton,
 } from "../style/AuthModalStyle";
-import { validateEmail } from "../utils/validation";
+import { validateEmail , validatePassword , validateUsername } from "../utils/validation";
 
 interface Props {
     open: boolean;
@@ -39,11 +39,16 @@ const RegisterModal = ({
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [usernameError, setUsernameError] = useState("");
+	
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!username || !email || !password) return;
         await onRegister(username, email, password);
+		handleSwitchToLogin();
+		
     };
 
     const handleClose = () => {
@@ -52,15 +57,21 @@ const RegisterModal = ({
             setEmail("");
             setPassword("");
             setEmailError("");
+			setPasswordError("");
+			setUsernameError("");
             onClose();
         }
     };
+
+
 
     const handleSwitchToLogin = () => {
         setUsername("");
         setEmail("");
         setPassword("");
         setEmailError("");
+		setPasswordError("");
+		setUsernameError("");
         onSwitchToLogin();
     };
 
@@ -119,9 +130,14 @@ const RegisterModal = ({
                             name="password"
                             autoComplete="new-password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {setPassword(e.target.value);
+                                setPassword(e.target.value);
+                                setPasswordError(validatePassword(e.target.value));
+                            }}
                             disabled={isLoading}
                             required
+                            error={!!passwordError}
+                            helperText={passwordError}
                         />
                         <StyledTextField
                             fullWidth
@@ -130,9 +146,14 @@ const RegisterModal = ({
                             name="username"
                             autoComplete="username"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={(e) => {
+                                setUsername(e.target.value);
+                                setUsernameError(validateUsername(e.target.value));
+                            }}
                             disabled={isLoading}
                             required
+                            error={!!usernameError}
+                            helperText={usernameError}
                         />
 
                         <PrimaryAuthButton
