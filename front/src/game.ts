@@ -1,444 +1,241 @@
-import { createElement } from "./tools.js";
-
-// Create square
-const square = {
-	x: -10,
-	y: -10,
-	width: 18,
-	height: 18,
-	speedX: 0,
-	speedY: 0
-};
-
-let gameState = 'menu';
-let gameMode: 'pvp' | 'ai' = 'pvp';
-let winningScore = 5;
-let aiInterval : number | null = null;
-let aiKeys = {up: false, down: false};
-
-// Variables for canvas and context
+const square = { x: 400, y: 300, width: 18, height: 18 };
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
-
-// Ajustes de física
-const BASE_SPEED = 500;
-const MAX_SPEED_LIMIT = 1200;
-const MAX_BOUNCE_ANGLE = 55 * (Math.PI / 180);
-const SPEED_BONUS = 0.8;
-
-// Create paddles
-const paddleLeft = {
-	x: 1,
-	y: 50,
-	width: 10,
-	height: 70,
-	speed: 600
-};
-
-const paddleRight = {
-	x: 800 - 10,
-	y: 50,
-	width: 10,
-	height: 70,
-	speed: 600
-};
-
+const paddleLeft = { x: 10, y: 265, width: 10, height: 70 };
+const paddleRight = { x: 800 - 20, y: 265, width: 10, height: 70 };
 let scoreRight = 0;
 let scoreLeft = 0;
+let gameState = 'loading'; // 'loading', 'countdown', 'playing', 'ended'
 
-const keysPressed: { [key: string]: boolean } = {};
+const serverTarget = {
+	ball: { x: 400, y: 300 },
+	paddleLeft: { y: 265 },
+	paddleRight: { y: 265 }
+};
 
-// To draw the current state
+//interpolacion: la bola se dibuja 60veces x segundo, o la tasa de refresco del monitor
+//el front no recibe 60 actualizaciones x segundo, sino bastantes menos. 
+//entonces no podemos igualar la posicion en pantalla a la posicion q nos de el server, pq iria a tirones
+//el lerp permite q vaya fluido, va acercando poco a poco la pelota a donde deberia estar, no teletransporta
+const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
+
+function createElement(tag: string, className: string = "", attributes: Record<string, string> = {}, children: (HTMLElement | string)[] = []): HTMLElement {
+	const element = document.createElement(tag);
+	if (className)
+		element.className = className;
+	Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+	children.forEach(child => typeof child === 'string' ? element.appendChild(document.createTextNode(child)) : element.appendChild(child));
+	return element;
+}
+
 function draw() {
-	// Repaint everything black
+	if (!context)
+		return;
 	context.fillStyle = 'black';
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
 	context.fillStyle = 'white';
 	context.font = '50px Arial';
 	context.textAlign = 'center';
-
-	// Left score
 	context.fillText(scoreLeft.toString(), canvas.width / 4, 100);
-
-	// Right score
 	context.fillText(scoreRight.toString(), (canvas.width / 4) * 3, 100);
-
-	// Middle line
 	context.fillRect((canvas.width / 2) - 2, 0, 4, canvas.height);
 
-	// Ball
 	context.fillStyle = 'white';
 	context.fillRect(square.x, square.y, square.width, square.height);
 
-	// Left paddle
 	context.fillStyle = 'red';
 	context.fillRect(paddleLeft.x, paddleLeft.y, paddleLeft.width, paddleLeft.height);
 
-	// Right paddle
 	context.fillStyle = 'blue';
 	context.fillRect(paddleRight.x, paddleRight.y, paddleRight.width, paddleRight.height);
 }
 
-function getRandomAngle(): number {
-	return ((Math.random() * 90) - 45) * Math.PI / 180;
+function gameLoop() {
+	if (gameState !== 'loading') {
+		const LERP_FACTOR = 0.3;
+
+		const dx = serverTarget.ball.x - square.x;
+		const dy = serverTarget.ball.y - square.y;
+
+		//para los casos en los q la pelota se mueve mucho en poco tiempo(como cuando marcamos gol, q vuelve al medio)
+		//no lerpeamos, sino q teletransportamos del tiron
+		if (Math.sqrt(dx * dx + dy * dy) > 100) {
+			square.x = serverTarget.ball.x;
+			square.y = serverTarget.ball.y;
+		} else {
+			square.x = lerp(square.x, serverTarget.ball.x, LERP_FACTOR);
+			square.y = lerp(square.y, serverTarget.ball.y, LERP_FACTOR);
+		}
+		//lerpeamos tb las palas para q vayan fluidas
+		paddleLeft.y = lerp(paddleLeft.y, serverTarget.paddleLeft.y, LERP_FACTOR);
+		paddleRight.y = lerp(paddleRight.y, serverTarget.paddleRight.y, LERP_FACTOR);
+
+		draw();
+	}
+	requestAnimationFrame(gameLoop);
 }
 
-function resetBall() {
-	square.x = (canvas.width / 2) - square.width / 2;
-	square.y = (canvas.height / 2) - square.width / 2;
-	square.speedX = 0;
-	square.speedY = 0;
+function startCountdown(onComplete: () => void) {
+	const layer = document.getElementById('menuLayer');
+	const title = layer?.querySelector('h1');
+	const sub = layer?.querySelector('p');
 
-	setTimeout(() => {
-		if (gameState === 'playing') {
-			let sign = Math.random() > 0.5 ? 1 : -1;
-			let angle = getRandomAngle();
+	if (!layer || !title || !sub)
+		return;
 
-			square.speedX = sign * BASE_SPEED * Math.cos(angle);
-			square.speedY = BASE_SPEED * Math.sin(angle);
+	layer.style.display = 'flex';
+	gameState = 'countdown';
+
+	let count = 3;
+	title.innerText = "PREPARADOS...";
+	sub.innerText = count.toString();
+	sub.style.fontSize = "4em";
+	sub.style.fontWeight = "bold";
+
+	const interval = setInterval(() => {
+		count--;
+		if (count > 0)
+			sub.innerText = count.toString();
+		else if (count === 0) {
+			sub.innerText = "GO!";
+			sub.style.color = "#FFFF00";
+		} else {
+			clearInterval(interval);
+			layer.style.display = 'none';
+			onComplete();
 		}
 	}, 1000);
 }
 
-function update(dt: number) {
-	// Move the square
-	square.x += square.speedX * dt;
-	square.y += square.speedY * dt;
+export function loadGame(gameMode: 'pvp' | 'ai' = 'pvp', scoreToWin: number = 5) {
+	const app = document.getElementById('root') || document.getElementById('app');
 
-	// Paddle movement
-	if (keysPressed['w'])
-		paddleLeft.y -= paddleLeft.speed * dt;
-	if (keysPressed['s'])
-		paddleLeft.y += paddleLeft.speed * dt;
-
-
-	let moveUp = false;
-	let moveDown = false;
-
-	if (gameMode === 'pvp') {
-		moveUp = keysPressed['ArrowUp'];
-		moveDown = keysPressed['ArrowDown'];
-	} else {
-		moveUp = aiKeys.up;
-		moveDown = aiKeys.down;
+	if (!app) {
+		console.error("CRITICAL: No encuentro el div 'root' ni 'app' para montar el juego.");
+		return;
 	}
 
-	if (moveUp)
-		paddleRight.y -= paddleRight.speed * dt;
-	if (moveDown)
-		paddleRight.y += paddleRight.speed * dt;
+	app.innerHTML = '';
 
-	// Paddle constraints (stay inside canvas)
-	if (paddleLeft.y < 0)
-		paddleLeft.y = 0;
-	if (paddleLeft.y + paddleLeft.height > canvas.height)
-		paddleLeft.y = canvas.height - paddleLeft.height;
-	if (paddleRight.y < 0)
-		paddleRight.y = 0;
-	if (paddleRight.y + paddleRight.height > canvas.height)
-		paddleRight.y = canvas.height - paddleRight.height;
-
-
-	//COLISSIONS
-	//right paddle
-	if (square.speedX > 0 &&
-		square.x + square.width >= paddleRight.x &&
-		square.x < paddleRight.x + paddleRight.width &&
-		square.y + square.height > paddleRight.y &&
-		square.y < paddleRight.y + paddleRight.height) {
-		
-		let paddleCenter = paddleRight.y + paddleRight.height / 2;
-		let ballCenter = square.y + square.height / 2;
-		let offset = (ballCenter - paddleCenter) / (paddleRight.height / 2);
-
-		if (offset > 1) offset = 1;
-		if (offset < -1) offset = -1;
-
-		let angle = offset * MAX_BOUNCE_ANGLE;
-
-		let newSpeed = BASE_SPEED * (1 + Math.abs(offset) * SPEED_BONUS);
-
-		newSpeed = Math.min(newSpeed, MAX_SPEED_LIMIT);
-
-		square.speedX = -newSpeed * Math.cos(angle);
-		square.speedY = newSpeed * Math.sin(angle);
-
-		//sticky paddles
-		square.x = paddleRight.x - square.width;
-	}
-	else if (square.x > canvas.width) {
-		scoreLeft++;
-		if (scoreLeft == winningScore) {
-			gameState = 'ended';
-			stopAiLogic();
-			const endLayer = document.getElementById('endLayer');
-			const winnerText = document.getElementById('winnerText');
-			if (endLayer && winnerText) {
-				endLayer.style.display = 'flex';
-				winnerText.innerText = "LEFT PLAYER WINS";
-			}
-		}
-		else
-			resetBall();
-	}
-
-	//left paddle
-	if (square.speedX < 0 &&
-		square.x <= paddleLeft.x + paddleLeft.width &&
-		square.x + square.width > paddleLeft.x &&
-		square.y + square.height > paddleLeft.y &&
-		square.y < paddleLeft.y + paddleLeft.height) {
-		let paddleCenter = paddleLeft.y + paddleLeft.height / 2;
-		let ballCenter = square.y + square.height / 2;
-		let offset = (ballCenter - paddleCenter) / (paddleLeft.height / 2);
-
-		if (offset > 1) offset = 1;
-		if (offset < -1) offset = -1;
-
-		let angle = offset * MAX_BOUNCE_ANGLE;
-		let newSpeed = BASE_SPEED * (1 + Math.abs(offset) * SPEED_BONUS);
-
-		newSpeed = Math.min(newSpeed, MAX_SPEED_LIMIT);
-
-		square.speedX = newSpeed * Math.cos(angle);
-		square.speedY = newSpeed * Math.sin(angle);
-
-		//to avoid sticky paddles
-		square.x = paddleLeft.x + paddleLeft.width;
-	}
-	else if (square.x + square.width < 0) {
-		scoreRight++;
-		if (scoreRight == winningScore) {
-			gameState = 'ended';
-			stopAiLogic();
-			const endLayer = document.getElementById('endLayer');
-			const winnerText = document.getElementById('winnerText');
-			if (endLayer && winnerText) {
-				endLayer.style.display = 'flex';
-				winnerText.innerText = "RIGHT PLAYER WINS";
-			}
-		}
-		else
-			resetBall();
-	}
-
-	// Bottom border
-	if (square.y + square.height > canvas.height) {
-		square.speedY = -square.speedY;
-		square.y = canvas.height - square.height;
-	}
-
-	// Top border
-	if (square.y < 0) {
-		square.speedY = -square.speedY;
-		square.y = 0;
-	}
-}
-
-let lastTime = 0;
-
-function gameLoop(currentTime: number) {
-
-	let dt;//changing velocity so it depends on pixels per second instead of pixels per frame
-	if (lastTime == 0)
-		dt = 0;
-	else
-		dt = (currentTime - lastTime) / 1000;
-	lastTime = currentTime;
-	if (gameState == 'playing')
-		update(dt);
-	draw();
-	requestAnimationFrame(gameLoop); // Call gameloop recursively every frame. This is the loop
-}
-
-
-//ai algo : trivial now but will improve it eventually, right now the ai follows the 
-//y coordinate of the ball, and it only works if the interval is small(1000 ms makes for a stupid ai)
-function startAiLogic() {
-	if (aiInterval) clearInterval(aiInterval);
-
-	aiInterval = window.setInterval(() => {
-		if (gameState !== 'playing') return;
-
-		const targetY = square.y;
-		const paddleCenter = paddleRight.y + paddleRight.height / 2;
-
-		const distance = Math.abs(targetY - paddleCenter);
-
-		const timeNeededMs = (distance / paddleRight.speed) * 1000;
-
-		aiKeys.up = false;
-		aiKeys.down = false;
-
-		const tolerance = 5;
-
-		//we only move if distance > tolerance, otherwise the paddle would never keep stil
-		if (distance > tolerance) {
-			if (targetY < paddleCenter) {
-				aiKeys.up = true;
-				setTimeout(() => { aiKeys.up = false; }, timeNeededMs);
-				//we use setTimeout to make the paddle able to stop mid movement, otherwise it 
-				//would keep moving even if past the destined position
-			} else {
-				aiKeys.down = true;
-				setTimeout(() => { aiKeys.down = false; }, timeNeededMs);
-			}
-		}
-
-	}, 300);
-}
-
-function stopAiLogic() {
-	if (aiInterval) {
-		clearInterval(aiInterval);
-		aiInterval = null;
-	}
-	aiKeys = { up: false, down: false };
-}
-
-
-export function loadGame() {
-	const app = document.getElementById('app')!;
-	app.innerHTML = ''; // clean login
-
-	//css handling
 	if (!document.getElementById('game-styles')) {
 		const style = document.createElement('style');
 		style.id = 'game-styles';
 		style.textContent = `
             #gameContainer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #222; display: flex; justify-content: center; align-items: center; z-index: 9999; }
             #gameCanvas { background-color: #000; border: 2px solid #fff; box-sizing: border-box; display: block; }
-            .overlay-menu { position: absolute; z-index: 10; background-color: rgba(0, 0, 0, 0.9); padding: 40px; border-radius: 15px; border: 1px solid #666; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; color: white; font-family: 'Courier New', Courier, monospace; text-align: center; }
-            .overlay-menu h1 { margin: 0 0 10px 0; text-transform: uppercase; }
-            .overlay-menu button { padding: 10px 20px; font-size: 1.2em; cursor: pointer; font-family: inherit; font-weight: bold; }
-            .overlay-menu input { padding: 10px; font-size: 1.2em; text-align: center; font-family: inherit; }
+            .overlay-menu { position: absolute; z-index: 10; background-color: rgba(0, 0, 0, 0.9); padding: 40px; border-radius: 15px; border: 1px solid #666; width: 300px; display: flex; flex-direction: column; gap: 15px; color: white; font-family: 'Courier New', monospace; text-align: center; justify-content: center; align-items: center; }
+            .overlay-menu h1 { margin: 0; text-transform: uppercase; }
+            .overlay-menu button { padding: 10px 20px; font-size: 1.2em; cursor: pointer; font-family: inherit; font-weight: bold; background: #fff; border: none; color: #000; margin-top: 10px; }
+            .overlay-menu button:hover { background: #ccc; }
         `;
 		document.head.appendChild(style);
 	}
 
-	// put the layers in variables to use later
 	const menuLayer = createElement('div', 'overlay-menu', { id: 'menuLayer' }, [
-		createElement('h1', '', {}, ['Pong Transcendence']),
-		createElement('label', '', {}, ['Points to win:']),
-		createElement('input', '', { type: 'number', id: 'scoreInput', value: '5', min: '1' }),
-		createElement('div', '', { style: 'display: flex; gap: 20px; justify-content: center;' }, [
-			createElement('button', '', { id: 'btnPvp' }, ['VS PLAYER']),
-			createElement('button', '', { id: 'btnAi' }, ['VS AI'])
-		])
+		createElement('h1', '', {}, ['CONECTANDO']),
+		createElement('p', '', {}, ['...'])
 	]);
 
+	const btnRestart = createElement('button', '', { id: 'restartBtn' }, ['JUGAR OTRA VEZ']);
 	const endLayer = createElement('div', 'overlay-menu', { id: 'endLayer', style: 'display: none;' }, [
 		createElement('h1', '', { id: 'winnerText' }, ['WINNER']),
-		createElement('button', '', { id: 'restartBtn' }, ['BACK TO MENY'])
-	]);
-
-	const pauseLayer = createElement('div', 'overlay-menu', { id: 'pauseLayer', style: 'display: none;' }, [
-		createElement('h1', '', {}, ['GAME PAUSED']),
-		createElement('button', '', { id: 'continueBtn' }, ['CONTINUE'])
+		btnRestart
 	]);
 
 	const gameCanvas = createElement('canvas', '', { id: 'gameCanvas', width: '800', height: '600' });
+	const gameContainer = createElement('div', '', { id: 'gameContainer' }, [gameCanvas, menuLayer, endLayer]);
 
-	const gameContainer = createElement('div', '', { id: 'gameContainer' }, [
-		menuLayer,
-		endLayer,
-		pauseLayer,
-		gameCanvas
-	]);
-
-	// put everything in app
 	app.appendChild(gameContainer);
 
-
-	canvas = gameCanvas as HTMLCanvasElement; 
+	canvas = gameCanvas as HTMLCanvasElement;
 	context = canvas.getContext('2d')!;
 
-	const btnPvp = document.getElementById('btnPvp')!;
-	const btnAi = document.getElementById('btnAi')!;
-	const restartBtn = document.getElementById('restartBtn')!;
-	const continueBtn = document.getElementById('continueBtn')!;
-	const scoreInput = document.getElementById('scoreInput') as HTMLInputElement;
+	console.log(`Conectando: Mode=${gameMode}, Score=${scoreToWin}`);
+	const socket = new WebSocket(`ws://localhost:3000/api/game/?mode=${gameMode}&score=${scoreToWin}`);
 
-	restartBtn.addEventListener('click', () => {
-		endLayer.style.display = 'none';
-		menuLayer.style.display = 'flex';
-		gameState = 'menu';
-		scoreLeft = 0;
-		scoreRight = 0;
-		resetBall();
-		draw();
-	});
+	const winnerText = document.getElementById('winnerText')!;
+	const endLayerDiv = document.getElementById('endLayer')!;
 
-	const startGame = (mode: 'pvp' | 'ai') => {
-		winningScore = parseInt(scoreInput.value);
-		menuLayer.style.display = 'none';
-		gameState = 'playing';
-		gameMode = mode;
-		scoreLeft = 0;
-		scoreRight = 0;
-		resetBall();
+	socket.onopen = () => {
+		console.log("Conectado");
+		startCountdown(() => {
+			gameState = 'playing';
+		});
+	};
 
-		if (mode === 'ai') {
-			startAiLogic();
+	socket.onmessage = (event) => {
+		try {
+			const msg = JSON.parse(event.data);
+			if (msg.type === 'UPDATE') {
+				const s = msg.state;
+
+				const PREDICTION = 0.05;
+				if (Math.abs(s.ball.speedX) > 0) {
+					//serverTarget.ball.x = lerp(s.ball.x, s.ball.speedX, PREDICTION);
+					//serverTarget.ball.y = lerp(s.ball.y, s.ball.speedY, PREDICTION);
+					serverTarget.ball.x = s.ball.x + (s.ball.speedX * PREDICTION);
+					serverTarget.ball.y = s.ball.y + (s.ball.speedY * PREDICTION);
+				} else {
+					serverTarget.ball.x = s.ball.x;
+					serverTarget.ball.y = s.ball.y;
+				}
+
+				serverTarget.paddleLeft.y = s.paddleLeft.y;
+				serverTarget.paddleRight.y = s.paddleRight.y;
+				scoreLeft = s.paddleLeft.score;
+				scoreRight = s.paddleRight.score;
+
+				if (s.status === 'ended' && gameState !== 'ended') {
+					gameState = 'ended';
+					endLayerDiv.style.display = 'flex';
+					winnerText.innerText = s.winner === 'left' ? "P1 WINS" : "P2 WINS";
+					if (gameMode === 'ai' && s.winner === 'right') winnerText.innerText = "AI WINS 🤖";
+				}
+
+				if (s.status === 'playing' && gameState === 'ended') {
+					endLayerDiv.style.display = 'none';
+					startCountdown(() => { gameState = 'playing'; });
+				}
+			}
+		} catch (e) { }
+	};
+
+	const keysPressed: Record<string, boolean> = {};
+	const sendInput = (action: string, key: string) => {
+		if (socket.readyState === WebSocket.OPEN) {
+			const msg = { type: 'INPUT', action, key: '' };
+			if (key === 'ArrowUp')
+				msg.key = 'RIGHT_UP';
+			else if (key === 'ArrowDown')
+				msg.key = 'RIGHT_DOWN';
+			else if (key === 'w' || key === 'W')
+				msg.key = 'LEFT_UP';
+			else if (key === 's' || key === 'S')
+				msg.key = 'LEFT_DOWN';
+			if (msg.key)
+				socket.send(JSON.stringify(msg));
 		}
 	};
 
-	btnPvp.addEventListener('click', () => startGame('pvp'));
-	btnAi.addEventListener('click', () => startGame('ai'));
-
-	continueBtn.addEventListener('click', () => {
-		gameState = 'playing';
-		pauseLayer.style.display = 'none';
-		lastTime = 0;
+	document.addEventListener('keydown', (e) => {
+		if (["ArrowUp", "ArrowDown", " "].includes(e.key))
+			e.preventDefault();
+		if (keysPressed[e.key])
+			return;
+		keysPressed[e.key] = true;
+		sendInput('PRESS', e.key);
 	});
 
-	if (!context) {
-		console.error("Couldn't get 2D context");
-		return;
-	}
-
-	console.log("Game loaded, initiating game loop");
-
-	const resizeGame = () => {
-		const gameRatio = canvas.width / canvas.height;
-		const container = document.getElementById('gameContainer');
-		if (!container) return;
-
-		const windowWidth = container.clientWidth;
-		const windowHeight = container.clientHeight;
-		const windowRatio = windowWidth / windowHeight;
-
-		const margin = 0.95;
-		if (windowRatio > gameRatio) {
-			canvas.style.height = `${windowHeight * margin}px`;
-			canvas.style.width = `${(windowHeight * margin) * gameRatio}px`;
-		}
-		else {
-			canvas.style.width = `${windowWidth * margin}px`;
-			canvas.style.height = `${(windowWidth * margin) / gameRatio}px`;
-		}
-	};
-
-	window.addEventListener('resize', resizeGame);
-	setTimeout(resizeGame, 0);
-
-	document.addEventListener('keydown', (event) => {
-		keysPressed[event.key] = true;
-		if (event.key === 'Escape') {
-			if (gameState === 'playing') {
-				gameState = 'paused';
-				pauseLayer.style.display = 'flex';
-			}
-			else if (gameState === 'paused') {
-				gameState = 'playing';
-				pauseLayer.style.display = 'none';
-				lastTime = 0;
-			}
-		}
+	document.addEventListener('keyup', (e) => {
+		keysPressed[e.key] = false;
+		sendInput('RELEASE', e.key);
 	});
-	document.addEventListener('keyup', (event) => { keysPressed[event.key] = false; });
 
-	lastTime = 0;
-	gameLoop(0);
+	btnRestart.addEventListener('click', () => {
+		if (socket.readyState === WebSocket.OPEN)
+			socket.send(JSON.stringify({ type: 'RESTART' }));
+	});
+
+	gameLoop();
 }
