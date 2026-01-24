@@ -88,10 +88,11 @@ function startCountdown(onComplete: () => void) {
 	gameState = 'countdown';
 
 	let count = 3;
-	title.innerText = "PREPARADOS...";
+	title.innerText = "READY...";
 	sub.innerText = count.toString();
 	sub.style.fontSize = "4em";
 	sub.style.fontWeight = "bold";
+	sub.style.color = "white";
 
 	const interval = setInterval(() => {
 		count--;
@@ -100,6 +101,11 @@ function startCountdown(onComplete: () => void) {
 		else if (count === 0) {
 			sub.innerText = "GO!";
 			sub.style.color = "#FFFF00";
+			clearInterval(interval);
+			setTimeout(() => {
+				layer.style.display = 'none';
+				onComplete();
+			}, 200);
 		} else {
 			clearInterval(interval);
 			layer.style.display = 'none';
@@ -112,7 +118,7 @@ export function loadGame(gameMode: 'pvp' | 'ai' = 'pvp', scoreToWin: number = 5)
 	const app = document.getElementById('root') || document.getElementById('app');
 
 	if (!app) {
-		console.error("CRITICAL: No encuentro el div 'root' ni 'app' para montar el juego.");
+		console.error("CRITICAL: cant find root or app");
 		return;
 	}
 
@@ -133,14 +139,20 @@ export function loadGame(gameMode: 'pvp' | 'ai' = 'pvp', scoreToWin: number = 5)
 	}
 
 	const menuLayer = createElement('div', 'overlay-menu', { id: 'menuLayer' }, [
-		createElement('h1', '', {}, ['CONECTANDO']),
+		createElement('h1', '', {}, ['CONECTING']),
 		createElement('p', '', {}, ['...'])
 	]);
+
+	const btnExit = createElement('button', '', { id: 'exitBtn' }, ['SALIR AL MENÚ']);
+	btnExit.addEventListener('click', () => {
+		window.location.reload();
+	});
 
 	const btnRestart = createElement('button', '', { id: 'restartBtn' }, ['JUGAR OTRA VEZ']);
 	const endLayer = createElement('div', 'overlay-menu', { id: 'endLayer', style: 'display: none;' }, [
 		createElement('h1', '', { id: 'winnerText' }, ['WINNER']),
-		btnRestart
+		btnRestart,
+		btnExit
 	]);
 
 	const gameCanvas = createElement('canvas', '', { id: 'gameCanvas', width: '800', height: '600' });
@@ -151,14 +163,14 @@ export function loadGame(gameMode: 'pvp' | 'ai' = 'pvp', scoreToWin: number = 5)
 	canvas = gameCanvas as HTMLCanvasElement;
 	context = canvas.getContext('2d')!;
 
-	console.log(`Conectando: Mode=${gameMode}, Score=${scoreToWin}`);
+	console.log(`Conecting: Mode=${gameMode}, Score=${scoreToWin}`);
 	const socket = new WebSocket(`ws://localhost:3000/api/game/?mode=${gameMode}&score=${scoreToWin}`);
 
 	const winnerText = document.getElementById('winnerText')!;
 	const endLayerDiv = document.getElementById('endLayer')!;
 
 	socket.onopen = () => {
-		console.log("Conectado");
+		console.log("Connected");
 		startCountdown(() => {
 			gameState = 'playing';
 		});
