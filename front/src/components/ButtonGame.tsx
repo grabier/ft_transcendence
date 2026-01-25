@@ -4,12 +4,14 @@ import { Box, Typography } from '@mui/material';
 interface ButtonProps {
     label: string;
     fillDirection?: 'left-to-right' | 'right-to-left';
+	onClick?: () => void;
 }
 
-const ButtonGame: React.FC<ButtonProps> = ({ label, fillDirection = 'left-to-right' }) => {
+const ButtonGame: React.FC<ButtonProps> = ({ label, fillDirection = 'left-to-right', onClick}) => {
     return (
         <Box
             component="button"
+			onClick={onClick}
             sx={{
                 position: 'relative',
                 overflow: 'hidden',

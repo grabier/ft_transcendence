@@ -21,15 +21,16 @@ services:
       - ./back/src:/app/src
       - /app/node_modules
     env_file:
-      - ./back/.env # Carga las variables desde back/.env
+      - ./back/.env 
     environment:
       - NODE_ENV=development
+      - DB_HOST=mariadb
     restart: on-failure
     networks:
       - trascendence-network
     depends_on:
       mariadb:
-        condition: service_healthy  # <--- Esta es la clave
+        condition: service_healthy
 
   mariadb:
     

@@ -25,6 +25,7 @@ interface GamePanelProps {
   isPeerActive: boolean;
   onHover: () => void;
   onLeave: () => void;
+  onOptionSelect: (option: string) => void;
 }
 
 const GamePanel: React.FC<GamePanelProps> = ({
@@ -37,6 +38,7 @@ const GamePanel: React.FC<GamePanelProps> = ({
   isPeerActive,
   onHover,
   onLeave,
+  onOptionSelect,
 }) => {
   const isLeft = align === 'left';
   const shadowColor = 'rgba(255, 255, 255, 0.6)';
@@ -237,6 +239,7 @@ const GamePanel: React.FC<GamePanelProps> = ({
                 <ButtonGame
                   label={label}
                   fillDirection={isLeft ? 'left-to-right' : 'right-to-left'}
+				  onClick={() => onOptionSelect(label)}
                 />
               </Box>
             ))}

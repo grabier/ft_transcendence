@@ -4,9 +4,10 @@
  * Inicializa la conexión a MariaDB y arranca el servidor Fastify.
  */
 
+
+import { ENV } from './routes/routes.js';
 import { connect } from '../db/database.js';
 import { seedDatabase } from '../db/seed-data.js';
-import { ENV } from './routes/routes.js';
 import { createAPIServer } from './server.js';
 
 /**

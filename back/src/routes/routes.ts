@@ -22,6 +22,7 @@ export const API_ROUTES = {
 	root,
 	auth: `${root}/auth`,
 	user: `${root}/user`,
+	game: `${root}/game`,
 };
 
 // ============================================================================
