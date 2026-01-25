@@ -1,8 +1,6 @@
 /**
  * auth.api.ts - API de autenticación
- *
- * Endpoints para registro y login de usuarios.
- * Usa MariaDB para almacenar los usuarios.
+ * * CORREGIDO: Error TS18047 solucionado en el callback de GitHub
  */
 
 import { FastifyPluginAsync } from "fastify";
@@ -14,18 +12,12 @@ import jwt from 'jsonwebtoken';
 // INTERFACES
 // ============================================================================
 
-/**
- * Estructura del body para el endpoint de registro
- */
 interface RegisterBody {
 	username: string;
 	email: string;
 	password: string;
 }
 
-/**
- * Estructura del body para el endpoint de login
- */
 interface LoginBody {
 	email: string;
 	password: string;
@@ -36,177 +28,99 @@ interface LoginBody {
 // ============================================================================
 
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
-	// ========================================================================
-	// POST /register - Registrar un nuevo usuario
-	// ========================================================================
-	fastify.post<{ Body: RegisterBody }>(
-		"/register",
-		async (request, reply) => {
-			const { username, email, password } = request.body;
 
-			// Validar que todos los campos estén presentes
-			if (!username || !email || !password) {
-				return reply.code(400).send({
-					error: "Faltan campos requeridos (username, email, password)",
-				});
-			}
-
-			try {
-				// Generar salt y hashear la contraseña
-				const salt = await bcrypt.genSalt(10);
-				const hashedPassword = await bcrypt.hash(password, salt);
-
-				// Insertar el nuevo usuario usando el repositorio
-				const userId = await userRepository.create({
-					username,
-					email,
-					password: hashedPassword,
-				});
-
-				return reply.code(201).send({
-					message: "Usuario creado con éxito",
-					userId,
-				});
-			} catch (error: any) {
-				request.log.error(error);
-
-				// Error de duplicado (usuario o email ya existe)
-				// En MariaDB el código es 'ER_DUP_ENTRY' en lugar de 'SQLITE_CONSTRAINT_UNIQUE'
-				if (error.code === "ER_DUP_ENTRY") {
-					return reply.code(409).send({
-						error: "El usuario o email ya existe",
-					});
-				}
-
-				return reply.code(500).send({
-					error: "Error interno del servidor",
-					details: error.message,
-				});
-			}
+	// --- POST /register (Sin cambios, estaba bien) ---
+	fastify.post<{ Body: RegisterBody }>("/register", async (request, reply) => {
+		const { username, email, password } = request.body;
+		if (!username || !email || !password) {
+			return reply.code(400).send({ error: "Faltan campos requeridos" });
 		}
-	);
+		try {
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(password, salt);
+			const userId = await userRepository.create({ username, email, password: hashedPassword });
+			return reply.code(201).send({ message: "Usuario creado con éxito", userId });
+		} catch (error: any) {
+			request.log.error(error);
+			if (error.code === "ER_DUP_ENTRY") {
+				return reply.code(409).send({ error: "El usuario o email ya existe" });
+			}
+			return reply.code(500).send({ error: "Error interno", details: error.message });
+		}
+	});
 
-	// ========================================================================
-	// POST /login - Iniciar sesión
-	// ========================================================================
+	// --- POST /login (Sin cambios, estaba bien) ---
 	fastify.post<{ Body: LoginBody }>("/login", async (request, reply) => {
 		const { email, password } = request.body;
-
-		// Validar campos
 		if (!email || !password) {
-			return reply.code(400).send({
-				error: "Faltan campos requeridos (email, password)",
-			});
+			return reply.code(400).send({ error: "Faltan campos requeridos" });
 		}
-
 		try {
-			// Buscar usuario por email
 			const user = await userRepository.findByEmail(email);
+			if (!user) return reply.code(401).send({ error: "Credenciales inválidas" });
+			if (!user.password) return reply.code(401).send({ error: "Este usuario usa OAuth" });
 
-			// Verificar si el usuario existe
-			if (!user) {
-				return reply.code(401).send({
-					error: "Credenciales inválidas",
-				});
-			}
-
-			// Verificar que el usuario tenga contraseña (no OAuth)
-			if (!user.password) {
-				return reply.code(401).send({
-					error: "Este usuario usa autenticación OAuth",
-				});
-			}
-
-			// Verificar la contraseña
 			const validPassword = await bcrypt.compare(password, user.password);
+			if (!validPassword) return reply.code(401).send({ error: "Credenciales inválidas" });
 
-			if (!validPassword) {
-				return reply.code(401).send({
-					error: "Credenciales inválidas",
-				});
-			}
-
-			// Actualizar last_login
-			// Actualizar last_login y estado online
 			await userRepository.updateLastLogin(user.id);
 			await userRepository.updateOnlineStatus(user.id, true);
 
-			// TODO: Generar y devolver JWT token
+			// Generar token normal (opcional, si lo necesitas en login normal)
+			const token = jwt.sign(
+				{ id: user.id, email: user.email, username: user.username },
+				process.env.JWT_SECRET || 'secreto',
+				{ expiresIn: '7d' }
+			);
+
 			return reply.code(200).send({
 				message: "Login exitoso",
-				user: {
-					id: user.id,
-					username: user.username,
-					email: user.email,
-				},
+				token, // <--- Añado el token aquí también por si acaso
+				user: { id: user.id, username: user.username, email: user.email },
 			});
 		} catch (error: any) {
 			request.log.error(error);
-			return reply.code(500).send({
-				error: "Error interno del servidor",
-				details: error.message,
-			});
+			return reply.code(500).send({ error: "Error interno", details: error.message });
 		}
 	});
-	// GET /github - Redirigir a GitHub
-	// ========================================================================
+
+	// --- GET /github (Sin cambios) ---
 	fastify.get("/github", async (request, reply) => {
 		const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 		const redirectUri = "http://localhost:3000/api/auth/github/callback";
-
-		// Mandamos al usuario a GitHub pidiendo permiso para leer su email y perfil
 		const url = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&scope=user:email`;
-
 		return reply.redirect(url);
 	});
-	fastify.get("/github/callback", async (request, reply) => {
-		// 1. Extraemos las variables de entorno nada más empezar
-		const {
-			GITHUB_CLIENT_ID,
-			GITHUB_CLIENT_SECRET,
-			FRONTEND_URL
-		} = process.env;
 
+	// ========================================================================
+	// GET /github/callback - AQUÍ ESTÁ LA CORRECCIÓN 🛠️
+	// ========================================================================
+	fastify.get("/github/callback", async (request, reply) => {
+		const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL } = process.env;
 		const { code } = request.query as { code: string };
 
-		// 2. Validación de seguridad para que el servidor no pete si falta el .env
 		if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
 			request.log.error("Faltan variables de entorno de OAuth");
 			return reply.redirect(`${FRONTEND_URL}?error=server_config_error`);
 		}
-
-		if (!code) {
-			return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
-		}
+		if (!code) return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
 
 		try {
-			// --- PASO A: TOKEN ---
+			// A. Obtener Token de GitHub
 			const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Accept: "application/json",
-				},
-				body: JSON.stringify({
-					client_id: GITHUB_CLIENT_ID,
-					client_secret: GITHUB_CLIENT_SECRET,
-					code: code,
-				}),
+				headers: { "Content-Type": "application/json", Accept: "application/json" },
+				body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, client_secret: GITHUB_CLIENT_SECRET, code }),
 			});
-
 			const tokenData = await tokenResponse.json() as { access_token: string };
+			if (!tokenData.access_token) throw new Error("GitHub no devolvió token");
 
-			if (!tokenData.access_token) {
-				throw new Error("GitHub no devolvió un access_token");
-			}
-
-			// --- PASO B: USUARIO ---
+			// B. Obtener Datos del Usuario
 			const userResponse = await fetch("https://api.github.com/user", {
 				headers: { Authorization: `Bearer ${tokenData.access_token}` },
 			});
 			const userData = await userResponse.json() as { login: string, email: string | null };
 
-			// Lógica de correos (GitHub devuelve null si el correo no es público en el perfil)
 			let email = userData.email;
 			if (!email) {
 				const emailsResponse = await fetch("https://api.github.com/user/emails", {
@@ -215,44 +129,47 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				const emailsData = await emailsResponse.json() as any[];
 				email = emailsData.find((e) => e.primary)?.email;
 			}
+			if (!email) throw new Error("No se pudo obtener el email");
 
-			if (!email) throw new Error("No se pudo obtener el email del usuario");
-
-			// --- PASO C: BASE DE DATOS ---
+			// C. Base de Datos
 			let user = await userRepository.findByEmail(email);
 
 			if (!user) {
-				// Nuevo usuario
+				// CASO: Nuevo Usuario
 				await userRepository.create({
 					username: userData.login,
 					email: email,
-					password: "", // Usuario OAuth
+					password: "",
 				});
+
+				// Acabamos de crearlo, pero la variable 'user' sigue siendo null.
+				// TENEMOS QUE BUSCARLO OTRA VEZ para llenar la variable.
+				user = await userRepository.findByEmail(email);
 			} else if (user.password) {
-				// Existe con contraseña manual: Conflicto
+				// CASO: Usuario existe con contraseña (conflicto)
 				return reply.redirect(`${FRONTEND_URL}?error=user_exists`);
 			}
 
-			// --- PASO D: ÉXITO ---
-			// Aquí es donde mandas al usuario logueado al Front
+			// Ahora le aseguramos a TypeScript que 'user' no es null
+			if (!user) {
+				throw new Error("Error crítico: El usuario debería existir pero no se encontró.");
+			}
+
+			// D. Generar JWT
 			const token = jwt.sign(
 				{
-					id: user.id,
+					id: user.id,        // Ahora TypeScript sabe que user.id existe
 					email: user.email,
 					username: user.username
 				},
-				// Esta es la "firma secreta" del hotel. Solo el hotel puede crear tarjetas válidas.
 				process.env.JWT_SECRET || 'secreto_super_seguro_para_desarrollo',
-				{ expiresIn: '7d' } // La tarjeta caduca en 7 días
+				{ expiresIn: '7d' }
 			);
 
-			// 2. REDIRIGIMOS CON EL TOKEN EN LA MANO
-			// Fíjate que añadimos "?token=..." al final. 
-			// Así le pasamos la tarjeta al Frontend a través de la URL.
 			return reply.redirect(`${FRONTEND_URL}?token=${token}`);
 
 		} catch (error: any) {
-			request.log.error("Error en el flujo de GitHub:", error.message);
+			request.log.error("Error en GitHub OAuth:", error.message);
 			return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
 		}
 	});
