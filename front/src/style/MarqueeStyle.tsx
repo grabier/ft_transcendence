@@ -6,7 +6,7 @@ import { styled, keyframes } from "@mui/material/styles";
 
 const marquee = keyframes`
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-500%); }
 `;
 
 export const MarqueeContainer = styled(Box)({

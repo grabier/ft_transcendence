@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
-import { useState , useEffect} from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     Box,
     AppBar,
@@ -9,6 +9,9 @@ import {
     Menu,
     MenuItem,
     Divider,
+    Snackbar,
+    Alert,
+    Avatar // <--- 1. IMPORTAMOS AVATAR
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -16,331 +19,210 @@ import {
     MarqueeTrack,
     MarqueeContent,
 } from "../style/MarqueeStyle";
+
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import ResetPasswordModal from "./ResetPasswordModal";
+import AuthErrorNotification from "./AuthErrorNotification";
 
 interface UserPayload {
     id: number;
     username: string;
+    email: string;
 }
 
 const Header = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // --- ESTADOS ---
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const menuOpen = Boolean(anchorEl);
-	const [user, setUser] = useState<UserPayload | null>(null);
-    const isLoggedIn = !!user; // Si hay usuario, estás logueado. Truco pro.
+    const [user, setUser] = useState<UserPayload | null>(null);
 
-	useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            try {
-                const decoded = jwtDecode<UserPayload>(token);
-                setUser(decoded); // ¡PUM! Ya sabemos quién eres
-            } catch (e) {
-                localStorage.removeItem('auth_token'); // Si el token es falso, fuera
-            }
-        }
-    }, []);
-
+    // Modales
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [registerModalOpen, setRegisterModalOpen] = useState(false);
     const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
 
+    // Notificaciones
+    const [authError, setAuthError] = useState({ open: false, message: "" });
+    const [successMsg, setSuccessMsg] = useState({ open: false, message: "" });
 
-    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+    // --- EFECTOS (Persistencia y OAuth) ---
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            try {
+                const decoded = jwtDecode<UserPayload>(token);
+                setUser(decoded);
+            } catch (e) {
+                localStorage.removeItem('auth_token');
+                setUser(null);
+            }
+        }
+    }, []);
 
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
+    useEffect(() => {
+        const errorType = searchParams.get("error");
+        if (errorType) {
+            const message = errorType === "user_exists" 
+                ? "Este email ya está registrado con otro método" 
+                : "Error de autenticación externa";
+            setAuthError({ open: true, message });
+            setSearchParams({});
+        }
+    }, [searchParams, setSearchParams]);
 
+    // --- HANDLERS ---
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+    const handleMenuClose = () => setAnchorEl(null);
+    
     const handleNavigate = (path: string) => {
         handleMenuClose();
-        // navigate(path); // Uncomment when ready
+        navigate(path);
     };
 
-    // --- CORREGIDO AQUÍ ---
+    const triggerSuccess = (msg: string) => setSuccessMsg({ open: true, message: msg });
+    const triggerError = (msg: string) => setAuthError({ open: true, message: msg });
+
+    // --- AUTH LOGIC ---
     const handleLogin = async (email: string, password: string) => {
-        console.log("Login attempt:", email, password);
         try {
             const response = await fetch('http://localhost:3000/api/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
             });
+            const data = await response.json();
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error desconocido en el servidor');
-            }
+            if (!response.ok) throw new Error(data.message || data.error || 'Error de credenciales');
 
-            //setIsLoggedIn(true);
+            localStorage.setItem('auth_token', data.token);
+            const decoded = jwtDecode<UserPayload>(data.token);
+            setUser(decoded);
+            
             setLoginModalOpen(false);
+            triggerSuccess(`¡Bienvenido, ${decoded.username}!`);
+        } catch (error: any) {
+            triggerError(error.message);
+        }
+    };
 
-        } catch (error) {
-            console.error('Error en login:', error);
-        } // <--- FALTABA CERRAR EL CATCH
-    }; // <--- FALTABA CERRAR LA FUNCIÓN handleLogin
-
-    // --- CORREGIDO: handleRegister ahora está fuera de handleLogin ---
-    const handleRegister = async (
-        username: string,
-        email: string,
-        password: string
-    ) => {
+    const handleRegister = async (username: string, email: string, password: string) => {
         try {
             const response = await fetch('http://localhost:3000/api/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username,
-                    email: email,
-                    password: password
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error desconocido en el servidor');
+            if (response.status === 409) {
+                triggerError("Usuario o email ya existen");
+                return;
             }
+            if (!response.ok) throw new Error("Error en registro");
 
-            const data = await response.json();
-            console.log('✅ Usuario registrado:', data);
-            handleSwitchToLogin();
-            return data;
-
-        } catch (error: any) { // Añadido :any para evitar quejas de TS
-            console.error('❌ Fallo en la matrix:', error.message);
+            setRegisterModalOpen(false);
+            setLoginModalOpen(true);
+            triggerSuccess("Cuenta creada. Por favor, inicia sesión.");
+        } catch (error: any) {
+            triggerError(error.message);
         }
-    };
-
-    const handleResetPassword = async (email: string) => {
-        try {
-            console.log("Reset password attempt:", email);
-            // TODO: Add your actual reset API call here??
-        } catch (error) {
-            console.error("Reset password failed:", error);
-            throw error;
-        }
-    };
-
-    const handleSwitchToLogin = () => {
-        setRegisterModalOpen(false);
-        setResetPasswordModalOpen(false);
-        setLoginModalOpen(true);
-    };
-
-    const handleSwitchToRegister = () => {
-        setLoginModalOpen(false);
-        setRegisterModalOpen(true);
-    };
-
-    const handleSwitchToResetPassword = () => {
-        setLoginModalOpen(false);
-        setResetPasswordModalOpen(true);
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('auth_token'); // Borramos el DNI del bolsillo
-        setUser(null); // Borramos el usuario de la memoria
+        localStorage.removeItem('auth_token');
+        setUser(null);
         handleMenuClose();
         navigate("/");
-        window.location.reload(); // Recargamos para limpiar todo
+        triggerSuccess("Sesión cerrada correctamente");
     };
+
+    const handleSwitchToLogin = () => { setRegisterModalOpen(false); setResetPasswordModalOpen(false); setLoginModalOpen(true); };
+    const handleSwitchToRegister = () => { setLoginModalOpen(false); setRegisterModalOpen(true); };
+    const handleSwitchToResetPassword = () => { setLoginModalOpen(false); setResetPasswordModalOpen(true); };
 
     return (
         <>
-            {/*Visible Header*/}
-            <AppBar
-                position="fixed"
-                sx={{
-                    bgcolor: "primary.dark",
-                    borderBottom: "2px solid",
-                    borderColor: "secondary.main",
-                    boxShadow: "none",
-                }}
-            >
-                <Toolbar disableGutters variant="dense" sx={{ minHeight: 48, px: 0, gap: 0 }}>
-                    {/* Logo */}
-                    <Box
-                        component="img"
-                        src="/assets/lyrics-logo.png"
-                        alt="Transcendence"
-                        sx={{
-                            filter: "invert(1)",
-                            width: 145,
-                            height: 36,
-                            bgcolor: "secondary.main",
-                            borderRight: "2px solid",
-                            borderColor: "secondary.main",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                        }}
-                    ></Box>
-
-                    {/* Marquee */}
+            <AppBar position="fixed" sx={{ bgcolor: "primary.dark", borderBottom: "2px solid", borderColor: "secondary.main", boxShadow: "none" }}>
+                <Toolbar disableGutters variant="dense" sx={{ minHeight: 48, px: 0 }}>
+                    <Box component="img" src="/assets/lyrics-logo.png" sx={{ filter: "invert(1)", width: 145, height: 36, bgcolor: "secondary.main", px: 1 }} />
                     <MarqueeContainer>
                         <MarqueeTrack>
-                            <MarqueeContent>
-                                Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory •
-                            </MarqueeContent>
-                            <MarqueeContent>
-                                Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory •
-                                Pong Tournament • Join the Arena • Win • Glory •
-                            </MarqueeContent>
+                            <MarqueeContent>Pong Tournament • Join the Arena • Win • Glory • </MarqueeContent>
                         </MarqueeTrack>
                     </MarqueeContainer>
 
-                    {/* Menu Button */}
-                    <IconButton
-                        onClick={handleMenuOpen}
-                        sx={{
-                            width: 48,
-                            height: "100%",
-                            bgcolor: "primary.main",
-                            borderLeft: "2px solid",
-                            borderRadius: 0,
-                            "&:hover": {
-                                bgcolor: "grey.900",
-                            },
-                            flexShrink: 0,
+                    {/* BOTÓN DEL MENÚ (ICONO vs AVATAR) */}
+                    <IconButton 
+                        onClick={handleMenuOpen} 
+                        sx={{ 
+                            width: 48, 
+                            height: "100%", // Ocupa toda la altura de la barra
+                            bgcolor: "primary.main", 
+                            borderLeft: "2px solid", 
+                            borderRadius: 0, 
+                            "&:hover": { bgcolor: "grey.900" }, 
+                            flexShrink: 0 
                         }}
                     >
-                        <MenuIcon
-                            sx={{
-                                color: "background.default",
-                            }}
-                        />
+                        {user ? (
+                            // CASO 1: LOGUEADO -> Mostramos la inicial
+                            <Avatar 
+                                sx={{ 
+                                    width: 32, 
+                                    height: 32, 
+                                    bgcolor: "secondary.main", // Usamos el color de acento de tu tema
+                                    color: "primary.dark",     // Texto oscuro para que se lea bien
+                                    fontWeight: "bold",
+                                    fontSize: "1.2rem",
+                                    border: "2px solid #000"   // Un borde fino para estilo retro
+                                }}
+                            >
+                                {user.username.charAt(0).toUpperCase()}
+                            </Avatar>
+                        ) : (
+                            // CASO 2: NO LOGUEADO -> Mostramos las 3 rayitas
+                            <MenuIcon sx={{ color: "background.default" }} />
+                        )}
                     </IconButton>
                 </Toolbar>
             </AppBar>
 
-            {/* Menu Dropdown */}
-            <Menu
-                anchorEl={anchorEl}
-                open={menuOpen}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                }}
-                transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                }}
-                sx={{
-                    mt: 5,
-                    "& .MuiPaper-root": {
-                        bgcolor: "grey.300",
-                        border: "2px solid",
-                        borderColor: "secondary.main",
-                        borderRadius: 2,
-                        minWidth: 200,
-                    },
-                    "& .MuiMenuItem-root": {
-                        height: 50,
-                        fontSize: 20,
-                        color: "grey.800",
-                        fontWeight: 900,
-                    },
-                }}
+            {/* MENÚ DESPLEGABLE */}
+            <Menu 
+                anchorEl={anchorEl} 
+                open={Boolean(anchorEl)} 
+                onClose={handleMenuClose} 
+                sx={{ mt: 5 }}
             >
-                {!isLoggedIn ? (
-                    <>
-                        <MenuItem
-                            onClick={() => {
-                                handleMenuClose();
-                                setLoginModalOpen(true);
-                            }}
-                        >
-                            Login
-                        </MenuItem>
-                        <Divider
-                            sx={{
-                                borderColor: "primary.light",
-                                borderBottomWidth: 3,
-                            }}
-                        />
-                        <MenuItem
-                            onClick={() => {
-                                handleMenuClose();
-                                setRegisterModalOpen(true);
-                            }}
-                        >
-                            Register
-                        </MenuItem>
-                    </>
-                ) : (
-				<>
-                        {/* AQUI ESTÁ LA MAGIA: Tu nombre en el menú */}
-                        <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.dark", fontWeight: "bold" }}>
-                            Hola, {user?.username}
-                        </MenuItem>
-                        <Divider sx={{ borderColor: "primary.main", borderBottomWidth: 3 }} />
-                        
-                        <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                    </>
-                )}
+                {!user && <MenuItem onClick={() => { handleMenuClose(); setLoginModalOpen(true); }}>Login</MenuItem>}
+                {!user && <MenuItem onClick={() => { handleMenuClose(); setRegisterModalOpen(true); }}>Register</MenuItem>}
+                
+                {!user && <Divider />}
+                {!user && <MenuItem onClick={() => handleNavigate("/stats")}>Rankings</MenuItem>}
 
-                <Divider
-                    sx={{ borderColor: "primary.main", borderBottomWidth: 3 }}
-                />
-                <MenuItem onClick={() => handleNavigate("/profile")}>
-                    Profile
-                </MenuItem>
-                <Divider
-                    sx={{ borderColor: "primary.dark", borderBottomWidth: 3 }}
-                />
-                <MenuItem onClick={() => handleNavigate("/stats")}>
-                    Rankings
-                </MenuItem>
-                <Divider
-                    sx={{ borderColor: "primary.light", borderBottomWidth: 3 }}
-                />
-                <MenuItem onClick={() => handleNavigate("/social")}>
-                    Social
-                </MenuItem>
+                {user && (
+                    <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>
+                        Hola, {user.username}
+                    </MenuItem>
+                )}
+                {user && <MenuItem onClick={() => handleNavigate("/profile")}>Profile</MenuItem>}
+                {user && <MenuItem onClick={() => handleNavigate("/social")}>Social</MenuItem>}
+                
+                {user && <Divider />}
+                {user && <MenuItem onClick={handleLogout}>Logout</MenuItem>}
             </Menu>
 
-            {/* Login Modal */}
-            <LoginModal
-                open={loginModalOpen}
-                onClose={() => setLoginModalOpen(false)}
-                onLogin={handleLogin}
-                onSwitchToRegister={handleSwitchToRegister}
-                onSwitchToResetPassword={handleSwitchToResetPassword}
-            />
+            {/* MODALES Y NOTIFICACIONES */}
+            <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} onLogin={handleLogin} onSwitchToRegister={handleSwitchToRegister} onSwitchToResetPassword={handleSwitchToResetPassword} />
+            <RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onRegister={handleRegister} onSwitchToLogin={handleSwitchToLogin} />
+            <ResetPasswordModal open={resetPasswordModalOpen} onClose={() => setResetPasswordModalOpen(false)} onResetPassword={() => {}} onSwitchToLogin={handleSwitchToLogin} />
 
-            {/* Register Modal */}
-            <RegisterModal
-                open={registerModalOpen}
-                onClose={() => setRegisterModalOpen(false)}
-                onRegister={handleRegister}
-                onSwitchToLogin={handleSwitchToLogin}
-            />
-
-            {/* Reset Password Modal */}
-            <ResetPasswordModal
-                open={resetPasswordModalOpen}
-                onClose={() => setResetPasswordModalOpen(false)}
-                onResetPassword={handleResetPassword}
-                onSwitchToLogin={handleSwitchToLogin}
-            />
+            <AuthErrorNotification open={authError.open} message={authError.message} onClose={() => setAuthError({ ...authError, open: false })} />
+            <Snackbar open={successMsg.open} autoHideDuration={4000} onClose={() => setSuccessMsg({ ...successMsg, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+                <Alert severity="success" sx={{ width: '100%', fontWeight: 'bold' }}>{successMsg.message}</Alert>
+            </Snackbar>
         </>
     );
 };
