@@ -60,7 +60,6 @@ const LoginModal = ({
         onSwitchToRegister();
     };
 
-    // Estilo forzado para que se vea SÍ o SÍ (Negro sobre Blanco)
     const oAuthStyle = {
         backgroundColor: "#000000",
         color: "#FFFFFF",
@@ -98,7 +97,7 @@ const LoginModal = ({
                     <OAuthButton 
                         component="a" 
                         href="http://localhost:3000/api/auth/google"
-                        sx={oAuthStyle} // <--- APLICAMOS EL ESTILO FORZADO
+                        sx={oAuthStyle}
                     >
                         Continue with Google
                     </OAuthButton>
@@ -106,7 +105,7 @@ const LoginModal = ({
                     <OAuthButton 
                         component="a" 
                         href="http://localhost:3000/api/auth/github"
-                        sx={oAuthStyle} // <--- APLICAMOS EL ESTILO FORZADO
+                        sx={oAuthStyle}
                     >
                         Continue with Github
                     </OAuthButton>

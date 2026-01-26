@@ -11,7 +11,7 @@ import {
     Divider,
     Snackbar,
     Alert,
-    Avatar // <--- 1. IMPORTAMOS AVATAR
+    Avatar
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -66,8 +66,8 @@ const Header = () => {
         const errorType = searchParams.get("error");
         if (errorType) {
             const message = errorType === "user_exists" 
-                ? "Este email ya está registrado con otro método" 
-                : "Error de autenticación externa";
+                ? "Email already registered" 
+                : "External auth error";
             setAuthError({ open: true, message });
             setSearchParams({});
         }
@@ -95,14 +95,14 @@ const Header = () => {
             });
             const data = await response.json();
 
-            if (!response.ok) throw new Error(data.message || data.error || 'Error de credenciales');
+            if (!response.ok) throw new Error(data.message || data.error || 'Credential error');
 
             localStorage.setItem('auth_token', data.token);
             const decoded = jwtDecode<UserPayload>(data.token);
             setUser(decoded);
             
             setLoginModalOpen(false);
-            triggerSuccess(`¡Bienvenido, ${decoded.username}!`);
+            triggerSuccess(`¡Welcome, ${decoded.username}!`);
         } catch (error: any) {
             triggerError(error.message);
         }
@@ -117,14 +117,14 @@ const Header = () => {
             });
 
             if (response.status === 409) {
-                triggerError("Usuario o email ya existen");
+                triggerError("User or email already exists");
                 return;
             }
-            if (!response.ok) throw new Error("Error en registro");
+            if (!response.ok) throw new Error("Register error");
 
             setRegisterModalOpen(false);
             setLoginModalOpen(true);
-            triggerSuccess("Cuenta creada. Por favor, inicia sesión.");
+            triggerSuccess("Account created, please log in");
         } catch (error: any) {
             triggerError(error.message);
         }
@@ -135,7 +135,7 @@ const Header = () => {
         setUser(null);
         handleMenuClose();
         navigate("/");
-        triggerSuccess("Sesión cerrada correctamente");
+        triggerSuccess("Logged out correctly");
     };
 
     const handleSwitchToLogin = () => { setRegisterModalOpen(false); setResetPasswordModalOpen(false); setLoginModalOpen(true); };
@@ -158,7 +158,7 @@ const Header = () => {
                         onClick={handleMenuOpen} 
                         sx={{ 
                             width: 48, 
-                            height: "100%", // Ocupa toda la altura de la barra
+                            height: "100%",
                             bgcolor: "primary.main", 
                             borderLeft: "2px solid", 
                             borderRadius: 0, 
@@ -167,22 +167,20 @@ const Header = () => {
                         }}
                     >
                         {user ? (
-                            // CASO 1: LOGUEADO -> Mostramos la inicial
                             <Avatar 
                                 sx={{ 
                                     width: 32, 
                                     height: 32, 
-                                    bgcolor: "secondary.main", // Usamos el color de acento de tu tema
-                                    color: "primary.dark",     // Texto oscuro para que se lea bien
+                                    bgcolor: "secondary.main",
+                                    color: "primary.dark",
                                     fontWeight: "bold",
                                     fontSize: "1.2rem",
-                                    border: "2px solid #000"   // Un borde fino para estilo retro
+                                    border: "2px solid #000"
                                 }}
                             >
                                 {user.username.charAt(0).toUpperCase()}
                             </Avatar>
                         ) : (
-                            // CASO 2: NO LOGUEADO -> Mostramos las 3 rayitas
                             <MenuIcon sx={{ color: "background.default" }} />
                         )}
                     </IconButton>

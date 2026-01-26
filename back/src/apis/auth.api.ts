@@ -158,7 +158,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			// D. Generar JWT
 			const token = jwt.sign(
 				{
-					id: user.id,        // Ahora TypeScript sabe que user.id existe
+					id: user.id,
 					email: user.email,
 					username: user.username
 				},

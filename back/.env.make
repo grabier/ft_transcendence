@@ -1,0 +1,15 @@
+# Server configuration
+PORT=3000
+NODE_ENV=development
+
+# MariaDB Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=transcendence42
+DB_PASSWORD=transcendence42
+DB_NAME=transcendence
+
+GITHUB_CLIENT_ID=Ov23lisb4EhThkr5xCQ4
+GITHUB_CLIENT_SECRET=05dfdbe398c52f174254c05d2a121a25c7806439
+
+FRONTEND_URL=http://localhost:8080
