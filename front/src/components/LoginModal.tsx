@@ -6,46 +6,46 @@ import {
     CircularProgress,
     Alert,
     Link,
-    Button,
 } from "@mui/material";
 import {
     StyledDialog,
     StyledTextField,
     PrimaryAuthButton,
+    OAuthButton, 
 } from "../style/AuthModalStyle";
 import { validateEmail } from "../utils/validation";
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    onRegister: (username: string, email: string, pass: string) => Promise<void>;
-    onSwitchToLogin: () => void;
+    onLogin: (email: string, pass: string) => Promise<void>;
+    onSwitchToRegister: () => void;
+    onSwitchToResetPassword: () => void;
     isLoading?: boolean;
     error?: string;
 }
 
-const RegisterModal = ({
+const LoginModal = ({
     open,
     onClose,
-    onRegister,
-    onSwitchToLogin,
+    onLogin,
+    onSwitchToRegister,
+    onSwitchToResetPassword,
     isLoading = false,
     error,
 }: Props) => {
-    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [emailError, setEmailError] = useState("");
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!username || !email || !password) return;
-        await onRegister(username, email, password);
+        if (!email || !password) return;
+        await onLogin(email, password);
     };
 
     const handleClose = () => {
         if (!isLoading) {
-            setUsername("");
             setEmail("");
             setPassword("");
             setEmailError("");
@@ -53,18 +53,28 @@ const RegisterModal = ({
         }
     };
 
-    const handleSwitchToLogin = () => {
-        setUsername("");
+    const handleSwitchToRegister = () => {
         setEmail("");
         setPassword("");
         setEmailError("");
-        onSwitchToLogin();
+        onSwitchToRegister();
+    };
+
+    // Estilo forzado para que se vea SÍ o SÍ (Negro sobre Blanco)
+    const oAuthStyle = {
+        backgroundColor: "#000000",
+        color: "#FFFFFF",
+        border: "2px solid #000000",
+        "&:hover": {
+            backgroundColor: "#FFFFFF",
+            color: "#000000",
+        }
     };
 
     return (
         <StyledDialog open={open} onClose={handleClose}>
             <Box sx={{ p: 4 }}>
-                {/* Title */}
+                {/* --- TÍTULO --- */}
                 <Box sx={{ textAlign: "center", mb: 4 }}>
                     <Typography
                         variant="authSubtitle"
@@ -76,53 +86,42 @@ const RegisterModal = ({
                             mb: 1,
                         }}
                     >
-                        Sign up for
+                        Sign in to
                     </Typography>
                     <Typography variant="displayTitle">
                         Transcendence
                     </Typography>
                 </Box>
 
-                {/* OAuth Buttons (Iguales que en Login) */}
+                {/* --- BOTONES OAUTH VISIBLES --- */}
                 <Stack spacing={2} sx={{ mb: 3 }}>
-                    <Button 
+                    <OAuthButton 
                         component="a" 
-                        href="http://localhost:3000/api/auth/google" 
+                        href="http://localhost:3000/api/auth/google"
+                        sx={oAuthStyle} // <--- APLICAMOS EL ESTILO FORZADO
                     >
-                        <Typography variant="subtitle1">Sign up with Google</Typography>
-                    </Button>
+                        Continue with Google
+                    </OAuthButton>
 
-                    <Button 
+                    <OAuthButton 
                         component="a" 
-                        href="http://localhost:3000/api/auth/github" 
+                        href="http://localhost:3000/api/auth/github"
+                        sx={oAuthStyle} // <--- APLICAMOS EL ESTILO FORZADO
                     >
-                        <Typography variant="subtitle1">Sign up with Github</Typography>
-                    </Button>
+                        Continue with Github
+                    </OAuthButton>
                 </Stack>
 
-                {/* Error Alert */}
+                {/* --- ALERTA --- */}
                 {error && (
                     <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>
                         {error}
                     </Alert>
                 )}
 
-                {/* Form */}
+                {/* --- FORMULARIO --- */}
                 <form onSubmit={handleSubmit}>
                     <Stack spacing={2}>
-                        {/* Nuevo campo USERNAME */}
-                        <StyledTextField
-                            fullWidth
-                            type="text"
-                            label="USERNAME"
-                            name="username"
-                            autoComplete="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            disabled={isLoading}
-                            required
-                        />
-
                         <StyledTextField
                             fullWidth
                             type="email"
@@ -139,13 +138,12 @@ const RegisterModal = ({
                             error={!!emailError}
                             helperText={emailError}
                         />
-
                         <StyledTextField
                             fullWidth
                             type="password"
                             label="PASSWORD"
                             name="password"
-                            autoComplete="new-password"
+                            autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
@@ -154,7 +152,7 @@ const RegisterModal = ({
 
                         <PrimaryAuthButton
                             type="submit"
-                            disabled={isLoading || !username || !email || !password}
+                            disabled={isLoading || !email || !password}
                             sx={{ mt: 3 }}
                         >
                             {isLoading ? (
@@ -163,19 +161,38 @@ const RegisterModal = ({
                                     sx={{ color: "secondary.main" }}
                                 />
                             ) : (
-                                "Create Account"
+                                "Log in"
                             )}
                         </PrimaryAuthButton>
                     </Stack>
                 </form>
 
-                {/* Switch to Login Footer */}
+                {/* --- RESET PASS --- */}
+                <Link
+                    component="button"
+                    type="button"
+                    onClick={onSwitchToResetPassword}
+                    sx={{
+                        display: "block",
+                        textAlign: "center",
+                        mt: 2,
+                        textDecoration: "underline",
+                        textDecorationThickness: "2px",
+                        textUnderlineOffset: "4px",
+                        color: "text.secondary",
+                        "&:hover": { color: "text.primary" },
+                    }}
+                >
+                    <Typography variant="subtitle1">Reset password</Typography>
+                </Link>
+
+                {/* --- SWITCHER --- */}
                 <Typography variant="body1" sx={{ textAlign: "center", mt: 3 }}>
-                    Already have an account?{" "}
+                    No account?{" "}
                     <Link
                         component="button"
                         type="button"
-                        onClick={handleSwitchToLogin}
+                        onClick={handleSwitchToRegister}
                         sx={{
                             fontWeight: 900,
                             fontFamily: "'Archivo Black', sans-serif",
@@ -187,7 +204,7 @@ const RegisterModal = ({
                             "&:hover": { color: "accent.yellowDark" },
                         }}
                     >
-                        Log in
+                        Create one
                     </Link>
                 </Typography>
             </Box>
@@ -195,4 +212,4 @@ const RegisterModal = ({
     );
 };
 
-export default RegisterModal;
+export default LoginModal;
