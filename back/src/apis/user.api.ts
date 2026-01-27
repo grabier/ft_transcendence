@@ -6,6 +6,7 @@
  */
 
 import { FastifyPluginAsync } from 'fastify';
+import { authenticate } from "../middleware/auth.js";
 import { pool } from '../../db/database.js';
 
 // ============================================================================
@@ -78,6 +79,16 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			});
 		}
 	});
+
+	
+	fastify.addHook('preHandler', authenticate); 
+    // Ruta de prueba
+    fastify.get("/profile", async (req, reply) => {
+        const user = req.user;
+        return { mensaje: "Si lees esto, es que tienes llave", user };
+    });
+
+	
 };
 
 export default userRoutes;

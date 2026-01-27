@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
+import fastifyJwt from '@fastify/jwt';
 import dotenv from 'dotenv';
 import authRoutes from './apis/auth.api.js';
 import userRoutes from './apis/user.api.js';
@@ -25,6 +26,10 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	});
 
 	await app.register(cookie);
+
+	await app.register(fastifyJwt, {
+        secret: process.env.JWT_SECRET || 'super_secret' // Debe coincidir con el de auth.api.ts
+    });
 
 	console.log("🔌 Inspeccionando plugin websocket...");
 

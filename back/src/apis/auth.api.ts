@@ -69,7 +69,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			// Generar token normal (opcional, si lo necesitas en login normal)
 			const token = jwt.sign(
 				{ id: user.id, email: user.email, username: user.username },
-				process.env.JWT_SECRET || 'secreto',
+				process.env.JWT_SECRET || 'super_secret',
 				{ expiresIn: '7d' }
 			);
 
