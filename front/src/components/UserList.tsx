@@ -13,7 +13,7 @@ export const UserList = () => {
 
   const fetchUsers = async () => {
     // 1. Recuperamos el token de donde lo hayáis guardado
-    const token = localStorage.getItem('auth_token');
+    const token = sessionStorage.getItem('auth_token');
 
     if (!token) {
       setError("No hay token. Por favor, inicia sesión.");

@@ -56,13 +56,13 @@ const Header = () => {
 
 	// --- EFECTOS (Persistencia y OAuth) ---
 	useEffect(() => {
-		const token = localStorage.getItem('auth_token');
+		const token = sessionStorage.getItem('auth_token');
 		if (token) {
 			try {
 				const decoded = jwtDecode<UserPayload>(token);
 				setUser(decoded);
 			} catch (e) {
-				localStorage.removeItem('auth_token');
+				sessionStorage.removeItem('auth_token');
 				setUser(null);
 			}
 		}
@@ -103,7 +103,7 @@ const Header = () => {
 
 			if (!response.ok) throw new Error(data.message || data.error || 'Credential error');
 
-			localStorage.setItem('auth_token', data.token);
+			sessionStorage.setItem('auth_token', data.token);
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 
@@ -137,12 +137,22 @@ const Header = () => {
 	};
 
 	const handleLogout = () => {
-		localStorage.removeItem('auth_token');
-		setUser(null);
-		handleMenuClose();
-		navigate("/");
-		triggerSuccess("Logged out correctly");
-	};
+    // 1. Avisar al back (Opcional si confías en que el usuario ya no hará peticiones, 
+    // pero recomendable hacerlo para poner is_online=false al instante)
+    const token = sessionStorage.getItem('auth_token');
+    if (token) {
+        fetch('http://localhost:3000/api/auth/logout', { 
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+    }
+
+    // 2. Limpieza local
+    sessionStorage.removeItem('auth_token'); // <--- IMPORTANTE: sessionStorage
+    setUser(null); // Limpiar estado de React
+	setVerUsuarios(false);
+    navigate("/"); // Redirigir
+};
 
 	const handleSwitchToLogin = () => { setRegisterModalOpen(false); setResetPasswordModalOpen(false); setLoginModalOpen(true); };
 	const handleSwitchToRegister = () => { setLoginModalOpen(false); setRegisterModalOpen(true); };
@@ -212,7 +222,8 @@ const Header = () => {
 					</MenuItem>
 				)}
 				{user && <MenuItem onClick={() => handleNavigate("/profile")}>Profile</MenuItem>}
-				{user && <MenuItem onClick={() => { handleMenuClose(); setSocialOpen(!socialOpen); }}>Social</MenuItem>}
+				{user && <MenuItem onClick={() => { handleMenuClose(); 
+					setSocialOpen(!socialOpen); }}>Social</MenuItem>}
 				{user && (
 					<MenuItem onClick={() => { handleMenuClose(); setVerUsuarios(true); }}>
 						Admin: Ver Lista Usuarios

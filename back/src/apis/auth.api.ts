@@ -7,7 +7,7 @@ import { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
 import * as userRepository from "../data-access/user.repository.js";
 import jwt from 'jsonwebtoken';
-
+import { authenticate } from "../middleware/auth.js";
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -155,7 +155,8 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (!user) {
 				throw new Error("Error crítico: El usuario debería existir pero no se encontró.");
 			}
-
+			await userRepository.updateLastLogin(user.id);       // Actualiza fecha
+			await userRepository.updateOnlineStatus(user.id, true);
 			// D. Generar JWT
 			const token = jwt.sign(
 				{
@@ -174,6 +175,26 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
 		}
 	});
+
+
+	fastify.post("/logout", 
+        { preHandler: [authenticate] }, // <--- ESTA ES LA CLAVE MÁGICA 🗝️
+        async (request, reply) => {
+            try {
+                const userId = (request.user as any).id;
+                
+                console.log(`🔌 Desconectando usuario ${userId}...`);
+
+                await userRepository.updateLastLogin(userId);
+                await userRepository.updateOnlineStatus(userId, false); // <--- Ahora sí funciona
+                
+                return { message: "Desconectado" };
+            } catch (err) {
+                request.log.error(err);
+                return reply.code(500).send({ error: "No se pudo cerrar sesión" });
+            }
+        }
+    );
 };
 
 export default authRoutes;
