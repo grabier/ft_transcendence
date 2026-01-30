@@ -31,14 +31,16 @@ const Frontend = () => {
 		}
 
 	}, []);
+	
 	useEffect(() => {
 		// Función que se ejecuta SOLO cuando intentas cerrar la pestaña
 		const handleTabClose = () => {
 			const token = localStorage.getItem('auth_token'); // O sesssionstorage si decides no cambiarlo
-
+			
 			if (token) {
 				// Usamos 'fetch' con keepalive: true
 				// Esto permite que la petición termine aunque la pestaña se cierre
+				
 				fetch('http://localhost:3000/api/auth/logout', {
 					method: 'POST',
 					headers: {
