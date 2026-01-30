@@ -6,7 +6,9 @@
  */
 
 import { FastifyPluginAsync } from 'fastify';
+import { authenticate } from "../middleware/auth.js";
 import { pool } from '../../db/database.js';
+import * as userRepository from "../data-access/user.repository.js";
 
 // ============================================================================
 // INTERFACES
@@ -78,6 +80,49 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			});
 		}
 	});
+
+	// user.api.ts
+
+	// Nuevo Endpoint de búsqueda
+	fastify.get('/search', async (request, reply) => {
+		const { q } = request.query as { q: string };
+
+		if (!q || q.length < 2) return [];
+
+		try {
+			// Buscamos usuarios que coincidan con el nombre
+			const [rows] = await pool.execute(
+				'SELECT id, username, avatar_url, is_online FROM users WHERE username LIKE ? LIMIT 5',
+				[`%${q}%`]
+			);
+			// Nos aseguramos de devolver SIEMPRE un array, aunque esté vacío
+			return rows || [];
+		} catch (error: any) {
+			request.log.error(error);
+			return []; // Devolvemos array vacío en lugar de error para que el front no pete
+		}
+	});
+
+
+	// GET /api/user/persistence - Marcar usuario como online y actualizar last_login
+	fastify.get("/persistence", async (req, reply) => {
+		const userToken = req.user as any; // El usuario del token
+
+		await userRepository.updateOnlineStatus(userToken.id, true);
+		await userRepository.updateLastLogin(userToken.id);
+
+		// 2. Buscamos los datos...
+	});
+
+
+	fastify.addHook('preHandler', authenticate);
+	// Ruta de prueba
+	/*  fastify.get("/profile", async (req, reply) => {
+		 const user = req.user;
+		 return { mensaje: "Si lees esto, es que tienes llave", user };
+	 }); */
+
+
 };
 
 export default userRoutes;

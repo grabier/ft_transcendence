@@ -120,8 +120,23 @@ const initializeTables = async (): Promise<void> => {
                 last_login TIMESTAMP NULL COMMENT 'Última vez que inició sesión'
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
+			await connection.execute(`
+				CREATE TABLE IF NOT EXISTS friendships (
+					id INT AUTO_INCREMENT PRIMARY KEY,
+					sender_id INT NOT NULL COMMENT 'Usuario que envía la petición',
+					receiver_id INT NOT NULL COMMENT 'Usuario que recibe la petición',
+					status ENUM('pending', 'accepted', 'blocked') DEFAULT 'pending',
+					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					-- Claves foráneas para mantener integridad
+					FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+					-- Evita duplicados: no puedes mandar dos peticiones a la misma persona
+					UNIQUE KEY unique_friendship (sender_id, receiver_id)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+			`);
 
-		console.log('✓ Tabla "users" verificada/creada');
+		console.log('✓ Tabla "users" y "friendships" verificada/creada');
 
 	} finally {
 		// Siempre liberamos la conexión, incluso si hay error

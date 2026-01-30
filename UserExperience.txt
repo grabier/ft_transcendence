@@ -21,8 +21,12 @@ PROFILE{
 	Picture - lapiz
 	Username - l
 	Email
-	Change Password
-	Friends
+	Change Password **
+	Friends -- Tiene un buscador 
+	Social -> |           | (lupa)
+		      >Online
+			  >Offline
+			  >Pending	
 	Blocked
 	Points DEPENDIENDO del modo / dificultad ?
 	(micro transaction SHOP)
