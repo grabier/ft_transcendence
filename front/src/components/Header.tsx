@@ -12,6 +12,7 @@ import {
 	Snackbar,
 	Alert,
 	Avatar,
+	Badge,
 	ClickAwayListener
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -27,7 +28,7 @@ import ResetPasswordModal from "./ResetPasswordModal";
 import AuthErrorNotification from "./AuthErrorNotification";
 import UserList from "./UserList";
 import { SocialPanel } from "./SocialPanel";
-import { SocketProvider } from "../context/SocketContext";
+import { useSocket } from "../context/SocketContext";
 
 
 interface UserPayload {
@@ -39,7 +40,7 @@ interface UserPayload {
 const Header = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-
+	const {unreadCount}= useSocket();
 	// --- ESTADOS ---
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [user, setUser] = useState<null | UserPayload>(null);
@@ -113,7 +114,7 @@ const Header = () => {
 		const interval = setInterval(checkToken, 500);
 		return () => clearInterval(interval);
 	}, []);
-	
+
 	// Uso de parámetros de búsqueda para manejar errores de OAuth
 	useEffect(() => {
 		const errorType = searchParams.get("error");
@@ -230,6 +231,7 @@ const Header = () => {
 							flexShrink: 0
 						}}
 					>
+						<Badge badgeContent={unreadCount} color="error" overlap="circular" >
 						{user ? (
 							<Avatar
 								sx={{
@@ -247,6 +249,7 @@ const Header = () => {
 						) : (
 							<MenuIcon sx={{ color: "background.default" }} />
 						)}
+						</Badge>
 					</IconButton>
 				</Toolbar>
 			</AppBar>

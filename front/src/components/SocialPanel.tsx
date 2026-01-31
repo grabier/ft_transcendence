@@ -11,6 +11,8 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
+import { useSocket } from "../context/SocketContext";
+
 
 
 interface Props {
@@ -31,7 +33,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<any[]>([]);
-
+	const {markAsRead, lastNotification} = useSocket();
 	const token = localStorage.getItem('auth_token');
 
 	// --- LÓGICA ORIGINAL ---
@@ -57,9 +59,17 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	useEffect(() => {
 		if (open) {
+			markAsRead();
 			fetchData();
 		}
-	}, [open, fetchData]);
+	}, [open, fetchData, markAsRead]);
+
+	useEffect(() => {
+		if (lastNotification?.type === 'FRIEND_REQUEST') {
+			fetchData();
+			
+		}
+	}, [lastNotification]);
 
 	
 

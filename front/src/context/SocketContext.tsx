@@ -8,19 +8,28 @@ interface Notification {
 
 interface SocketContextType {
 	socket: WebSocket | null;
-	lastNotification: Notification | null; // Lo usaremos para reaccionar en componentes
+	lastNotification: Notification | null;
+	unreadCount: number; // Lo usaremos para reaccionar en componentes
+	markAsRead: () => void;
 }
 
 //para que no se joda la conexion al cambiar entre paginas
-const SocketContext = createContext<SocketContextType>({ socket: null, lastNotification: null });
+const SocketContext = createContext<SocketContextType>({ 
+	socket: null, 
+	lastNotification: null,
+	unreadCount : 0,
+	markAsRead: () => {}
+ });
 
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	const [socket, setSocket] = useState<WebSocket | null>(null);
 	const [lastNotification, setLastNotification] = useState<Notification | null>(null);
+	const [unreadCount, setUnreadCount] = useState(0);
 	const reconnectTimeout = useRef<number | null>(null);
 
+	const markAsRead = () => setUnreadCount(0);
 	// Función para conectar
 	const connect = () => {
 		const token = localStorage.getItem('auth_token'); // O localStorage según decidimos
@@ -43,7 +52,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 				const data = JSON.parse(event.data);
 				console.log("🔔 Notification received:", data);
 				setLastNotification(data);
-
+				setUnreadCount(prev => prev + 1);
 				// Hack: Limpiar la notificacion tras 1ms para permitir recibir otra igual
 				// Opcional, depende de cómo lo consumas.
 			} catch (err) {
@@ -76,7 +85,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	}, []); // Dependencia vacía para cargar al inicio. Podrías poner [user] si tienes el user en otro context.
 
 	return (
-		<SocketContext.Provider value={{ socket, lastNotification }}>
+		<SocketContext.Provider value={{ socket, lastNotification, unreadCount, markAsRead}}>
 			{children}
 		</SocketContext.Provider>
 	);
