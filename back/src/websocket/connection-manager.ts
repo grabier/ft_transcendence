@@ -7,13 +7,13 @@ class ConnectionManager {
     /**
      * Registra un usuario conectado
      */
-    addUser(userId: number, socket: WebSocket) {
+    addUser(userId: number, socket: WebSocket, username: string) {
         if (!this.connections.has(userId)) {
             this.connections.set(userId, new Set());
         }
         this.connections.get(userId)?.add(socket);
         
-        console.log(`🔌 User ${userId} connected. Total sockets: ${this.connections.get(userId)?.size}`);
+        console.log(`🔌 User ${userId} connected, username: ${username}. Total sockets: ${this.connections.get(userId)?.size}`);
     }
 
     /**
