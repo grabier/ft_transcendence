@@ -18,7 +18,7 @@ const Frontend = () => {
 		// B. "¡ESTOY VIVO!" (Heartbeat inicial)
 		// Cada vez que se recarga la página (F5), confirmamos al back que estamos online.
 		// Esto arregla el bug de aparecer Offline tras un F5.
-		const currentToken = localStorage.getItem('auth_token');
+		//const currentToken = localStorage.getItem('auth_token');
 		/* if (currentToken) {
 			// (Opcional) Podrías crear una ruta específica /heartbeat, 
 			// pero llamar a /profile o similar ya suele validar el token.
@@ -50,12 +50,13 @@ const Frontend = () => {
 				});
 			}
 		};
-
+		//console.log("useffect frontend alo alo");
 		// Añadimos el escuchador del evento
 		window.addEventListener('beforeunload', handleTabClose);
-
+		
 		// Limpiamos el escuchador cuando el componente se desmonta
 		return () => {
+			//console.log("RETURN useffect frontend alo alo");
 			window.removeEventListener('beforeunload', handleTabClose);
 		};
 	}, []);

@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Box,
@@ -42,7 +42,7 @@ const Header = () => {
 
 	// --- ESTADOS ---
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [user, setUser] = useState<UserPayload | null>(null);
+	const [user, setUser] = useState<null | UserPayload>(null);
 
 	// Modales
 	const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -66,26 +66,54 @@ const Header = () => {
 		setAnchorEl(null);
 	};
 	// --- EFECTOS (Persistencia y OAuth) ---
+	// ⚡ PROBLEMA: Cuando GitHub redirecciona con el token en la URL, Header ya está montado.
+	// El token se guarda en localStorage pero Header no se enteraba del cambio.
+	// SOLUCIÓN: Usar polling para detectar cambios en el token y recargar el usuario.
+	
+	const lastTokenRef = React.useRef<string | null>(null);
+
 	useEffect(() => {
-		const token = localStorage.getItem('auth_token');
-		if (token) {
-			try {
-				const decoded = jwtDecode<UserPayload>(token);
-				setUser(decoded);
-				fetch('http://localhost:3000/api/user/persistence', {
-					headers: { 'Authorization': `Bearer ${token}` }
-				}).catch(err => {
-					// Si el token es inválido o expiró, hacemos logout limpio
-					console.error("Token inválido o expirado", err);
-					localStorage.removeItem('auth_token');
+		const checkToken = () => {
+			const currentToken = localStorage.getItem('auth_token');
+			// Solo procesar si el token cambió (evita spam innecesario de fetches)
+			if (currentToken !== lastTokenRef.current) {
+				lastTokenRef.current = currentToken;
+				
+				if (currentToken) {
+					try {
+						// Decodificar el JWT para extraer datos del usuario
+						const decoded = jwtDecode<UserPayload>(currentToken);
+						setUser(decoded); // ✅ Actualiza el estado del usuario
+						
+						// Validar el token con el backend y actualizar último acceso
+						fetch('http://localhost:3000/api/user/persistence', {
+							headers: { 'Authorization': `Bearer ${currentToken}` }
+						}).catch(err => {
+							console.error("Token inválido o expiró", err);
+							localStorage.removeItem('auth_token');
+							lastTokenRef.current = null;
+							setUser(null);
+						});
+					} catch (e) {
+						// Token corrupto o inválido
+						localStorage.removeItem('auth_token');
+						lastTokenRef.current = null;
+						setUser(null);
+					}
+				} else {
+					// Sin token = usuario deslogueado
 					setUser(null);
-				});
-			} catch (e) {
-				localStorage.removeItem('auth_token');
-				setUser(null);
+				}
 			}
-		}
+		};
+		// ⭐ CLAVE: Ejecutar INMEDIATAMENTE al montar (para el primer load + refresh)
+		checkToken();
+		// 🔄 Polling cada 500ms (detecta cuando GitHub redirecciona y cambia el token)
+		// Solo hace fetch si detecta un CAMBIO en el token, no cada 500ms
+		const interval = setInterval(checkToken, 500);
+		return () => clearInterval(interval);
 	}, []);
+	
 	// Uso de parámetros de búsqueda para manejar errores de OAuth
 	useEffect(() => {
 		const errorType = searchParams.get("error");
@@ -97,7 +125,6 @@ const Header = () => {
 			setSearchParams({});
 		}
 	}, [searchParams, setSearchParams]);
-
 	// --- HANDLERS ---
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
 	const handleMenuClose = () => setAnchorEl(null);
@@ -120,8 +147,8 @@ const Header = () => {
 			});
 			const data = await response.json();
 
-			if (!response.ok) 
-					throw new Error(data.message || data.error || 'Credential error');
+			if (!response.ok)
+				throw new Error(data.message || data.error || 'Credential error');
 
 			localStorage.setItem('auth_token', data.token);
 			const decoded = jwtDecode<UserPayload>(data.token);
@@ -259,7 +286,7 @@ const Header = () => {
 			{/* MODALES Y NOTIFICACIONES */}
 			<LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} onLogin={handleLogin} onSwitchToRegister={handleSwitchToRegister} onSwitchToResetPassword={handleSwitchToResetPassword} />
 			<RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onRegister={handleRegister} onSwitchToLogin={handleSwitchToLogin} />
-			<ResetPasswordModal open={resetPasswordModalOpen} onClose={() => setResetPasswordModalOpen(false)} onResetPassword={() => { }} onSwitchToLogin={handleSwitchToLogin} />
+			<ResetPasswordModal open={resetPasswordModalOpen} onClose={() => setResetPasswordModalOpen(false)} onResetPassword={async () => { }} onSwitchToLogin={handleSwitchToLogin} />
 			<UserList
 				open={seeAllUsers}
 				onClose={() => setSeeAllUsers(false)}
