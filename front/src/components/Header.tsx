@@ -27,6 +27,7 @@ import ResetPasswordModal from "./ResetPasswordModal";
 import AuthErrorNotification from "./AuthErrorNotification";
 import UserList from "./UserList";
 import { SocialPanel } from "./SocialPanel";
+import { SocketProvider } from "../context/SocketContext";
 
 
 interface UserPayload {

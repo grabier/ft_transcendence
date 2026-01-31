@@ -19,7 +19,7 @@ const Frontend = () => {
 		// Cada vez que se recarga la página (F5), confirmamos al back que estamos online.
 		// Esto arregla el bug de aparecer Offline tras un F5.
 		const currentToken = localStorage.getItem('auth_token');
-		if (currentToken) {
+		/* if (currentToken) {
 			// (Opcional) Podrías crear una ruta específica /heartbeat, 
 			// pero llamar a /profile o similar ya suele validar el token.
 			// Aquí forzamos una actualización simple si tienes una ruta para ello, 
@@ -28,7 +28,7 @@ const Frontend = () => {
 			fetch('http://localhost:3000/api/user/profile', { // O tu ruta de "me"
 				headers: { 'Authorization': `Bearer ${currentToken}` }
 			}).catch(console.error);
-		}
+		} */
 
 	}, []);
 	

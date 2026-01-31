@@ -6,6 +6,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { muiTheme } from "./style/theme";
 import Frontend from "./Frontend";
 
+import { SocketProvider } from "./context/SocketContext";
+
 // Importa tus páginas
 import MainPage from "./pages/MainPage";
 import GamesPage from "./pages/GamesPage";
@@ -14,7 +16,9 @@ const AppWithTheme = () => {
     return (
         <ThemeProvider theme={muiTheme}>
             <CssBaseline />
-            <RouterProvider router={router} />
+            <SocketProvider> 
+                <RouterProvider router={router} />
+            </SocketProvider>
         </ThemeProvider>
     );
 };

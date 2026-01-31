@@ -63,7 +63,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	
 
-	const handleSearch = async () => {
+	const handleSearch = useCallback(async () => {
 		if (searchQuery.length < 2) return;
 		try {
 			const res = await fetch(`http://localhost:3000/api/user/search?q=${searchQuery}`, {
@@ -75,7 +75,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error("Error en búsqueda:", err);
 			setSearchResults([]);
 		}
-	};
+	}, [searchQuery, setSearchResults]);
 
 	useEffect(() => {
 		if (searchQuery.length < 1) {

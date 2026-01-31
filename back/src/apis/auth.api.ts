@@ -183,7 +183,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
             try {
                 const userId = (request.user as any).id;
                 
-                console.log(`🔌 Desconectando usuario ${userId}...`);
+                console.log(`🔌 Logout user ${userId}...`);
 
                 await userRepository.updateLastLogin(userId);
                 await userRepository.updateOnlineStatus(userId, false); // <--- Ahora sí funciona
