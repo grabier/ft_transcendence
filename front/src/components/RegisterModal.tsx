@@ -96,7 +96,6 @@ const RegisterModal = ({
                 {/* BOTONES OAUTH VISIBLES */}
                 <Stack spacing={2} sx={{ mb: 3 }}>
                     <OAuthButton 
-                        component="a" 
                         href="http://localhost:3000/api/auth/google"
                         sx={oAuthStyle}
                     >
@@ -104,7 +103,6 @@ const RegisterModal = ({
                     </OAuthButton>
 
                     <OAuthButton 
-                        component="a" 
                         href="http://localhost:3000/api/auth/github"
                         sx={oAuthStyle}
                     >

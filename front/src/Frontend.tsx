@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { useEffect } from "react";
 
-const Frontend = () => {
+const Frontend = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
 		// A. Si venimos de GitHub/Google con token en URL
@@ -70,7 +70,7 @@ const Frontend = () => {
 					width: "100%",
 				}}
 			>
-				<Outlet />
+				{children}
 			</main>
 		</>
 	);
