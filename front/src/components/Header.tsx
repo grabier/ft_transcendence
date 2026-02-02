@@ -27,8 +27,8 @@ import RegisterModal from "./RegisterModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 import AuthErrorNotification from "./AuthErrorNotification";
 import UserList from "./UserList";
-import { SocialPanel } from "./SocialPanel";
 import { useSocket } from "../context/SocketContext";
+import { SocialPanel } from "./SocialPanel";
 
 
 interface UserPayload {
