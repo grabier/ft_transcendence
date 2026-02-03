@@ -87,7 +87,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	}, [lastNotification]);
 
 
-
 	const handleSearch = useCallback(async () => {
 		if (searchQuery.length < 2) return;
 		try {
