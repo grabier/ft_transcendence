@@ -11,6 +11,8 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
+import { useSocket } from "../context/SocketContext";
+
 
 
 interface Props {
@@ -31,7 +33,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<any[]>([]);
-
+	const { markAsRead, lastNotification } = useSocket();
 	const token = localStorage.getItem('auth_token');
 
 	// --- LÓGICA ORIGINAL ---
@@ -39,8 +41,24 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		if (!token) return;
 		try {
 			const [resF, resP] = await Promise.all([
-				fetch('http://localhost:3000/api/friend/list', { headers: { 'Authorization': `Bearer ${token}` } }),
-				fetch('http://localhost:3000/api/friend/pending', { headers: { 'Authorization': `Bearer ${token}` } })
+				fetch('http://localhost:3000/api/friend/list', {
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						// 👇 AÑADE ESTO: Obliga a no usar caché
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
+						'Pragma': 'no-cache',
+						'Expires': '0'
+					}
+				}),
+				fetch('http://localhost:3000/api/friend/pending', {
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						// 👇 AQUÍ TAMBIÉN
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
+						'Pragma': 'no-cache',
+						'Expires': '0'
+					}
+				})
 			]);
 
 			const friendsData = await resF.json();
@@ -57,11 +75,17 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	useEffect(() => {
 		if (open) {
+			markAsRead();
 			fetchData();
 		}
-	}, [open, fetchData]);
+	}, [open, fetchData, markAsRead]);
 
-	
+	useEffect(() => {
+		if (lastNotification?.type === 'FRIEND_REQUEST') {
+			fetchData();
+		}
+	}, [lastNotification]);
+
 
 	const handleSearch = useCallback(async () => {
 		if (searchQuery.length < 2) return;

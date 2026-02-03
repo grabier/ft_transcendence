@@ -9,6 +9,7 @@ import authRoutes from './apis/auth.api.js';
 import userRoutes from './apis/user.api.js';
 import gameRoutes from './apis/game.api.js';
 import friendRoutes from './apis/friend.api.js';
+import wsRoutes from './apis/ws.api.js';
 
 import { API_ROUTES } from './routes/routes.js';
 
@@ -42,10 +43,10 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 		console.log("📦 Usando fastifyWebsocket.default");
 		// @ts-ignore
 		await app.register(fastifyWebsocket.default);
-	} else {
+	} /* else {
 		console.log("📦 Usando fastifyWebsocket directo");
 		await app.register(fastifyWebsocket);
-	}
+	} */
 	/* 
 	Para conectarse desde remoto la segunda IP que dan "Server listening at http://10.13.9.6:3000"
 	app.get('/', async () => {
@@ -58,8 +59,9 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	//registramos las rutas
 	await app.register(authRoutes, { prefix: API_ROUTES.auth });
 	await app.register(userRoutes, { prefix: API_ROUTES.user });
-	await app.register(gameRoutes, { prefix: '/api/game' });
+	await app.register(gameRoutes, { prefix: API_ROUTES.game });
 	await app.register(friendRoutes, { prefix: API_ROUTES.friend });
+	await app.register(wsRoutes, {prefix: API_ROUTES.ws});
 
 	// Fastify parsea JSON nativamente, no necesitas "app.use(express.json())"
 
