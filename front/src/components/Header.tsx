@@ -31,34 +31,23 @@ import { SocialPanel } from "./SocialPanel";
 import { useSocket } from "../context/SocketContext";
 import { useNotification } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
+import { useAuthModals } from "../hooks/useAuthModals";
 
 
 const Header = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
+
+	//----Contexts---
 	const { unreadCount } = useSocket();
 	const { notifySuccess, notifyError } = useNotification();
 	const { user, login, register, logout } = useAuth();
-	// --- ESTADOS ---
 
-	// Modales
+	// --- HOOK DE MODALES (Toda la lógica visual está aquí dentro) ---
+	const modals = useAuthModals();
+
+	// --- ESTADOS(solo el menu desplegable) ---
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [loginModalOpen, setLoginModalOpen] = useState(false);
-	const [registerModalOpen, setRegisterModalOpen] = useState(false);
-	const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
-	const [seeAllUsers, setSeeAllUsers] = useState(false);
-	const [socialOpen, setSocialOpen] = useState(false);
-
-	const closeAllModals = () => {
-		setLoginModalOpen(false);
-		setRegisterModalOpen(false);
-		setResetPasswordModalOpen(false);
-		setSeeAllUsers(false);
-		setSocialOpen(false);
-		// Cierra también el menú desplegable si estuviera abierto
-		setAnchorEl(null);
-
-	};
 
 	// Uso de parámetros de búsqueda para manejar errores de OAuth
 	useEffect(() => {
@@ -71,39 +60,29 @@ const Header = () => {
 			setSearchParams({});
 		}
 	}, [searchParams, setSearchParams, notifyError]);
-	// --- HANDLERS ---
+
+	// --- HANDLERS AUXILIARES ---
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
 	const handleMenuClose = () => setAnchorEl(null);
+	const handleNavigate = (path: string) => { handleMenuClose(); navigate(path); };
 
-	const handleNavigate = (path: string) => {
-		handleMenuClose();
-		navigate(path);
-	};
-
-	// --- AUTH LOGIC ---
+	// Puentes lógicos (Conectan Contexto <-> Modal)
 	const onLoginSubmit = async (email: string, pass: string) => {
-		const success = await login(email, pass);
-		if (success)
-			setLoginModalOpen(false);
+		if (await login(email, pass))
+			modals.closeAll();
 	};
 
 	const onRegisterSubmit = async (username: string, email: string, pass: string) => {
-		const success = await register(username, email, pass);
-		if (success) {
-			setRegisterModalOpen(false);
-			setLoginModalOpen(true); // Mandar al login tras registro
-		}
+		if (await register(username, email, pass))
+			modals.switchToLogin();
 	};
 
 	const onLogoutClick = () => {
 		logout();
-		closeAllModals();
+		modals.closeAll();
+		handleMenuClose();
 		navigate("/");
 	};
-
-	const switchToLogin = () => { setRegisterModalOpen(false); setResetPasswordModalOpen(false); setLoginModalOpen(true); };
-	const switchToRegister = () => { setLoginModalOpen(false); setRegisterModalOpen(true); };
-	const switchToReset = () => { setLoginModalOpen(false); setResetPasswordModalOpen(true); };
 
 	return (
 		<>
@@ -111,7 +90,10 @@ const Header = () => {
 				<Toolbar disableGutters variant="dense" sx={{ minHeight: 48, px: 0 }}>
 					<Box component="img" src="/assets/lyrics-logo.png" sx={{ filter: "invert(1)", width: 145, height: 36, bgcolor: "secondary.main", px: 1 }} />
 					<MarqueeContainer>
-						<MarqueeTrack><MarqueeContent>Pong Tournament • Join the Arena • Win • Glory • </MarqueeContent></MarqueeTrack>
+						<MarqueeTrack>
+							<MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+							<MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+						</MarqueeTrack>
 					</MarqueeContainer>
 
 					<IconButton onClick={handleMenuOpen} sx={{ width: 48, height: "100%", bgcolor: "primary.main", borderLeft: "2px solid", borderRadius: 0, "&:hover": { bgcolor: "grey.900" }, flexShrink: 0 }}>
@@ -126,41 +108,46 @@ const Header = () => {
 				</Toolbar>
 			</AppBar>
 
+			{/* MENÚ DESPLEGABLE */}
 			<Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{ mt: 5 }}>
-				{!user && <MenuItem onClick={() => { handleMenuClose(); setLoginModalOpen(true); }}>Login</MenuItem>}
-				{!user && <MenuItem onClick={() => { handleMenuClose(); setRegisterModalOpen(true); }}>Register</MenuItem>}
+				{!user && <MenuItem onClick={() => { handleMenuClose(); modals.openLogin(); }}>Login</MenuItem>}
+				{!user && <MenuItem onClick={() => { handleMenuClose(); modals.openRegister(); }}>Register</MenuItem>}
+
 				{!user && <Divider />}
 				{!user && <MenuItem onClick={() => handleNavigate("/stats")}>Rankings</MenuItem>}
+
 				{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>Hola, {user.username}</MenuItem>}
 				{user && <MenuItem onClick={() => handleNavigate("/profile")}>Profile</MenuItem>}
-				{user && <MenuItem onClick={() => { handleMenuClose(); setSocialOpen(!socialOpen); }}>Social</MenuItem>}
-				{user && <MenuItem onClick={() => { handleMenuClose(); setSeeAllUsers(true); }}>Admin: Ver Lista Usuarios</MenuItem>}
+				{user && <MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>}
+				{user && <MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin: Ver Lista Usuarios</MenuItem>}
+
 				{user && <Divider />}
 				{user && <MenuItem onClick={onLogoutClick}>Logout</MenuItem>}
 			</Menu>
 
+			{/* MODALES (Más limpios) */}
 			<LoginModal
-				open={loginModalOpen}
-				onClose={() => setLoginModalOpen(false)}
+				open={modals.loginOpen}
+				onClose={modals.closeAll}
 				onLogin={onLoginSubmit}
-				onSwitchToRegister={switchToRegister}
-				onSwitchToResetPassword={switchToReset}
+				onSwitchToRegister={modals.switchToRegister}
+				onSwitchToResetPassword={modals.switchToReset}
 			/>
 			<RegisterModal
-				open={registerModalOpen}
-				onClose={() => setRegisterModalOpen(false)}
+				open={modals.registerOpen}
+				onClose={modals.closeAll}
 				onRegister={onRegisterSubmit}
-				onSwitchToLogin={switchToLogin}
+				onSwitchToLogin={modals.switchToLogin}
 			/>
 			<ResetPasswordModal
-				open={resetPasswordModalOpen}
-				onClose={() => setResetPasswordModalOpen(false)}
+				open={modals.resetPasswordOpen}
+				onClose={modals.closeAll}
 				onResetPassword={async () => { }}
-				onSwitchToLogin={switchToLogin}
+				onSwitchToLogin={modals.switchToLogin}
 			/>
 
-			<UserList open={seeAllUsers} onClose={() => setSeeAllUsers(false)} />
-			<SocialPanel open={socialOpen} onClose={() => setSocialOpen(false)} />
+			<UserList open={modals.seeAllUsers} onClose={modals.closeAll} />
+			<SocialPanel open={modals.socialOpen} onClose={modals.closeAll} />
 		</>
 	);
 };

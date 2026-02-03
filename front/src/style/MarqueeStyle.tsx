@@ -6,7 +6,7 @@ import { styled, keyframes } from "@mui/material/styles";
 
 const marquee = keyframes`
   0% { transform: translateX(0); }
-  100% { transform: translateX(-500%); }
+  100% { transform: translateX(-50%); }
 `;
 
 export const MarqueeContainer = styled(Box)({
@@ -23,7 +23,7 @@ export const MarqueeContainer = styled(Box)({
 export const MarqueeTrack = styled(Box)({
     display: "flex",
     width: "max-content",
-    animation: `${marquee} 50s linear infinite`,
+    animation: `${marquee} 30s linear infinite`,
 });
 
 export const MarqueeContent = styled(Typography)({
