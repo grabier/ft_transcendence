@@ -120,7 +120,9 @@ const initializeTables = async (): Promise<void> => {
                 last_login TIMESTAMP NULL COMMENT 'Última vez que inició sesión'
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
-			await connection.execute(`
+
+		//tabla friendships
+		await connection.execute(`
 				CREATE TABLE IF NOT EXISTS friendships (
 					id INT AUTO_INCREMENT PRIMARY KEY,
 					sender_id INT NOT NULL COMMENT 'Usuario que envía la petición',
@@ -136,8 +138,52 @@ const initializeTables = async (): Promise<void> => {
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 			`);
 
-		console.log('✓ Tabla "users" y "friendships" verificada/creada');
+		// SALAS DE CHAT (Direct Messages)
+		// Define QUE existen conversaciones entre dos personas
+		await connection.execute(`
+            CREATE TABLE IF NOT EXISTS direct_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user1_id INT NOT NULL,
+                user2_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE,
+                -- CONSTRAINT: Asegura que no haya salas duplicadas para la misma pareja
+                UNIQUE KEY unique_dm (user1_id, user2_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
 
+		//  MENSAJES (El historial)
+		// Aquí guardamos cada línea de texto o invitación
+		await connection.execute(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                dm_id INT NOT NULL,
+                sender_id INT NOT NULL,
+                content TEXT,
+                type ENUM('text', 'game_invite', 'system') DEFAULT 'text',
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (dm_id) REFERENCES direct_messages(id) ON DELETE CASCADE,
+                FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+
+		// USUARIOS BLOQUEADOS
+		// Para que el chat sepa si permitir enviar mensaje o no
+		await connection.execute(`
+            CREATE TABLE IF NOT EXISTS blocked_users (
+                blocker_id INT NOT NULL,
+                blocked_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (blocker_id, blocked_id),
+                FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+		console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages, blocked_users');
 	} finally {
 		// Siempre liberamos la conexión, incluso si hay error
 		connection.release();

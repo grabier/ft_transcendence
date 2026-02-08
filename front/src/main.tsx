@@ -12,15 +12,20 @@ import MainPage from "./pages/MainPage";
 import GamesPage from "./pages/GamesPage";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./context/AuthContext";
+import { ChatProvider } from "./context/ChatContext";
+import { ChatWidget } from "./components/chat/ChatWidget";
 
 const AppLayout = () => (
-    <NotificationProvider>
-        <AuthProvider>
-            <SocketProvider>
-                <MainPage />
-            </SocketProvider>
-        </AuthProvider>
-    </NotificationProvider>
+	<NotificationProvider>
+		<AuthProvider>
+			<SocketProvider>
+				<ChatProvider>
+					<MainPage />
+					<ChatWidget />
+				</ChatProvider>
+			</SocketProvider>
+		</AuthProvider>
+	</NotificationProvider>
 );
 
 const router = createBrowserRouter([
