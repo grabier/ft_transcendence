@@ -123,8 +123,9 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (result.affectedRows === 0) {
 				return reply.code(404).send({ error: "Petición no encontrada o ya aceptada" });
 			}
-			socketManager.notifyUser(senderId, 'FRIEND_REQUEST', {
-				senderId: userId,
+			const aidi = parseInt(senderId);
+			socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
+				senderId: aidi,
 				username: userId.username, // Para que el front muestre el nombre
 				message: `${senderId.username} has accepted your request.`
 			});

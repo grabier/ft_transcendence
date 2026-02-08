@@ -34,7 +34,7 @@ class ConnectionManager {
      * Envía una notificación a un usuario específico
      */
     notifyUser(userId: number, type: string, payload: any) {
-        const userSockets = this.connections.get(userId);
+		const userSockets = this.connections.get(userId);
         
         if (!userSockets ) {
             console.log(`📭 User ${userId} is offline. Notification saved/dropped NO USERSOCKETS.`);
