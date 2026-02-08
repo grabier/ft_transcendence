@@ -31,7 +31,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 	// 1. CARGAR LISTA DE CHATS (SIDEBAR)
 	const fetchChats = useCallback(async () => {
-		if (!token) return;
+		if (!token)
+			return;
 		try {
 			const res = await fetch('http://localhost:3000/api/chat/me', { // Crearemos esto ahora
 				headers: { 'Authorization': `Bearer ${token}` }
@@ -48,7 +49,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	// Cargar al inicio
 	useEffect(() => {
 		fetchChats();
-	}, [fetchChats]);
+	}, [fetchChats, messages]);
 
 	// 2. ABRIR UN CHAT
 	// targetUser es opcional: si venimos de la lista de amigos, ya tenemos sus datos
@@ -64,7 +65,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 			});
 			const data = await res.json();
 
-			if (!data.dmId) throw new Error("No DM ID returned");
+			if (!data.dmId)
+				throw new Error("No DM ID returned");
 
 			// B. Cargar historial
 			const msgsRes = await fetch(`http://localhost:3000/api/chat/${data.dmId}/messages?limit=50`, {
@@ -93,7 +95,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 			setMessages(msgsData);
 
 			// Recargamos la lista por si era un chat nuevo que ahora debe aparecer
-			if (data.isNew) fetchChats();
+			if (data.isNew)
+				fetchChats();
 
 		} catch (error) {
 			console.error("Error opening chat:", error);
@@ -119,7 +122,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 	// 4. ESCUCHAR MENSAJES (Sockets)
 	useEffect(() => {
-		if (!socket) return;
+		if (!socket)
+			return;
 
 		const handleSocketMessage = (event: MessageEvent) => {
 			try {

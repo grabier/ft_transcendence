@@ -12,7 +12,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
 import { useSocket } from "../context/SocketContext";
-
+import { useChat } from '../context/ChatContext';
+import ChatIcon from '@mui/icons-material/Chat'; // El icono
 
 
 interface Props {
@@ -35,6 +36,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const [searchResults, setSearchResults] = useState<any[]>([]);
 	const { markAsRead, lastNotification } = useSocket();
 	const token = localStorage.getItem('auth_token');
+	const { selectChat } = useChat(); // <--- SACAMOS LA FUNCIÓN MÁGICA
 
 	// --- LÓGICA ORIGINAL ---
 	const fetchData = useCallback(async () => {
@@ -130,7 +132,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				method: 'PUT',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
-			if (res.ok) 
+			if (res.ok)
 				fetchData();
 		} catch (err) {
 			console.error(err);
@@ -285,7 +287,25 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						<Collapse in={showOnline}>
 							<List disablePadding>
 								{online.map(f => (
-									<ListItem key={f.id} sx={{ pl: 3 }}>
+									<ListItem
+										key={f.id}
+										sx={{ pl: 3 }}
+										// 👇 CORRECCIÓN 1: secondaryAction va AQUÍ, como propiedad
+										secondaryAction={
+											<IconButton
+												edge="end"
+												aria-label="chat"
+												// 👇 CORRECCIÓN 2: Usamos 'f' (el amigo actual), no 'friends'
+												onClick={() => {
+													console.log("Abriendo chat con:", f.username);
+													onClose();
+													selectChat(f.id, f);
+												}}
+											>
+												<ChatIcon color="primary" fontSize="small" />
+											</IconButton>
+										}
+									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
 											<Badge variant="dot" color="success" overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
 												<Avatar src={f.avatar_url} sx={{ width: 32, height: 32 }} />
@@ -312,7 +332,20 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						<Collapse in={showOffline}>
 							<List disablePadding>
 								{offline.map(f => (
-									<ListItem key={f.id} sx={{ pl: 3, opacity: 0.5 }}>
+									<ListItem
+										key={f.id}
+										sx={{ pl: 3, opacity: 0.8 }} // Un poco más visible para poder interactuar
+										secondaryAction={
+											<IconButton
+												edge="end"
+												aria-label="chat"
+												onClick={() => {selectChat(f.id, f); 
+													onClose();}}
+											>
+												<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+											</IconButton>
+										}
+									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
 											<Avatar src={f.avatar_url} sx={{ width: 32, height: 32, filter: 'grayscale(1)' }} />
 										</ListItemAvatar>
