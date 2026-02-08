@@ -40,6 +40,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });
 		}
 		try {
+			//hola soy gabri del pasado. no te olbides de parsear la contrasenia
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
 			const userId = await userRepository.create({ username, email, password: hashedPassword });
