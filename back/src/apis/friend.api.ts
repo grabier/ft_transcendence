@@ -113,7 +113,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	fastify.put<{ Params: FriendParams }>('/accept/:id', async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
-			const senderId = request.params.id;
+			const senderId = (request.params as any).id;
 
 			const [result]: any = await pool.execute(
 				'UPDATE friendships SET status = "accepted" WHERE receiver_id = ? AND sender_id = ? AND status = "pending"',
@@ -123,7 +123,12 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (result.affectedRows === 0) {
 				return reply.code(404).send({ error: "Petición no encontrada o ya aceptada" });
 			}
-
+			const aidi = parseInt(senderId);
+			socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
+				senderId: aidi,
+				username: userId.username, // Para que el front muestre el nombre
+				message: `${senderId.username} has accepted your request.`
+			});
 			return { message: "Ahora sois amigos" };
 		} catch (error: any) {
 			return reply.code(500).send({ error: "Error al aceptar la amistad" });

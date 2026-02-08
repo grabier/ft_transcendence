@@ -34,10 +34,15 @@ class ConnectionManager {
      * Envía una notificación a un usuario específico
      */
     notifyUser(userId: number, type: string, payload: any) {
-        const userSockets = this.connections.get(userId);
+		const userSockets = this.connections.get(userId);
         
-        if (!userSockets || userSockets.size === 0) {
-            console.log(`📭 User ${userId} is offline. Notification saved/dropped.`);
+        if (!userSockets ) {
+            console.log(`📭 User ${userId} is offline. Notification saved/dropped NO USERSOCKETS.`);
+            return;
+        }
+
+		if ( userSockets.size === 0) {
+            console.log(`📭 User ${userId} is offline. Notification saved/dropped.USERSOKETSIZE= 0`);
             return;
         }
 

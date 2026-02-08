@@ -68,6 +68,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 		ws.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
+				console.log(`MENSAJE RECIBIDO: ${data.message}`);
 				setLastNotification(data);
 				setUnreadCount(prev => prev + 1);
 			} catch (err) {

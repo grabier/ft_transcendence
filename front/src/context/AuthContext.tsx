@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return false;
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/update-username', {
+        const response = await fetch('http://localhost:3000/api/user/update-username', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
