@@ -9,21 +9,6 @@ import MenuHeader from "./MenuHeader";
 import { useNotification } from "../context/NotificationContext";
 
 const Header = () => {
-	const [searchParams, setSearchParams] = useSearchParams();
-	const { notifyError } = useNotification();
-
-	// Solo mantenemos la lógica de errores de OAuth porque afecta a la URL global
-	useEffect(() => {
-		const errorType = searchParams.get("error");
-		if (errorType) {
-			const message = errorType === "user_exists"
-				? "Email already registered"
-				: "External auth error";
-			notifyError(message);
-			setSearchParams({});
-		}
-	}, [searchParams, setSearchParams, notifyError]);
-
 	return (
 		<AppBar position="fixed" sx={{ bgcolor: "primary.dark", borderBottom: "2px solid", borderColor: "secondary.main", boxShadow: "none" }}>
 			<Toolbar disableGutters variant="dense" sx={{ minHeight: 48, px: 0 }}>
@@ -32,14 +17,11 @@ const Header = () => {
 
 				{/* MARQUEE */}
 				<MarqueeContainer>
-					<MarqueeTrack>
-						<MarqueeContent>Pong Tournament • Join the Arena • Win • Glory • </MarqueeContent>
-						<MarqueeContent>Pong Tournament • Join the Arena • Win • Glory • </MarqueeContent>
-					</MarqueeTrack>
-				</MarqueeContainer>
-
-				{/* AQUÍ ESTÁ LA LLAMADA 📞 */}
-				{/* El componente se pinta a sí mismo (botón) y gestiona sus modales */}
+                        <MarqueeTrack>
+                            <MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+                            <MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+                        </MarqueeTrack>
+                    </MarqueeContainer>
 				<MenuHeader />
 			</Toolbar>
 		</AppBar>

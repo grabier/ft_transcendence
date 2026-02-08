@@ -16,6 +16,7 @@ import RegisterModal from "./RegisterModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 import UserList from "./UserList";
 import { SocialPanel } from "./SocialPanel";
+import {Profile} from "./Profile";
 
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
@@ -33,7 +34,7 @@ const MenuHeader = () => {
 
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
 	const handleMenuClose = () => setAnchorEl(null);
-	const handleNavigate = (path: string) => { handleMenuClose(); navigate(path); };
+	const handleNavigate = (path: string) => { handleMenuClose(); navigate(path); }; // no tendremos otro path, quitar.
 
 	// --- PUENTES LÓGICOS ---
 	const onLoginSubmit = async (email: string, pass: string) => {
@@ -41,7 +42,10 @@ const MenuHeader = () => {
 	};
 
 	const onRegisterSubmit = async (username: string, email: string, pass: string) => {
-		if (await register(username, email, pass)) modals.switchToLogin();
+		if (await register(username, email, pass)) {
+			await login(email, pass);
+			modals.closeAll();
+		}
 	};
 
 	const onLogoutClick = () => {
@@ -82,15 +86,14 @@ const MenuHeader = () => {
 				{!user && <MenuItem onClick={() => { handleMenuClose(); modals.openLogin(); }}>Login</MenuItem>}
 				{!user && <MenuItem onClick={() => { handleMenuClose(); modals.openRegister(); }}>Register</MenuItem>}
 
-				{!user && <Divider />}
 				{!user && <MenuItem onClick={() => handleNavigate("/stats")}>Rankings</MenuItem>}
 
 				{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>Hola, {user.username}</MenuItem>}
-				{user && <MenuItem onClick={() => handleNavigate("/profile")}>Profile</MenuItem>}
-				{user && <MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>}
-				{user && <MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin: Ver Lista Usuarios</MenuItem>}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>Profile</MenuItem>) :<MenuItem disabled >Profile</MenuItem >}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>) :<MenuItem disabled >Social</MenuItem >}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin:Ver Lista Usuarios</MenuItem>) :<MenuItem disabled> Admin:Ver Lista Usuarios</MenuItem>}
 
-				{user && <Divider />}
+	
 				{user && <MenuItem onClick={onLogoutClick}>Logout</MenuItem>}
 			</Menu>
 
@@ -117,6 +120,7 @@ const MenuHeader = () => {
 
 			<UserList open={modals.seeAllUsers} onClose={modals.closeAll} />
 			<SocialPanel open={modals.socialOpen} onClose={modals.closeAll} />
+			<Profile open={modals.profileOpen} onClose={modals.closeAll} />
 		</>
 	);
 };

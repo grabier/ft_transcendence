@@ -105,3 +105,15 @@ export const updateLastLogin = async (id: number): Promise<void> => {
 		[id]
 	);
 };
+
+/**
+ * Updates the username for a specific user
+ * @param id - User ID
+ * @param newUsername - The new username string
+ */
+export const updateUsername = async (id: number, newUsername: string): Promise<void> => {
+    await pool.execute(
+        'UPDATE users SET username = ? WHERE id = ?',
+        [newUsername, id]
+    );
+};

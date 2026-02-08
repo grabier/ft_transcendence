@@ -1,7 +1,6 @@
-import { Outlet } from "react-router-dom";
 import { useEffect } from "react";
 
-const Frontend = () => {
+const Frontend = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
 		// A. Si venimos de GitHub/Google con token en URL
@@ -14,33 +13,15 @@ const Frontend = () => {
 			localStorage.setItem('auth_token', tokenFromUrl);
 			window.history.replaceState({}, document.title, window.location.pathname);
 		}
-
-		// B. "¡ESTOY VIVO!" (Heartbeat inicial)
-		// Cada vez que se recarga la página (F5), confirmamos al back que estamos online.
-		// Esto arregla el bug de aparecer Offline tras un F5.
-		//const currentToken = localStorage.getItem('auth_token');
-		/* if (currentToken) {
-			// (Opcional) Podrías crear una ruta específica /heartbeat, 
-			// pero llamar a /profile o similar ya suele validar el token.
-			// Aquí forzamos una actualización simple si tienes una ruta para ello, 
-			// o confiamos en que tu siguiente petición autenticada actualizará el 'last_seen'.
-			// Lo IDEAL es tener esto:
-			fetch('http://localhost:3000/api/user/profile', { // O tu ruta de "me"
-				headers: { 'Authorization': `Bearer ${currentToken}` }
-			}).catch(console.error);
-		} */
-
 	}, []);
-	
+
 	useEffect(() => {
-		// Función que se ejecuta SOLO cuando intentas cerrar la pestaña
+		//el useEffect carga la funcion , no la llama. 
+		//al cerrar la window, se llama a handleTabClose
 		const handleTabClose = () => {
-			const token = localStorage.getItem('auth_token'); // O sesssionstorage si decides no cambiarlo
-			
+			const token = localStorage.getItem('auth_token');
+
 			if (token) {
-				// Usamos 'fetch' con keepalive: true
-				// Esto permite que la petición termine aunque la pestaña se cierre
-				
 				fetch('http://localhost:3000/api/auth/logout', {
 					method: 'POST',
 					headers: {
@@ -49,17 +30,15 @@ const Frontend = () => {
 					keepalive: true // <--- ¡LA CLAVE MAGICA! 🗝️
 				});
 			}
+			window.addEventListener('beforeunload', handleTabClose);
 		};
-		//console.log("useffect frontend alo alo");
-		// Añadimos el escuchador del evento
-		window.addEventListener('beforeunload', handleTabClose);
-		
-		// Limpiamos el escuchador cuando el componente se desmonta
 		return () => {
-			//console.log("RETURN useffect frontend alo alo");
 			window.removeEventListener('beforeunload', handleTabClose);
 		};
 	}, []);
+
+	
+
 	return (
 		<>
 			<main
@@ -70,7 +49,7 @@ const Frontend = () => {
 					width: "100%",
 				}}
 			>
-				<Outlet />
+				{children}
 			</main>
 		</>
 	);

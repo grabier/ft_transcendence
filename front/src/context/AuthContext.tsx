@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNotification } from "./NotificationContext";
+import { useSearchParams } from "react-router-dom";
 
 // Definimos la forma de nuestro usuario (copiado de Header)
 interface UserPayload {
@@ -16,6 +17,7 @@ interface AuthContextType {
 	login: (email: string, pass: string) => Promise<boolean>; // Devuelve true si fue bien
 	register: (username: string, email: string, pass: string) => Promise<boolean>;
 	logout: () => void;
+	updateUsername: (newUsername: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,22 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const { notifySuccess, notifyError } = useNotification();
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	// OAuth Error
+	const errorType = searchParams.get("error");
+	useEffect(() => {
+
+		if (errorType) {
+			const message = errorType === "user_exists"
+				? "Email already registered"
+				: "External auth error";
+			notifyError(message);
+
+			setSearchParams({}, { replace: true });
+		}
+	}, [errorType, setSearchParams, notifyError]);
+
 	const [user, setUser] = useState<UserPayload | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -54,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setUser(decoded);
 			lastTokenRef.current = data.token;
 
-			notifySuccess(`¡Welcome back, ${decoded.username}!`);
+			notifySuccess(`Finally here, ${decoded.username}`);
 			return true;
 		} catch (error: any) {
 			notifyError(error.message);
@@ -137,14 +155,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				}
 			}
 		};
-
 		checkToken(); // Check inicial
 		const interval = setInterval(checkToken, 500); // Polling
 		return () => clearInterval(interval);
 	}, []);
 
+	const updateUsername = async (newUsername: string): Promise<boolean> => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/auth/update-username', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Asegúrate de que el backend espera "Bearer"
+            },
+            body: JSON.stringify({ newUsername })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            notifyError(data.error || "Update failed");
+            return false;
+        }
+
+        if (data.token) {
+            // Actualizamos la referencia ANTES que el storage para que el polling no se raye
+            lastTokenRef.current = data.token; 
+            localStorage.setItem('auth_token', data.token);
+        }
+
+        // Actualizamos estado de React
+        setUser(prev => prev ? { ...prev, username: newUsername } : null);
+
+        notifySuccess("Username updated successfully!");
+        return true;
+        
+    } catch (error: any) {
+        notifyError("Server connection error");
+        return false;
+    }
+};
+
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername }}>
 			{children}
 		</AuthContext.Provider>
 	);

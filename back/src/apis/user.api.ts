@@ -9,6 +9,8 @@ import { FastifyPluginAsync } from 'fastify';
 import { authenticate } from "../middleware/auth.js";
 import { pool } from '../../db/database.js';
 import * as userRepository from "../data-access/user.repository.js";
+import jwt from 'jsonwebtoken';
+
 
 // ============================================================================
 // INTERFACES
@@ -19,6 +21,9 @@ import * as userRepository from "../data-access/user.repository.js";
  */
 interface UserParams {
 	id: string;
+}
+interface UpdateUsernameBody {
+	newUsername: string;
 }
 
 // ============================================================================
@@ -121,6 +126,50 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		 const user = req.user;
 		 return { mensaje: "Si lees esto, es que tienes llave", user };
 	 }); */
+
+	 fastify.patch<{ Body: UpdateUsernameBody }>(
+    "/update-username",
+    { preHandler: [authenticate] }, // Verifica que 'authenticate' esté bien importado
+    async (request, reply) => {
+        try {
+            const { newUsername } = request.body;
+            // Forzamos el tipado para evitar el error de "id does not exist on type user"
+            const currentUser = request.user as { id: number; email: string; username: string };
+
+            if (!currentUser) {
+                return reply.code(401).send({ error: "Unauthorized: No user found in token" });
+            }
+
+            const userId = currentUser.id;
+
+            // 1. Validar disponibilidad
+            const existingUser = await userRepository.findByUsername(newUsername);
+            if (existingUser && existingUser.id !== userId) {
+                return reply.code(409).send({ error: "Username is already taken" });
+            }
+
+            // 2. Actualizar DB
+            await userRepository.updateUsername(userId, newUsername);
+
+            // 3. Generar nuevo Token
+            const newToken = jwt.sign(
+                { id: userId, email: currentUser.email, username: newUsername },
+                process.env.JWT_SECRET || 'super_secret',
+                { expiresIn: '7d' }
+            );
+
+            // 4. Enviar respuesta con el token
+            return reply.code(200).send({
+                message: "Username updated successfully",
+                token: newToken,
+                username: newUsername
+            });
+        } catch (error: any) {
+            request.log.error(error);
+            return reply.code(500).send({ error: "Internal server error", details: error.message });
+        }
+    }
+);
 
 
 };

@@ -26,14 +26,16 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	await app.register(cors, {
 		origin: ['http://localhost:5173', 'http://localhost:8080'],
 		credentials: true,
-		methods: ['GET', 'POST', 'PUT', 'DELETE']
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+		// 🛡️ Asegúrate de permitir el header de Authorization si usas Bearer tokens
+		allowedHeaders: ['Content-Type', 'Authorization']
 	});
 
 	await app.register(cookie);
 
 	await app.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET || 'super_secret' // Debe coincidir con el de auth.api.ts
-    });
+		secret: process.env.JWT_SECRET || 'super_secret' // Debe coincidir con el de auth.api.ts
+	});
 
 	console.log("🔌 Inspeccionando plugin websocket...");
 
@@ -61,7 +63,7 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	await app.register(userRoutes, { prefix: API_ROUTES.user });
 	await app.register(gameRoutes, { prefix: API_ROUTES.game });
 	await app.register(friendRoutes, { prefix: API_ROUTES.friend });
-	await app.register(wsRoutes, {prefix: API_ROUTES.ws});
+	await app.register(wsRoutes, { prefix: API_ROUTES.ws });
 
 	// Fastify parsea JSON nativamente, no necesitas "app.use(express.json())"
 

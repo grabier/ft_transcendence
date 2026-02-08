@@ -22,12 +22,16 @@ interface LoginBody {
 	email: string;
 	password: string;
 }
+interface UpdateUsernameBody {
+	newUsername: string;
+}
 
 // ============================================================================
 // RUTAS DE AUTENTICACIÓN
 // ============================================================================
 
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
+
 
 	// --- POST /register (Sin cambios, estaba bien) ---
 	fastify.post<{ Body: RegisterBody }>("/register", async (request, reply) => {
@@ -177,24 +181,27 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 
-	fastify.post("/logout", 
-        { preHandler: [authenticate] }, // <--- ESTA ES LA CLAVE MÁGICA 🗝️
-        async (request, reply) => {
-            try {
-                const userId = (request.user as any).id;
-                
-                console.log(`🔌 Logout user ${userId}...`);
+	fastify.post("/logout",
+		{ preHandler: [authenticate] }, // <--- ESTA ES LA CLAVE MÁGICA 🗝️
+		async (request, reply) => {
+			try {
+				const userId = (request.user as any).id;
 
-                await userRepository.updateLastLogin(userId);
-                await userRepository.updateOnlineStatus(userId, false); // <--- Ahora sí funciona
-                
-                return { message: "Desconectado" };
-            } catch (err) {
-                request.log.error(err);
-                return reply.code(500).send({ error: "No se pudo cerrar sesión" });
-            }
-        }
-    );
+				console.log(`🔌 Logout user ${userId}...`);
+
+				await userRepository.updateLastLogin(userId);
+				await userRepository.updateOnlineStatus(userId, false); // <--- Ahora sí funciona
+
+				return { message: "Desconectado" };
+			} catch (err) {
+				request.log.error(err);
+				return reply.code(500).send({ error: "No se pudo cerrar sesión" });
+			}
+		}
+	);
+	// auth.api.ts
+
+
 };
 
 export default authRoutes;

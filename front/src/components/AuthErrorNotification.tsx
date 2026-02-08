@@ -36,6 +36,7 @@ const ErrorHeader = styled(Box)(({ theme }) => ({
 
 // 1. Pasamos las Props a la función
 const AuthErrorNotification = ({ open, message, onClose }: Props) => {
+	
     return (
         <Snackbar
             open={open} // 2. Usamos el prop 'open'
