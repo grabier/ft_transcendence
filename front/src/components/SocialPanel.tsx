@@ -63,7 +63,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 			const friendsData = await resF.json();
 			const pendingData = await resP.json();
-
 			setFriends(Array.isArray(friendsData) ? friendsData : []);
 			setPending(Array.isArray(pendingData) ? pendingData : []);
 		} catch (err) {
@@ -81,6 +80,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	}, [open, fetchData, markAsRead]);
 
 	useEffect(() => {
+		console.log("lastnoti useffect")
 		if (lastNotification?.type === 'FRIEND_REQUEST') {
 			fetchData();
 		}
@@ -130,7 +130,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				method: 'PUT',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
-			if (res.ok) fetchData();
+			if (res.ok) 
+				fetchData();
 		} catch (err) {
 			console.error(err);
 		}

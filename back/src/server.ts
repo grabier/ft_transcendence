@@ -28,7 +28,7 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 		// 🛡️ Asegúrate de permitir el header de Authorization si usas Bearer tokens
-		allowedHeaders: ['Content-Type', 'Authorization']
+		allowedHeaders: ['Content-Type', 'Authorization','Cache-Control','Pragma','Expires']
 	});
 
 	await app.register(cookie);
