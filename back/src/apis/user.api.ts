@@ -25,6 +25,9 @@ interface UserParams {
 interface UpdateUsernameBody {
 	newUsername: string;
 }
+interface UpdateAvatarUrlBody {
+	newUrl: string;
+}
 
 // ============================================================================
 // RUTAS DE USUARIOS
@@ -127,49 +130,81 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		 return { mensaje: "Si lees esto, es que tienes llave", user };
 	 }); */
 
-	 fastify.patch<{ Body: UpdateUsernameBody }>(
-    "/update-username",
-    { preHandler: [authenticate] }, // Verifica que 'authenticate' esté bien importado
-    async (request, reply) => {
-        try {
-            const { newUsername } = request.body;
-            // Forzamos el tipado para evitar el error de "id does not exist on type user"
-            const currentUser = request.user as { id: number; email: string; username: string };
+	fastify.patch<{ Body: UpdateUsernameBody }>("/update-username",
+		{ preHandler: [authenticate] }, // Verifica que 'authenticate' esté bien importado
+		async (request, reply) => {
+			try {
+				const { newUsername } = request.body;
+				// Forzamos el tipado para evitar el error de "id does not exist on type user"
+				const currentUser = request.user as { id: number; email: string; username: string };
 
-            if (!currentUser) {
-                return reply.code(401).send({ error: "Unauthorized: No user found in token" });
-            }
+				if (!currentUser) {
+					return reply.code(401).send({ error: "Unauthorized: No user found in token" });
+				}
 
-            const userId = currentUser.id;
+				const userId = currentUser.id;
 
-            // 1. Validar disponibilidad
-            const existingUser = await userRepository.findByUsername(newUsername);
-            if (existingUser && existingUser.id !== userId) {
-                return reply.code(409).send({ error: "Username is already taken" });
-            }
+				// 1. Validar disponibilidad
+				const existingUser = await userRepository.findByUsername(newUsername);
+				if (existingUser && existingUser.id !== userId) {
+					return reply.code(409).send({ error: "Username is already taken" });
+				}
 
-            // 2. Actualizar DB
-            await userRepository.updateUsername(userId, newUsername);
+				// 2. Actualizar DB
+				await userRepository.updateUsername(userId, newUsername);
 
-            // 3. Generar nuevo Token
-            const newToken = jwt.sign(
-                { id: userId, email: currentUser.email, username: newUsername },
-                process.env.JWT_SECRET || 'super_secret',
-                { expiresIn: '7d' }
-            );
+				// 3. Generar nuevo Token
+				const newToken = jwt.sign(
+					{ id: userId, email: currentUser.email, username: newUsername },
+					process.env.JWT_SECRET || 'super_secret',
+					{ expiresIn: '7d' }
+				);
 
-            // 4. Enviar respuesta con el token
-            return reply.code(200).send({
-                message: "Username updated successfully",
-                token: newToken,
-                username: newUsername
-            });
-        } catch (error: any) {
-            request.log.error(error);
-            return reply.code(500).send({ error: "Internal server error", details: error.message });
-        }
-    }
-);
+				// 4. Enviar respuesta con el token
+				return reply.code(200).send({
+					message: "Username updated successfully",
+					token: newToken,
+					username: newUsername
+				});
+			} catch (error: any) {
+				request.log.error(error);
+				return reply.code(500).send({ error: "Internal server error", details: error.message });
+			}
+		}
+
+
+	);
+	fastify.patch<{ Body: UpdateAvatarUrlBody }>("/update-avatarUrl",
+		{ preHandler: [authenticate] }, // Verifica que 'authenticate' esté bien importado
+		async (request, reply) => {
+			try {
+				const { newUrl } = request.body;
+				// Forzamos el tipado para evitar el error de "id does not exist on type user"
+				const currentUser = request.user as { id: number; email: string; username: string; avatarUrl: string; };
+
+				if (!currentUser) {
+					return reply.code(401).send({ error: "Unauthorized: No user found in token" });
+				}
+
+				const userId = currentUser.id;
+
+
+				// 2. Actualizar DB
+				await userRepository.updateAvatarUrl(userId, newUrl);
+
+				// 4. Enviar respuesta con el token
+				return reply.code(200).send({
+					message: "Username updated successfully",
+					newUrl : newUrl
+				});
+			} catch (error: any) {
+				request.log.error(error);
+				return reply.code(500).send({ error: "Internal server error", details: error.message });
+			}
+		}
+
+
+	);
 
 
 };

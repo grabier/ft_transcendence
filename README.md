@@ -10,9 +10,12 @@ MODULES: WEB
 - 
 
 // 
+tareas
+view profiles (avatar en chat window primer)
+dilit frens
 cerrar chat en logout Y QUE SE BORREN LOS CHATS
 
-Hacer:
+FALTA POR Hacer:
 	----JUEGO---
 2  + 1 + (minor complete noti system) TORNEOS (poder crearlos, invitar y quitar , empezar torneo, descartar/cancelar)
 2 REMOTE PVP

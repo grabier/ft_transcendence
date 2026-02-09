@@ -62,8 +62,8 @@ export const findByUsername = async (username: string): Promise<PublicUser | nul
  */
 export const create = async (userData: NewUser): Promise<number> => {
     const [result] = await pool.execute<ResultSetHeader>(
-        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-        [userData.username, userData.email, userData.password]
+        'INSERT INTO users (username, email, password, avatar_url) VALUES (?, ?, ?, ?)',
+        [userData.username, userData.email, userData.password, userData.avatar_url]
     );
     return result.insertId;
 };
@@ -115,5 +115,12 @@ export const updateUsername = async (id: number, newUsername: string): Promise<v
     await pool.execute(
         'UPDATE users SET username = ? WHERE id = ?',
         [newUsername, id]
+    );
+};
+
+export const updateAvatarUrl = async (id: number, newUrl: string): Promise<void> => {
+    await pool.execute(
+        'UPDATE users SET avatar_url = ? WHERE id = ?',
+        [newUrl, id]
     );
 };
