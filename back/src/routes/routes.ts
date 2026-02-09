@@ -25,6 +25,7 @@ export const API_ROUTES = {
 	game: `${root}/game`,
 	friend: `${root}/friend`,
 	ws: `${root}/ws`,
+	chat: `${root}/chat`,
 };
 
 // ============================================================================

@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { socketManager } from '../websocket/connection-manager.js';
+import { handleChatMessage } from '../websocket/chat.handler.js';
 
 interface QueryParams {
 	token: string;
@@ -34,8 +35,39 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			});
 
 			// 4. Pong
-			socket.on('message', (msg: any) => {
-				if (msg.toString() === 'ping') socket.send('pong');
+			socket.on('message', async (rawMsg: any) => {
+				const msgString = rawMsg.toString();
+
+				// A. Mantener el Ping-Pong para que no se caiga la conexión
+				if (msgString === 'ping') {
+					socket.send('pong');
+					return;
+				}
+
+				// B. Procesar Eventos Complejos (JSON)
+				try {
+					const data = JSON.parse(msgString);
+
+					// Aquí actúa como un Router: ¿Qué quieres hacer?
+					switch (data.type) {
+						case 'SEND_MESSAGE':
+							// Delegamos la lógica dura al handler que creamos antes
+							// payload debe tener: { dmId, content, type }
+							await handleChatMessage(userId, data.payload);
+							break;
+
+						// Aquí añadiremos más casos en el futuro:
+						// case 'GAME_INVITE': ...
+						// case 'BLOCK_USER': ...
+
+						default:
+							console.warn(`Event type unknown: ${data.type}`);
+					}
+
+				} catch (error) {
+					console.error("WS Parse Error or Logic Error:", error);
+					// No cerramos el socket por un error de parsing, solo lo logueamos
+				}
 			});
 
 		} catch (error) {

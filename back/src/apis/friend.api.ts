@@ -110,7 +110,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 * PUT /accept/:id - Aceptar una petición de amistad
 	 * El :id es el ID del usuario que envió la petición (sender_id)
 	 */
-	fastify.put<{ Params: FriendParams }>('/accept/:id', async (request, reply) => {
+
+	//gabri del futuro.. si tienes tiempo prueba esto
+	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
+	fastify.put<{ Params: FriendParams, }>('/accept/:id', async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
 			const senderId = (request.params as any).id;

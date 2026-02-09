@@ -32,7 +32,7 @@ export interface DbUser {
  * Datos necesarios para crear un nuevo usuario (registro).
  * Excluye campos que la BD genera automáticamente (id, created_at, etc.)
  */
-export type NewUser = Pick<DbUser, 'username' | 'email' | 'password'>;
+export type NewUser = Pick<DbUser, 'username' | 'email' | 'password' | 'avatar_url'>;
 
 /**
  * Datos que se pueden mostrar públicamente (sin password).

@@ -8,6 +8,7 @@ interface UserPayload {
 	id: number;
 	username: string;
 	email: string;
+	avatarUrl: string;
 }
 
 // Definimos qué funciones y datos "regalamos" al resto de la app
@@ -18,6 +19,7 @@ interface AuthContextType {
 	register: (username: string, email: string, pass: string) => Promise<boolean>;
 	logout: () => void;
 	updateUsername: (newUsername: string) => Promise<boolean>;
+	updateAvatarUrl: (newAvatarUrl: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [errorType, setSearchParams, notifyError]);
 
 	const [user, setUser] = useState<UserPayload | null>(null);
+	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null);
+	
 	const [isLoading, setIsLoading] = useState(false);
 
 	// Referencia para el polling
@@ -86,10 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const register = async (username: string, email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
+			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || 'Guest'}`;
+
 			const response = await fetch('http://localhost:3000/api/auth/register', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ username, email, password: pass })
+				body: JSON.stringify({ username, email, password: pass, avatarUrl: defaultAvatar })
 			});
 
 			if (response.status === 409) {
@@ -198,9 +204,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
     }
 };
+const updateAvatarUrl = async (newUrl: string): Promise<boolean> => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/user/update-avatarUrl', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Asegúrate de que el backend espera "Bearer"
+            },
+            body: JSON.stringify({ newUrl })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            notifyError(data.error || "Update failed");
+            return false;
+        }
+
+        if (data.token) {
+            // Actualizamos la referencia ANTES que el storage para que el polling no se raye
+            lastTokenRef.current = data.token; 
+            localStorage.setItem('auth_token', data.token);
+        }
+
+        // Actualizamos estado de React
+        setAvatarUrl(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
+
+        notifySuccess("Username updated successfully!");
+        return true;
+        
+    } catch (error: any) {
+        notifyError("Server connection error");
+        return false;
+    }
+};
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername }}>
+		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername, updateAvatarUrl}}>
 			{children}
 		</AuthContext.Provider>
 	);

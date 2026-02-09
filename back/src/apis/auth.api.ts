@@ -16,6 +16,7 @@ interface RegisterBody {
 	username: string;
 	email: string;
 	password: string;
+	avatarUrl: string;
 }
 
 interface LoginBody {
@@ -35,15 +36,15 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	// --- POST /register (Sin cambios, estaba bien) ---
 	fastify.post<{ Body: RegisterBody }>("/register", async (request, reply) => {
-		const { username, email, password } = request.body;
-		if (!username || !email || !password) {
+		const { username, email, password, avatarUrl } = request.body;
+		if (!username || !email || !password || !avatarUrl) {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });
 		}
 		try {
 			//hola soy gabri del pasado. no te olbides de parsear la contrasenia
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
-			const userId = await userRepository.create({ username, email, password: hashedPassword });
+			const userId = await userRepository.create({ username, email, password: hashedPassword, avatar_url: avatarUrl });
 			return reply.code(201).send({ message: "Usuario creado con éxito", userId });
 		} catch (error: any) {
 			request.log.error(error);
@@ -139,6 +140,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			// C. Base de Datos
 			let user = await userRepository.findByEmail(email);
+			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.login || 'Guest'}`;
 
 			if (!user) {
 				// CASO: Nuevo Usuario
@@ -146,6 +148,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					username: userData.login,
 					email: email,
 					password: "",
+					avatar_url : defaultAvatar,
 				});
 
 				// Acabamos de crearlo, pero la variable 'user' sigue siendo null.

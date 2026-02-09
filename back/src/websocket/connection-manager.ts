@@ -51,7 +51,8 @@ class ConnectionManager {
         console.log(`📨 Sending ${type} to User ${userId}`);
         
         userSockets.forEach(socket => {
-            if (socket.readyState === socket.OPEN) {
+            if (socket.readyState === socket.OPEN) 
+			{
                 socket.send(message);
             }
         });

@@ -10,14 +10,18 @@ interface SocketContextType {
 	socket: WebSocket | null;
 	lastNotification: Notification | null;
 	unreadCount: number;
+	unreadMessages: number;
 	markAsRead: () => void;
+	markAsReadMessage: () => void;
 }
 
 const SocketContext = createContext<SocketContextType>({
 	socket: null,
 	lastNotification: null,
 	unreadCount: 0,
-	markAsRead: () => { }
+	unreadMessages: 0,
+	markAsRead: () => { },
+	markAsReadMessage: () => { }
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -29,6 +33,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	const [socket, setSocket] = useState<WebSocket | null>(null);
 	const [lastNotification, setLastNotification] = useState<Notification | null>(null);
 	const [unreadCount, setUnreadCount] = useState(0);
+	const [unreadMessages, setUnreadMessages] = useState(0);
 
 	// Refs (Control interno para romper el bucle)
 	// Usamos esto para saber SIEMPRE el estado real sin esperar al re-render de React
@@ -36,6 +41,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	const reconnectTimeout = useRef<number | null>(null);
 
 	const markAsRead = () => setUnreadCount(0);
+	const markAsReadMessage = () => setUnreadMessages(0);
 
 	// Función estable (No depende de 'socket' estado, sino de 'socketRef')
 	const connect = useCallback(() => {
@@ -70,7 +76,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 				const data = JSON.parse(event.data);
 				console.log(`MENSAJE RECIBIDO: ${data.message}`);
 				setLastNotification(data);
-				setUnreadCount(prev => prev + 1);
+				if(data.type === 'FRIEND_REQUEST')
+					setUnreadCount(prev => prev + 1);
+				if(data.type !== 'MESSAGE_SENT_OK')
+					setUnreadMessages(prev => prev + 1);
 			} catch (err) {
 				console.error("WS Parse Error", err);
 			}
@@ -116,7 +125,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	}, [user, connect]); //necesitamos actualizar la conexion si user cambia, o si la conexxion se jode por lo que sea
 
 	return (
-		<SocketContext.Provider value={{ socket, lastNotification, unreadCount, markAsRead }}>
+		<SocketContext.Provider value={{ socket, lastNotification, unreadCount, markAsRead, markAsReadMessage, unreadMessages }}>
 			{children}
 		</SocketContext.Provider>
 	);
