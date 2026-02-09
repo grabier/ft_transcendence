@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	IconButton,
@@ -26,7 +26,8 @@ import { useAuthModals } from "../hooks/useAuthModals";
 const MenuHeader = () => {
 	const navigate = useNavigate();
 	const { user, login, register, logout } = useAuth();
-	const { unreadCount } = useSocket(); // Necesitamos esto para el Badge
+	const { unreadCount } = useSocket();
+	// Necesitamos esto para el Badge
 	const modals = useAuthModals();
 
 	// Estado local del menú (Solo vive aquí, no ensucia el Header)

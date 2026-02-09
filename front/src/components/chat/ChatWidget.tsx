@@ -8,10 +8,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatWindow } from './ChatWindow';
 import { useChat } from '../../context/ChatContext';
+import { useSocket } from "../../context/SocketContext";
 
 export const ChatWidget = () => {
 	const [isOpen, setIsOpen] = useState(false); // ¿Está el widget abierto?
 	const { activeChat, closeChat, chats, refreshChats: fetchChats} = useChat();
+	const { unreadMessages, markAsReadMessage } = useSocket();
+	
 
 	// Calculamos mensajes no leídos totales (opcional, para el globito rojo)
 	// Por ahora sumamos 1 si hay chats, luego lo puedes refinar con un campo 'unread' real
@@ -22,6 +25,7 @@ export const ChatWidget = () => {
 		fetchChats();
 		if (isOpen) {
 			setIsOpen(false);
+			markAsReadMessage();
 			closeChat(); // Reseteamos al cerrar
 		} else {
 			setIsOpen(true);
@@ -73,7 +77,7 @@ export const ChatWidget = () => {
 					{isOpen ? (
 						<CloseIcon />
 					) : (
-						<Badge badgeContent={totalUnread} color="error">
+						<Badge badgeContent={unreadMessages} color="error">
 							<ChatIcon />
 						</Badge>
 					)}
