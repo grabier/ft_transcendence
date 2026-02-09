@@ -12,4 +12,3 @@ MODULES: WEB
 // 
 que no salte notificacion al que envia el mensaje
 que se cierre la pestaña del chat al hacerl logout Y QUE SE BORREN LOS CHATS
-cambiar el estado de los que hacen logout (ciclando lista de amigos)
