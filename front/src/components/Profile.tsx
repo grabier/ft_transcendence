@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { useAuthModals } from '../hooks/useAuthModals';
 import { useNavigate } from 'react-router-dom';
 
+
 interface Props {
 	open: boolean;
 	onClose: () => void;
@@ -22,16 +23,36 @@ export const Profile = ({ open, onClose }: Props) => {
 	const { user, logout } = useAuth();
 	const modals = useAuthModals();
 	const navigate = useNavigate();
+	const { updateAvatarUrl } = useAuth();
+	const { updateUsername } = useAuth(); // Importas la función
 
 	// Independent states for editing
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
 	const [editEmail, setEditEmail] = useState({ open: false, value: user?.email || '' });
 
-	// Consistent default avatar
+	// avatar
 	const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
+	const [currentAvatar, setCurrentAvatar] = useState(user?.avatarUrl || defaultAvatar);
 
-	const { updateUsername } = useAuth(); // Importas la función
+	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
+	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
+
+	const handleSelectAvatar = async (seed: string) => {
+		const newUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+
+		// Cambiamos la imagen en la UI antes de que responda el servidor (Optimismo)
+		setCurrentAvatar(newUrl);
+
+		const success = await updateAvatarUrl(newUrl);
+		if (success) {
+			setShowAvatarPicker(false);
+		} else {
+			// Si falla, volvemos a la original
+			setCurrentAvatar(user?.avatarUrl || defaultAvatar);
+			alert("Error al actualizar el avatar");
+		}
+	};
 	const handleUpdate = useCallback(async (type: 'user' | 'email') => {
 		if (type === 'user') {
 			// Llamas a la función del contexto
@@ -84,10 +105,62 @@ export const Profile = ({ open, onClose }: Props) => {
 				borderBottom: '1px solid',
 				borderColor: 'divider'
 			}}>
-				<Avatar
-					src={user?.avatarUrl || defaultAvatar}
-					sx={{ width: 100, height: 100, mb: 2, boxShadow: 3, border: '4px solid white' }}
-				/>
+				<Box sx={{ position: 'relative', mb: 2 }}>
+					<Avatar
+						src={currentAvatar}
+						sx={{ width: 100, height: 100, boxShadow: 3, border: '4px solid white' }}
+					/>
+					<IconButton
+						onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+						sx={{
+							position: 'absolute',
+							bottom: 0,
+							right: -5,
+							bgcolor: 'primary.main',
+							color: 'white',
+							'&:hover': { bgcolor: 'primary.dark' },
+							width: 30,
+							height: 30,
+							boxShadow: 2
+						}}
+					>
+						<EditIcon sx={{ fontSize: 16 }} />
+					</IconButton>
+				</Box>
+
+				{/* Selector de Avatares (Collapse) */}
+				<Collapse in={showAvatarPicker} sx={{ width: '100%', px: 3 }}>
+					<Typography variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
+						Selecciona un nuevo avatar:
+					</Typography>
+					<Box sx={{
+						display: 'grid',
+						gridTemplateColumns: 'repeat(4, 1fr)',
+						gap: 1,
+						p: 1.5,
+						bgcolor: '#f8f9fa',
+						borderRadius: 2,
+						mb: 2
+					}}>
+						{AVATAR_SEEDS.map((seed) => {
+							const url = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+							return (
+								<Avatar
+									key={seed}
+									src={url}
+									onClick={() => handleSelectAvatar(seed)}
+									sx={{
+										width: 45,
+										height: 45,
+										cursor: 'pointer',
+										border: user?.avatarUrl === url ? '2px solid #1976d2' : '2px solid transparent',
+										'&:hover': { transform: 'scale(1.1)', transition: '0.1s' }
+									}}
+								/>
+							);
+						})}
+					</Box>
+				</Collapse>
 				<Typography variant="h5" fontWeight="bold">
 					{user?.username || 'Guest'}
 				</Typography>

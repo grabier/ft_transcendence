@@ -194,7 +194,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 				// 4. Enviar respuesta con el token
 				return reply.code(200).send({
-					message: "Username updated successfully",
+					message: "Avatar updated successfully",
 					newUrl : newUrl
 				});
 			} catch (error: any) {
