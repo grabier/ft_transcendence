@@ -29,12 +29,15 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	// --- ESTADOS ---
 	const [friends, setFriends] = useState<any[]>([]);
 	const [pending, setPending] = useState<any[]>([]);
+	const [blocked, setBlocked] = useState<any[]>([]);
 	const [loading, setLoading] = useState(true);
 
 	// Estados de visualización de secciones
 	const [showOnline, setShowOnline] = useState(true);
 	const [showOffline, setShowOffline] = useState(true);
 	const [showPending, setShowPending] = useState(true);
+	const [showBlocked, setShowBlocked] = useState(true);
+
 
 	// Estados de búsqueda
 	const [showSearch, setShowSearch] = useState(false);
@@ -58,7 +61,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const fetchData = useCallback(async () => {
 		if (!token) return;
 		try {
-			const [resF, resP] = await Promise.all([
+			const [resF, resP, resB] = await Promise.all([
 				fetch('http://localhost:3000/api/friend/list', {
 					headers: {
 						'Authorization': `Bearer ${token}`,
@@ -74,13 +77,22 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						'Pragma': 'no-cache',
 						'Expires': '0'
 					}
+				}), fetch('http://localhost:3000/api/friend/blocked', {
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
+						'Pragma': 'no-cache',
+						'Expires': '0'
+					}
 				})
 			]);
 
 			const friendsData = await resF.json();
 			const pendingData = await resP.json();
+			const blockedData = await resB.json();
 			setFriends(Array.isArray(friendsData) ? friendsData : []);
 			setPending(Array.isArray(pendingData) ? pendingData : []);
+			setBlocked(Array.isArray(blockedData) ? blockedData : []);
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -141,7 +153,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		setSearchResults([]);
 		setShowSearch(false);
 	};
-
 	const handleAccept = async (senderId: number) => {
 		try {
 			const res = await fetch(`http://localhost:3000/api/friend/accept/${senderId}`, {
@@ -154,7 +165,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error(err);
 		}
 	};
-
 	const handleReject = async (senderId: number) => {
 		try {
 			const res = await fetch(`http://localhost:3000/api/friend/delete/${senderId}`, {
@@ -167,9 +177,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error(err);
 		}
 	};
-
 	const handleDelete = async (friendId: number) => {
-		//console.log("<<<<<<<<<<<<<<<< entra al handle delete");
 		try {
 			const res = await fetch(`http://localhost:3000/api/friend/delete/${friendId}`, {
 				method: 'DELETE',
@@ -182,9 +190,21 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		}
 	};
 
+	const handleBlock = async (blockedId: number) => {
+		try {
+			const res = await fetch(`http://localhost:3000/api/friend/block/${blockedId}`, {
+				method: 'PUT',
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (res.ok)
+				fetchData();
+		} catch (err) {
+			console.error(err);
+		}
+	};
 	const online = useMemo(() => Array.isArray(friends) ? friends.filter(f => f.is_online) : [], [friends]);
 	const offline = useMemo(() => Array.isArray(friends) ? friends.filter(f => !f.is_online) : [], [friends]);
-
+	const blockedUsers = useMemo(() => Array.isArray(blocked) ? blocked : [], [blocked]);
 	// --- RENDERIZADO ---
 	return (
 		<Drawer
@@ -323,12 +343,13 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
 													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
 												/>
 												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
 													<ChatIcon color="primary" fontSize="small" />
 												</IconButton>
 
-												
+
 											</Stack>
 										}
 									>
@@ -369,12 +390,54 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
 													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
 												/>
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
 												</IconButton>
 
-												
+
+											</Stack>
+										}
+									>
+										<ListItemAvatar sx={{ minWidth: 45 }}>
+											<Avatar src={f.avatar_url} sx={{ width: 32, height: 32, filter: 'grayscale(1)' }} />
+										</ListItemAvatar>
+										<ListItemText
+											primary={f.username}
+											primaryTypographyProps={{ fontSize: '0.9rem' }}
+										/>
+									</ListItem>
+								))}
+							</List>
+						</Collapse>
+						{/* BLOCKED */}
+						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
+							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
+							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
+								BLOCKED ({blockedUsers.length})
+							</Typography>
+						</Box>
+						<Collapse in={showBlocked}>
+							<List disablePadding>
+								{blockedUsers.map(f => (
+									<ListItem
+										key={f.id}
+										sx={{ pl: 3, opacity: 0.8 }}
+										secondaryAction={
+											<Stack direction="row" spacing={0} alignItems="center">
+												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
+												<FriendActionsMenu
+													friend={f}
+													onViewProfile={() => handleViewProfile(f)}
+													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
+												/>
+												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
+													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+												</IconButton>
+
+
 											</Stack>
 										}
 									>
@@ -393,6 +456,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					</List>
 				)}
 			</Box>
+
 			{selectedFriend && (
 				<ProfileFriend
 					open={modals.profileFriendsOpen}

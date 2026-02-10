@@ -9,7 +9,7 @@ interface Props {
     friend: any;
     onViewProfile: () => void;
     onRemove: (id: number) => void;
-    onBlock?: (id: number) => void;
+    onBlock: (id: number) => void;
 }
 
 export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: Props) => {
@@ -28,7 +28,7 @@ export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: 
     const actions = [
         { icon: <AccountCircleIcon />, name: 'Perfil', onClick: () => handleAction(onViewProfile), color: '#607d8b' },
         { icon: <PersonRemoveIcon />, name: 'Eliminar', onClick: () => handleAction(() => onRemove(friend.id)), color: '#ff5252' },
-        { icon: <BlockIcon />, name: 'Bloquear', onClick: () => handleAction(() => onBlock && onBlock(friend.id)), color: '#607d8b' },
+        { icon: <BlockIcon />, name: 'Bloquear', onClick: () => handleAction(() => onBlock(friend.id)),  color: '#607d8b' },
     ];
 
     return (

@@ -169,21 +169,7 @@ const initializeTables = async (): Promise<void> => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
-
-		// USUARIOS BLOQUEADOS
-		// Para que el chat sepa si permitir enviar mensaje o no
-		await connection.execute(`
-            CREATE TABLE IF NOT EXISTS blocked_users (
-                blocker_id INT NOT NULL,
-                blocked_id INT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (blocker_id, blocked_id),
-                FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        `);
-
-		console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages, blocked_users');
+	console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages');
 	} finally {
 		// Siempre liberamos la conexión, incluso si hay error
 		connection.release();

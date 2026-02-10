@@ -16,56 +16,10 @@ interface Props {
 }
 
 export const ProfileFriend = ({ open, onClose, friend }: Props) => {
-	//const { user, logout } = useAuth();
 	const modals = useAuthModals();
-	//const navigate = useNavigate();
-	//const { updateAvatarUrl } = useAuth();
-	//const { updateUsername } = useAuth(); // Importas la función
-
-	// Independent states for editing
-	//const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
-	//const [editEmail, setEditEmail] = useState({ open: false, value: user?.email || '' });
-
 	// avatar
 	const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
 	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatarUrl || defaultAvatar);
-
-	//const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
-	//const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-
-
-	/* const handleSelectAvatar = async (seed: string) => {
-		const newUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-
-		// Cambiamos la imagen en la UI antes de que responda el servidor (Optimismo)
-		setCurrentAvatar(newUrl);
-
-		const success = await updateAvatarUrl(newUrl);
-		if (success) {
-			setShowAvatarPicker(false);
-		} else {
-			// Si falla, volvemos a la original
-			setCurrentAvatar(user?.avatarUrl || defaultAvatar);
-			alert("Error al actualizar el avatar");
-		}
-	}; */
-	/* const handleUpdate = useCallback(async (type: 'user' | 'email') => {
-		if (type === 'user') {
-			// Llamas a la función del contexto
-			const success = await updateUsername(editName.value);
-			if (success) {
-				setEditName(prev => ({ ...prev, open: false }));
-			}
-		}
-		// ... resto de lógica
-	}, [editName.value, updateUsername]); */
-
-	/* const onLogoutClick = () => {
-		logout();
-		modals.closeAll();
-		onClose(); // This triggers the drawer to close in the parent state
-		navigate("/");
-	}; */
 
 	return (
 		<Drawer
@@ -131,16 +85,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
 
 				<Divider variant="inset" component="li" />
 
-				{/* Email Field */}
-				<ListItem>
-					<ListItemAvatar>
-						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
-					</ListItemAvatar>
-					<ListItemText
-						primary="Email Address"
-						secondary={friend?.email || 'Not set'}
-					/>
-				</ListItem>
+	
 			</List>
 		</Drawer>
 	);
