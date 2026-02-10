@@ -318,16 +318,17 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										sx={{ pl: 3 }}
 										secondaryAction={
 											<Stack direction="row" spacing={0} alignItems="center">
-												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
-													<ChatIcon color="primary" fontSize="small" />
-												</IconButton>
-
 												{/* AQUÍ ESTA TU MENÚ INTEGRADO CORRECTAMENTE */}
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
 													onRemove={() => handleDelete(f.id)}
 												/>
+												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
+													<ChatIcon color="primary" fontSize="small" />
+												</IconButton>
+
+												
 											</Stack>
 										}
 									>
@@ -363,16 +364,17 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										sx={{ pl: 3, opacity: 0.8 }}
 										secondaryAction={
 											<Stack direction="row" spacing={0} alignItems="center">
-												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
-													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-												</IconButton>
-
 												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
 													onRemove={() => handleDelete(f.id)}
 												/>
+												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
+													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+												</IconButton>
+
+												
 											</Stack>
 										}
 									>
