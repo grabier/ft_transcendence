@@ -130,7 +130,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
 				senderId: aidi,
 				username: userId.username, // Para que el front muestre el nombre
-				message: `${senderId.username} has accepted your request.`
+				message: `${(request.params as any).username} has accepted your request.`
 			});
 			return { message: "Ahora sois amigos" };
 		} catch (error: any) {
@@ -142,10 +142,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 * DELETE /:id - Eliminar un amigo o rechazar una petición
 	 * El :id es el ID del otro usuario
 	 */
-	fastify.delete<{ Params: FriendParams }>('/:id', async (request, reply) => {
+	fastify.delete<{ Params: FriendParams }>('/delete/:id', async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
-			const otherId = request.params.id;
+			const otherId = (request.params as any).id;
 
 			// Borra la relación sin importar quién la empezó
 			await pool.execute(`
@@ -153,6 +153,12 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
                 WHERE (sender_id = ? AND receiver_id = ?) 
                    OR (sender_id = ? AND receiver_id = ?)
             `, [userId, otherId, otherId, userId]);
+
+			const aidi = parseInt(otherId);
+			socketManager.notifyUser(aidi, 'DELETE', {
+				senderId: aidi,
+				message: `${(request.params as any).username} has removed you as a frien.`
+			});
 
 			return { message: "Relación eliminada correctamente" };
 		} catch (error: any) {

@@ -74,11 +74,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 		ws.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
-				console.log(`MENSAJE RECIBIDO: ${data.message}`);
+				console.log(`MENSAJE RECIBIDO: ${data.type}`);
 				setLastNotification(data);
 				if(data.type === 'FRIEND_REQUEST')
 					setUnreadCount(prev => prev + 1);
-				if(data.type !== 'MESSAGE_SENT_OK')
+				if(data.type === 'NEW_MESSAGE')
 					setUnreadMessages(prev => prev + 1);
 			} catch (err) {
 				console.error("WS Parse Error", err);

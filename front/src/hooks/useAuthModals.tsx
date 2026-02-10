@@ -10,6 +10,7 @@ export const useAuthModals = () => {
 	const [socialOpen, setSocialOpen] = useState(false);
 	const [seeAllUsers, setSeeAllUsers] = useState(false);
 	const [profileOpen, setProfileOpen] = useState(false);
+	const [profileFriendsOpen, setProfileFriendsOpen] = useState(false);
 
 	// --- ACCIONES DE CIERRE ---
 	const closeAll = () => {
@@ -19,6 +20,7 @@ export const useAuthModals = () => {
 		setSocialOpen(false);
 		setSeeAllUsers(false);
 		setProfileOpen(false);
+		setProfileFriendsOpen(false);
 	};
 
 	// --- ACCIONES DE APERTURA / CAMBIO ---
@@ -51,7 +53,15 @@ export const useAuthModals = () => {
 	const toggleProfile = () => {
 		const wasOpen = profileOpen;
 		closeAll();
-		if (!wasOpen) setProfileOpen(true);
+		if (!wasOpen)
+			setProfileOpen(true);
+	};
+
+	const toggleProfileFriends = () => {
+		const wasOpen = profileFriendsOpen;
+		closeAll();
+		if (!wasOpen)
+			setProfileFriendsOpen(true);
 	};
 
 	const openUserList = () => {
@@ -67,6 +77,7 @@ export const useAuthModals = () => {
 		resetPasswordOpen,
 		socialOpen,
 		profileOpen,
+		profileFriendsOpen,
 		seeAllUsers,
 
 		// Acciones
@@ -76,6 +87,7 @@ export const useAuthModals = () => {
 		openUserList,
 		toggleSocial,
 		toggleProfile,
+		toggleProfileFriends,
 
 		// Transiciones
 		switchToRegister,
