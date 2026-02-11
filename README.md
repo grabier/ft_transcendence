@@ -26,6 +26,9 @@ minor Spectator mode
 	--EXTRAS--
 (torneo) Minor: A complete notification system for all creation, update, and deletion actions. ( CON TORNEOS) 
 minor SSR? SEO?
+
+
+
 1- idiomas
 1 - RLT
 1 - support additional browser 

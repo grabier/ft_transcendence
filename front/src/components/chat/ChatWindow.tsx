@@ -3,9 +3,9 @@ import { Box, Paper, TextField, IconButton, Typography, Avatar, Stack } from '@m
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
-import { useChat } from '../../context/ChatContext'; // <--- Ajusta esta ruta si te sale rojo
-import { useAuth } from '../../context/AuthContext'; // <--- Ajusta esta ruta si te sale rojo
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // IMPORTAR ESTO
+import { useChat } from '../../context/ChatContext';
+import { useAuth } from '../../context/AuthContext';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export const ChatWindow = () => {
 	const { activeChat, messages, sendMessage, closeChat } = useChat();

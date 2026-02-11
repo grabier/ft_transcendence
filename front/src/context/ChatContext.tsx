@@ -147,6 +147,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		return () => socket.removeEventListener('message', handleSocketMessage);
 	}, [socket, activeChat, fetchChats]);
 
+	//limpieza
+	useEffect(() => {
+		if (!user) {
+			console.log("🧹 Limpiando estado del chat (Logout detected)");
+			setActiveChat(null);
+			setMessages([]);
+			setChats([]);
+		}
+	}, [user]);
+
 	const closeChat = () => setActiveChat(null);
 
 	return (
