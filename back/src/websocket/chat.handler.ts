@@ -33,8 +33,8 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		// 2. BLOQUEOS: ¿Me ha bloqueado el receptor?
 		// Buscamos si existe una fila donde blocker = receptor AND blocked = yo
 		const [blockCheck]: any = await pool.execute(
-			'SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?',
-			[receiverId, senderId]
+			`SELECT 1 FROM friendships WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))  AND status = 'blocked'`,
+			[receiverId, senderId, senderId, receiverId]
 		);
 
 		if (blockCheck.length > 0) {
