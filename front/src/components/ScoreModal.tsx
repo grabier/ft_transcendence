@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Slider, Typography, Box } from '@mui/material';
 
 interface ScoreModalProps {
@@ -10,6 +11,8 @@ interface ScoreModalProps {
 
 const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart }) => {
 	const [score, setScore] = useState<number>(5);
+
+    const { t } = useTranslation();
 
 	return (
 		<Dialog
@@ -29,16 +32,16 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 			}}
 		>
 			<DialogTitle sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 'bold' }}>
-				Set Game
+				{t('scoreModal.title')}
 			</DialogTitle>
 
 			<DialogContent>
 				<Typography gutterBottom sx={{ color: 'grey.400', mb: 4 }}>
-					Mode: <span style={{ color: '#fff', fontWeight: 'bold' }}>{mode === 'ai' ? 'VS IA' : '1 VS 1'}</span>
+					{t('scoreModal.mode')}: <span style={{ color: '#fff', fontWeight: 'bold' }}>{mode === t('scoreModal.ai') ? t('scoreModal.vsAI') : t('scoreModal.vsPlayer')}</span>
 				</Typography>
 
 				<Typography gutterBottom>
-					Points to win: <strong>{score}</strong>
+					{t('scoreModal.pointsToWin')}: <strong>{score}</strong>
 				</Typography>
 
 				<Box sx={{ px: 2, mt: 2 }}>
@@ -67,7 +70,7 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 
 			<DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
 				<Button onClick={onClose} sx={{ color: 'grey.500' }}>
-					CANCEL
+					{t('scoreModal.cancel')}
 				</Button>
 				<Button
 					onClick={() => onStart(score)}
@@ -79,7 +82,7 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 						'&:hover': { bgcolor: 'grey.300' }
 					}}
 				>
-					START GAME
+					{t('scoreModal.startGame')}
 				</Button>
 			</DialogActions>
 		</Dialog>

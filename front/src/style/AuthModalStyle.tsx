@@ -14,9 +14,9 @@ export const fadeIn = keyframes`
 
 export const StyledDialog = styled(Dialog)(({ theme }) => ({
     "& .MuiDialog-paper": {
-        backgroundColor: theme.palette.background.default,
-        border: `3px solid ${theme.palette.secondary.main}`,
-        boxShadow: `10px 10px 0px 0px ${theme.palette.secondary.main}`,
+        backgroundColor: "background.default",
+        border: `3px solid "secondary.main"`,
+        boxShadow: `10px 10px 0px 0px "secondary.main"`,
         borderRadius: 0,
         maxWidth: "448px",
         width: "100%",
@@ -24,7 +24,7 @@ export const StyledDialog = styled(Dialog)(({ theme }) => ({
         transition: "all 0.3s",
         "&:hover": {
             transform: "translate(-2px, -2px)",
-            boxShadow: `12px 12px 0px 0px ${theme.palette.accent.yellow}`,
+            boxShadow: `12px 12px 0px 0px "accent.yellow"`,
         },
     },
     "& .MuiBackdrop-root": {
@@ -32,11 +32,11 @@ export const StyledDialog = styled(Dialog)(({ theme }) => ({
     },
 }));
 
-export const StyledTextField = styled(TextField)(({ theme }) => ({
+export const StyledTextField = styled(TextField)(() => ({
     "& .MuiOutlinedInput-root": {
         borderRadius: 0,
-        backgroundColor: theme.palette.grey[200],
-        border: `2px solid ${theme.palette.secondary.main}`,
+        backgroundColor: "grey[200]",
+        border: `2px solid "secondary.main"`,
         fontFamily: "'Space Mono', 'Courier New', monospace",
         fontWeight: "bold",
         textTransform: "uppercase",
@@ -45,11 +45,11 @@ export const StyledTextField = styled(TextField)(({ theme }) => ({
             border: "none",
         },
         "&:hover": {
-            backgroundColor: theme.palette.grey[200],
+            backgroundColor: "grey[200]",
         },
         "&.Mui-focused": {
-            backgroundColor: theme.palette.background.default,
-            borderColor: theme.palette.accent.yellow,
+            backgroundColor: "background.default",
+            borderColor: "accent.yellow",
         },
     },
     "& .MuiInputLabel-root": {
@@ -66,29 +66,29 @@ export const StyledTextField = styled(TextField)(({ theme }) => ({
     },
 }));
 
-export const PrimaryAuthButton = styled(Button)(({ theme }) => ({
+export const PrimaryAuthButton = styled(Button)(() => ({
     width: "100%",
-    backgroundColor: theme.palette.accent.yellow,
-    color: theme.palette.secondary.main,
+    backgroundColor: "accent.yellow",
+    color: "secondary.main",
     fontSize: "1.25rem",
     fontWeight: 900,
     fontFamily: "'Archivo Black', sans-serif",
     padding: "16px 24px",
-    border: `2px solid ${theme.palette.secondary.main}`,
+    border: `2px solid "secondary.main"`,
     borderRadius: 0,
-    boxShadow: `5px 5px 0px 0px ${theme.palette.secondary.main}`,
+    boxShadow: `5px 5px 0px 0px "secondary.main"`,
     textTransform: "uppercase",
     transition: "all 0.1s",
     "&:hover": {
-        backgroundColor: theme.palette.accent.yellowHover,
+        backgroundColor: "accent.yellowHover",
     },
     "&:active": {
         transform: "translate(5px, 5px)",
         boxShadow: "0px 0px 0px 0px",
     },
     "&:disabled": {
-        backgroundColor: theme.palette.grey[300],
-        color: theme.palette.grey[700],
+        backgroundColor: "grey[300]",
+        color: "grey[700]",
     },
 }));
 

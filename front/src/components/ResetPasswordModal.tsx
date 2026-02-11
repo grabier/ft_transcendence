@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Stack,
@@ -34,6 +35,8 @@ const ResetPasswordModal = ({
 }: Props) => {
     const [email, setEmail] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
+
+    const { t } = useTranslation();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -72,10 +75,10 @@ const ResetPasswordModal = ({
                             mb: 1,
                         }}
                     >
-                        Reset your password
+                        {t('resetPassword.title')}
                     </Typography>
                     <Typography variant="displayTitle">
-                        Transcendence
+                        {t('resetPassword.subtitle')}
                     </Typography>
                 </Box>
 
@@ -88,8 +91,7 @@ const ResetPasswordModal = ({
                         color: "text.secondary",
                     }}
                 >
-                    Enter your email address and we'll send you a link to reset
-                    your password.
+                    {t('resetPassword.instructions')}
                 </Typography>
 
                 {/* Error Alert */}
@@ -102,7 +104,7 @@ const ResetPasswordModal = ({
                 {/* Success Alert */}
                 {isSuccess && ( // Change from `success` to `isSuccess`
                     <Alert severity="success" sx={{ mb: 2 }}>
-                        Check your email for the reset link!
+                        {t('resetPassword.successMessage')}
                     </Alert>
                 )}
 
@@ -112,7 +114,7 @@ const ResetPasswordModal = ({
                         <StyledTextField
                             fullWidth
                             type="email"
-                            label="EMAIL"
+                            label={t('resetPassword.emailLabel')}
                             name="email"
                             autoComplete="email"
                             value={email}
@@ -131,14 +133,14 @@ const ResetPasswordModal = ({
                                     size={24}
                                     sx={{ color: "secondary.main" }}
                                 />
-                            ) : isSuccess ? "Email Sent!" : "Send Reset Link"}
+                            ) : isSuccess ? t('resetPassword.emailSent') : t('resetPassword.sendButton')}
                         </PrimaryAuthButton>
                     </Stack>
                 </form>
 
                 {/* Back to Login */}
                 <Typography variant="body1" sx={{ textAlign: "center", mt: 3 }}>
-                    Remember your password?{" "}
+                    {t('resetPassword.backToLogin')}{" "}
                     <Link
                         component="button"
                         type="button"
@@ -154,7 +156,7 @@ const ResetPasswordModal = ({
                             "&:hover": { color: "accent.yellowDark" },
                         }}
                     >
-                        Back to login
+                        {t('resetPassword.backToLoginLink')}
                     </Link>
                 </Typography>
             </Box>

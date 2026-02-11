@@ -9,6 +9,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Check';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../context/AuthContext";
 import { useAuthModals } from '../hooks/useAuthModals';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +38,7 @@ export const Profile = ({ open, onClose }: Props) => {
 	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
+    const { t } = useTranslation();
 
 	const handleSelectAvatar = async (seed: string) => {
 		const newUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
@@ -89,7 +91,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				bgcolor: 'primary.main',
 				color: 'white'
 			}}>
-				<Typography variant="h6" fontWeight="600">My Profile</Typography>
+				<Typography variant="h6" fontWeight="600">{t('profile.title')}</Typography>
 				<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
 					<CloseIcon />
 				</IconButton>
@@ -131,7 +133,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				{/* Selector de Avatares (Collapse) */}
 				<Collapse in={showAvatarPicker} sx={{ width: '100%', px: 3 }}>
 					<Typography variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
-						Selecciona un nuevo avatar:
+						{t('profile.selectAvatar')}
 					</Typography>
 					<Box sx={{
 						display: 'grid',
@@ -162,10 +164,10 @@ export const Profile = ({ open, onClose }: Props) => {
 					</Box>
 				</Collapse>
 				<Typography variant="h5" fontWeight="bold">
-					{user?.username || 'Guest'}
+					{t('profile.username') || 'Guest'}
 				</Typography>
 				<Typography variant="body2" color="text.secondary">
-					{user?.role || 'Standard Member'}
+					{t('profile.role') || 'Standard Member'}
 				</Typography>
 			</Box>
 
@@ -183,8 +185,8 @@ export const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'primary.light' }}><PersonOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
-						primary="Username"
-						secondary={user?.username || 'Not set'}
+						primary={t('profile.username')}
+						secondary={t('profile.username') || 'Not set'}
 					/>
 				</ListItem>
 
@@ -192,7 +194,7 @@ export const Profile = ({ open, onClose }: Props) => {
 					<TextField
 						fullWidth
 						size="small"
-						label="New Username"
+						label={t('profile.newUsername')}
 						value={editName.value}
 						onChange={(e) => setEditName(p => ({ ...p, value: e.target.value }))}
 						InputProps={{
@@ -219,8 +221,8 @@ export const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
-						primary="Email Address"
-						secondary={user?.email || 'Not set'}
+						primary={t('profile.email')}
+						secondary={t('profile.email') || 'Not set'}
 					/>
 				</ListItem>
 
@@ -228,7 +230,7 @@ export const Profile = ({ open, onClose }: Props) => {
 					<TextField
 						fullWidth
 						size="small"
-						label="New Email"
+						label={t('profile.newEmail')}
 						value={editEmail.value}
 						onChange={(e) => setEditEmail(p => ({ ...p, value: e.target.value }))}
 						InputProps={{
@@ -251,7 +253,7 @@ export const Profile = ({ open, onClose }: Props) => {
 					sx={{ borderRadius: 2, py: 1.5, fontWeight: 'bold' }}
 					onClick={onLogoutClick}
 				>
-					Logout
+					{t('profile.logout')}
 				</Button>
 			</Box>
 		</Drawer>

@@ -1,0 +1,35 @@
+{
+  "profile": {
+    "title": "My Profile",
+    "username": "Username",
+    "email": "Email Address",
+    "newUsername": "New Username",
+    "newEmail": "New Email",
+    "role": "Role",
+    "standardMember": "Standard Member",
+    "selectAvatar": "Select a new avatar:",
+    "logout": "Logout"
+  },
+  "resetPassword": {
+    "title": "Reset your password",
+    "subtitle": "Transcendence",
+    "instructions": "Enter your email address and we'll send you a link to reset your password.",
+    "emailLabel": "EMAIL",
+    "sendButton": "Send Reset Link",
+    "sending": "Sending...",
+    "emailSent": "Email Sent!",
+    "successMessage": "Check your email for the reset link!",
+    "backToLogin": "Remember your password?",
+    "backToLoginLink": "Back to login"
+  },
+  "scoreModal": {
+    "title": "Set Game",
+    "mode": "Mode",
+    "ai": "AI",
+    "vsAI": "VS AI",
+    "vsPlayer": "1 VS 1",
+    "pointsToWin": "Points to win",
+    "cancel": "CANCEL",
+    "startGame": "START GAME"
+  }
+}

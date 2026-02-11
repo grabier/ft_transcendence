@@ -1,0 +1,35 @@
+{
+  "profile": {
+    "title": "Mon Profil",
+    "username": "Nom d'utilisateur",
+    "email": "Adresse e-mail",
+    "newUsername": "Nouveau nom d'utilisateur",
+    "newEmail": "Nouveau e-mail",
+    "role": "Rôle",
+    "standardMember": "Membre Standard",
+    "selectAvatar": "Sélectionnez un nouvel avatar:",
+    "logout": "Se déconnecter"
+  },
+  "resetPassword": {
+    "title": "Réinitialisez votre mot de passe",
+    "subtitle": "Transcendence",
+    "instructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+    "emailLabel": "E-MAIL",
+    "sendButton": "Envoyer le lien",
+    "sending": "Envoi...",
+    "emailSent": "E-mail envoyé!",
+    "successMessage": "Vérifiez votre e-mail pour le lien de réinitialisation!",
+    "backToLogin": "Vous vous souvenez de votre mot de passe?",
+    "backToLoginLink": "Retour à la connexion"
+  },
+  "scoreModal": {
+    "title": "Configurer la partie",
+    "mode": "Mode",
+    "ai": "IA",
+    "vsAI": "VS IA",
+    "vsPlayer": "1 VS 1",
+    "pointsToWin": "Points pour gagner",
+    "cancel": "ANNULER",
+    "startGame": "COMMENCER LA PARTIE"
+  }
+}

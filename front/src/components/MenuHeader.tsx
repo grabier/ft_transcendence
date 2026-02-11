@@ -21,6 +21,7 @@ import {Profile} from "./Profile";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModals } from "../hooks/useAuthModals";
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 // Ya no recibe children, se pinta él solo
 const MenuHeader = () => {
@@ -96,7 +97,8 @@ const MenuHeader = () => {
 
 	
 				{user && <MenuItem onClick={onLogoutClick}>Logout</MenuItem>}
-			</Menu>
+                <MenuItem><LanguageSwitcher /></MenuItem>
+            </Menu>
 
 			{/* 3. LOS MODALES */}
 			<LoginModal
