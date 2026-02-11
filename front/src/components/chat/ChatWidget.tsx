@@ -9,11 +9,13 @@ import { ChatSidebar } from './ChatSidebar';
 import { ChatWindow } from './ChatWindow';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from "../../context/SocketContext";
+import { useAuth } from '../../context/AuthContext';
 
 export const ChatWidget = () => {
 	const [isOpen, setIsOpen] = useState(false); // ¿Está el widget abierto?
 	const { activeChat, closeChat, chats, refreshChats: fetchChats} = useChat();
 	const { unreadMessages, markAsReadMessage } = useSocket();
+	const { user } = useAuth();
 	
 
 	// Calculamos mensajes no leídos totales (opcional, para el globito rojo)
@@ -37,6 +39,9 @@ export const ChatWidget = () => {
 			setIsOpen(true);
 		}
 	}, [activeChat]);
+
+	if (!user)
+		return null;
 
 	return (
 		<Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>

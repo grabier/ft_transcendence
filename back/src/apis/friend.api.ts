@@ -76,11 +76,30 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
                 FROM users u
                 JOIN friendships f ON (u.id = f.sender_id OR u.id = f.receiver_id)
                 WHERE (f.sender_id = ? OR f.receiver_id = ?) 
-                  AND f.status = 'accepted' 
+                  AND f.status = 'accepted'
                   AND u.id != ?
             `, [userId, userId, userId]);
 
 			return friends;
+		} catch (error: any) {
+			return reply.code(500).send({ error: "Error al obtener la lista de amigos" });
+		}
+	});
+	fastify.get('/blocked', async (request, reply) => {
+		try {
+			const userId = (request.user as any).id;
+
+			// Query que busca amigos en ambas direcciones de la relación
+			const [blockade] = await pool.execute(`
+                SELECT u.id, u.username, u.avatar_url, u.is_online
+                FROM users u
+                JOIN friendships f ON (u.id = f.sender_id OR u.id = f.receiver_id)
+                WHERE (f.sender_id = ? OR f.receiver_id = ?) 
+                  AND f.status = 'blocked' 
+                  AND u.id != ?
+            `, [userId, userId, userId]);
+
+			return blockade;
 		} catch (error: any) {
 			return reply.code(500).send({ error: "Error al obtener la lista de amigos" });
 		}
@@ -130,7 +149,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
 				senderId: aidi,
 				username: userId.username, // Para que el front muestre el nombre
-				message: `${senderId.username} has accepted your request.`
+				message: `${(request.params as any).username} has accepted your request.`
 			});
 			return { message: "Ahora sois amigos" };
 		} catch (error: any) {
@@ -142,10 +161,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 * DELETE /:id - Eliminar un amigo o rechazar una petición
 	 * El :id es el ID del otro usuario
 	 */
-	fastify.delete<{ Params: FriendParams }>('/:id', async (request, reply) => {
+	fastify.delete<{ Params: FriendParams }>('/delete/:id', async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
-			const otherId = request.params.id;
+			const otherId = (request.params as any).id;
 
 			// Borra la relación sin importar quién la empezó
 			await pool.execute(`
@@ -154,11 +173,51 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
                    OR (sender_id = ? AND receiver_id = ?)
             `, [userId, otherId, otherId, userId]);
 
+			const aidi = parseInt(otherId);
+			socketManager.notifyUser(aidi, 'DELETE', {
+				senderId: aidi,
+				message: `${(request.params as any).username} has removed you as a frien.`
+			});
+
 			return { message: "Relación eliminada correctamente" };
 		} catch (error: any) {
 			return reply.code(500).send({ error: "Error al eliminar la relación" });
 		}
 	});
+
+
+	/**
+	 * PUT /accept/:id - Aceptar una petición de amistad
+	 * El :id es el ID del usuario que envió la petición (sender_id)
+	 */
+
+	//gabri del futuro.. si tienes tiempo prueba esto
+	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
+	fastify.put<{ Params: FriendParams, }>('/block/:id', async (request, reply) => {
+		try {
+			const userId = (request.user as any).id;
+			const blockedId = (request.params as any).id;
+
+			const [result]: any = await pool.execute(
+				'UPDATE friendships SET status = "blocked" WHERE receiver_id = ? AND sender_id = ? AND status = "pending" OR status = "accepted"',
+				[userId, blockedId]
+			);
+
+			if (result.affectedRows === 0) {
+				return reply.code(404).send({ error: "Petición no encontrada o ya bloqueada" });
+			}
+			const aidi = parseInt(blockedId);
+			socketManager.notifyUser(aidi, 'BLOCKED', {
+				blockedId: aidi,
+				username: userId.username, // Para que el front muestre el nombre
+				message: `${(request.params as any).username} has blocked you.`
+			});
+			return { message: "Tan blokeao por pajas" };
+		} catch (error: any) {
+			return reply.code(500).send({ error: "Error al bloquear usuario" });
+		}
+	});
+
 };
 
 export default friendRoutes;

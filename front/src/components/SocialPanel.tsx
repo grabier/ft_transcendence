@@ -11,10 +11,14 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
+import ChatIcon from '@mui/icons-material/Chat';
 import { useSocket } from "../context/SocketContext";
 import { useChat } from '../context/ChatContext';
-import ChatIcon from '@mui/icons-material/Chat'; // El icono
+import ProfileFriend from './ProfileFriend';
+import { useAuthModals } from "../hooks/useAuthModals";
 
+// Importamos tu componente de menú semicircular
+import { FriendActionsMenu } from './FriendActionsMenu';
 
 interface Props {
 	open: boolean;
@@ -22,31 +26,45 @@ interface Props {
 }
 
 export const SocialPanel = ({ open, onClose }: Props) => {
-	// --- ESTADOS ORIGINALES ---
+	// --- ESTADOS ---
 	const [friends, setFriends] = useState<any[]>([]);
 	const [pending, setPending] = useState<any[]>([]);
+	const [blocked, setBlocked] = useState<any[]>([]);
 	const [loading, setLoading] = useState(true);
 
+	// Estados de visualización de secciones
 	const [showOnline, setShowOnline] = useState(true);
 	const [showOffline, setShowOffline] = useState(true);
 	const [showPending, setShowPending] = useState(true);
+	const [showBlocked, setShowBlocked] = useState(true);
 
+
+	// Estados de búsqueda
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<any[]>([]);
-	const { markAsRead, lastNotification } = useSocket();
-	const token = localStorage.getItem('auth_token');
-	const { selectChat } = useChat(); // <--- SACAMOS LA FUNCIÓN MÁGICA
 
-	// --- LÓGICA ORIGINAL ---
+	// Hooks y Contexto
+	const { markAsRead, lastNotification } = useSocket();
+	const { selectChat } = useChat();
+	const token = localStorage.getItem('auth_token');
+
+	const modals = useAuthModals();
+	const [selectedFriend, setSelectedFriend] = useState<any>();
+
+	const handleViewProfile = (friend: any) => {
+		setSelectedFriend(friend);
+		modals.toggleProfileFriends();
+	};
+
+	// --- FETCH DATA ---
 	const fetchData = useCallback(async () => {
 		if (!token) return;
 		try {
-			const [resF, resP] = await Promise.all([
+			const [resF, resP, resB] = await Promise.all([
 				fetch('http://localhost:3000/api/friend/list', {
 					headers: {
 						'Authorization': `Bearer ${token}`,
-						// 👇 AÑADE ESTO: Obliga a no usar caché
 						'Cache-Control': 'no-cache, no-store, must-revalidate',
 						'Pragma': 'no-cache',
 						'Expires': '0'
@@ -55,7 +73,13 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				fetch('http://localhost:3000/api/friend/pending', {
 					headers: {
 						'Authorization': `Bearer ${token}`,
-						// 👇 AQUÍ TAMBIÉN
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
+						'Pragma': 'no-cache',
+						'Expires': '0'
+					}
+				}), fetch('http://localhost:3000/api/friend/blocked', {
+					headers: {
+						'Authorization': `Bearer ${token}`,
 						'Cache-Control': 'no-cache, no-store, must-revalidate',
 						'Pragma': 'no-cache',
 						'Expires': '0'
@@ -65,8 +89,10 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 			const friendsData = await resF.json();
 			const pendingData = await resP.json();
+			const blockedData = await resB.json();
 			setFriends(Array.isArray(friendsData) ? friendsData : []);
 			setPending(Array.isArray(pendingData) ? pendingData : []);
+			setBlocked(Array.isArray(blockedData) ? blockedData : []);
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -82,15 +108,15 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	}, [open, fetchData, markAsRead]);
 
 	useEffect(() => {
-		console.log("lastnoti useffect")
-		if (lastNotification?.type === 'FRIEND_REQUEST') {
+		if (lastNotification?.type === 'FRIEND_REQUEST' || 'DELETE') {
 			fetchData();
 		}
-	}, [lastNotification]);
+	}, [lastNotification, fetchData]);
 
-
+	// --- BUSQUEDA ---
 	const handleSearch = useCallback(async () => {
-		if (searchQuery.length < 2) return;
+		if (searchQuery.length < 2)
+			return;
 		try {
 			const res = await fetch(`http://localhost:3000/api/user/search?q=${searchQuery}`, {
 				headers: { 'Authorization': `Bearer ${token}` }
@@ -101,7 +127,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error("Error en búsqueda:", err);
 			setSearchResults([]);
 		}
-	}, [searchQuery, setSearchResults]);
+	}, [searchQuery, token]);
 
 	useEffect(() => {
 		if (searchQuery.length < 1) {
@@ -109,12 +135,14 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			return;
 		}
 		const timer = setTimeout(() => {
-			if (searchQuery.length > 1) handleSearch();
+			if (searchQuery.length > 1)
+				handleSearch();
 		}, 300);
 
 		return () => clearTimeout(timer);
 	}, [searchQuery, handleSearch]);
 
+	// --- ACCIONES ---
 	const sendRequest = async (receiverId: number) => {
 		await fetch('http://localhost:3000/api/friend/request', {
 			method: 'POST',
@@ -125,7 +153,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		setSearchResults([]);
 		setShowSearch(false);
 	};
-
 	const handleAccept = async (senderId: number) => {
 		try {
 			const res = await fetch(`http://localhost:3000/api/friend/accept/${senderId}`, {
@@ -138,35 +165,56 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error(err);
 		}
 	};
-
 	const handleReject = async (senderId: number) => {
 		try {
-			const res = await fetch(`http://localhost:3000/api/friend/${senderId}`, {
+			const res = await fetch(`http://localhost:3000/api/friend/delete/${senderId}`, {
 				method: 'DELETE',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
-			if (res.ok) fetchData();
+			if (res.ok)
+				fetchData();
+		} catch (err) {
+			console.error(err);
+		}
+	};
+	const handleDelete = async (friendId: number) => {
+		try {
+			const res = await fetch(`http://localhost:3000/api/friend/delete/${friendId}`, {
+				method: 'DELETE',
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (res.ok)
+				fetchData();
 		} catch (err) {
 			console.error(err);
 		}
 	};
 
+	const handleBlock = async (blockedId: number) => {
+		try {
+			const res = await fetch(`http://localhost:3000/api/friend/block/${blockedId}`, {
+				method: 'PUT',
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (res.ok)
+				fetchData();
+		} catch (err) {
+			console.error(err);
+		}
+	};
 	const online = useMemo(() => Array.isArray(friends) ? friends.filter(f => f.is_online) : [], [friends]);
 	const offline = useMemo(() => Array.isArray(friends) ? friends.filter(f => !f.is_online) : [], [friends]);
-
-	// --- RENDERIZADO DEL MODAL ---
+	const blockedUsers = useMemo(() => Array.isArray(blocked) ? blocked : [], [blocked]);
+	// --- RENDERIZADO ---
 	return (
 		<Drawer
 			anchor="right"
 			open={open}
 			onClose={onClose}
-			// ESTA ES LA CLAVE PARA LA PERSISTENCIA:
-			// Mantiene el componente montado en el DOM aunque esté oculto.
-			// Así no pierdes si tenías desplegado "Offline" o lo que habías escrito en el buscador.
 			ModalProps={{ keepMounted: true }}
 			PaperProps={{
 				sx: {
-					width: 320, // Ancho fijo del sidebar
+					width: 320,
 					bgcolor: 'background.paper',
 					borderLeft: '1px solid',
 					borderColor: 'divider',
@@ -174,7 +222,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				}
 			}}
 		>
-			{/* --- CABECERA DEL DRAWER --- */}
+			{/* --- CABECERA --- */}
 			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'primary.dark' }}>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<GroupIcon sx={{ color: 'secondary.main' }} />
@@ -211,9 +259,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 							size="small"
 							placeholder="Username..."
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)} //gives the searchquery string value
+							onChange={(e) => setSearchQuery(e.target.value)}
 							onKeyDown={(e) => (e.key === 'Enter' && handleSearch())}
-							//onKeyUp={() =>  handleSearch()}
 							sx={{ mt: 1 }}
 							InputProps={{
 								endAdornment: (
@@ -223,7 +270,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 								)
 							}}
 						/>
-						{/* Resultados de búsqueda */}
 						<List dense sx={{ mt: 1, bgcolor: 'action.hover', borderRadius: 1 }}>
 							{Array.isArray(searchResults) && searchResults.map(u => (
 								<ListItem key={u.id} divider>
@@ -290,20 +336,21 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 									<ListItem
 										key={f.id}
 										sx={{ pl: 3 }}
-										// 👇 CORRECCIÓN 1: secondaryAction va AQUÍ, como propiedad
 										secondaryAction={
-											<IconButton
-												edge="end"
-												aria-label="chat"
-												// 👇 CORRECCIÓN 2: Usamos 'f' (el amigo actual), no 'friends'
-												onClick={() => {
-													console.log("Abriendo chat con:", f.username);
-													onClose();
-													selectChat(f.id, f);
-												}}
-											>
-												<ChatIcon color="primary" fontSize="small" />
-											</IconButton>
+											<Stack direction="row" spacing={0} alignItems="center">
+												{/* AQUÍ ESTA TU MENÚ INTEGRADO CORRECTAMENTE */}
+												<FriendActionsMenu
+													friend={f}
+													onViewProfile={() => handleViewProfile(f)}
+													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
+												/>
+												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
+													<ChatIcon color="primary" fontSize="small" />
+												</IconButton>
+
+
+											</Stack>
 										}
 									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
@@ -320,6 +367,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 								{online.length === 0 && <Typography variant="caption" sx={{ pl: 4, py: 1, display: 'block', color: 'text.secondary' }}>No friends online</Typography>}
 							</List>
 						</Collapse>
+
 						<Divider variant="middle" sx={{ my: 1 }} />
 
 						{/* OFFLINE FRIENDS */}
@@ -334,16 +382,63 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 								{offline.map(f => (
 									<ListItem
 										key={f.id}
-										sx={{ pl: 3, opacity: 0.8 }} // Un poco más visible para poder interactuar
+										sx={{ pl: 3, opacity: 0.8 }}
 										secondaryAction={
-											<IconButton
-												edge="end"
-												aria-label="chat"
-												onClick={() => {selectChat(f.id, f); 
-													onClose();}}
-											>
-												<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-											</IconButton>
+											<Stack direction="row" spacing={0} alignItems="center">
+												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
+												<FriendActionsMenu
+													friend={f}
+													onViewProfile={() => handleViewProfile(f)}
+													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
+												/>
+												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
+													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+												</IconButton>
+
+
+											</Stack>
+										}
+									>
+										<ListItemAvatar sx={{ minWidth: 45 }}>
+											<Avatar src={f.avatar_url} sx={{ width: 32, height: 32, filter: 'grayscale(1)' }} />
+										</ListItemAvatar>
+										<ListItemText
+											primary={f.username}
+											primaryTypographyProps={{ fontSize: '0.9rem' }}
+										/>
+									</ListItem>
+								))}
+							</List>
+						</Collapse>
+						{/* BLOCKED */}
+						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
+							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
+							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
+								BLOCKED ({blockedUsers.length})
+							</Typography>
+						</Box>
+						<Collapse in={showBlocked}>
+							<List disablePadding>
+								{blockedUsers.map(f => (
+									<ListItem
+										key={f.id}
+										sx={{ pl: 3, opacity: 0.8 }}
+										secondaryAction={
+											<Stack direction="row" spacing={0} alignItems="center">
+												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
+												<FriendActionsMenu
+													friend={f}
+													onViewProfile={() => handleViewProfile(f)}
+													onRemove={() => handleDelete(f.id)}
+													onBlock={() => handleBlock(f.id)}
+												/>
+												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
+													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+												</IconButton>
+
+
+											</Stack>
 										}
 									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
@@ -361,6 +456,14 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					</List>
 				)}
 			</Box>
+
+			{selectedFriend && (
+				<ProfileFriend
+					open={modals.profileFriendsOpen}
+					onClose={modals.closeAll}
+					friend={selectedFriend}
+				/>
+			)}
 		</Drawer>
 	);
 };
