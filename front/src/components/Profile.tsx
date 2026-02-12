@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
 	Typography, Divider, IconButton, Box,
@@ -12,8 +13,6 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../context/AuthContext";
 import { useAuthModals } from '../hooks/useAuthModals';
-import { useNavigate } from 'react-router-dom';
-
 
 interface Props {
 	open: boolean;
@@ -91,8 +90,8 @@ export const Profile = ({ open, onClose }: Props) => {
 				bgcolor: 'primary.main',
 				color: 'white'
 			}}>
-				<Typography variant="h6" fontWeight="600">{t('profile.title')}</Typography>
-				<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
+				<Typography aria-label="Profile modal" variant="h6" fontWeight="600">{t('profile.title')}</Typography>
+				<IconButton onClick={onClose} aria-label="Close profile modal" size="small" sx={{ color: 'white' }}>
 					<CloseIcon />
 				</IconButton>
 			</Box>
@@ -109,11 +108,18 @@ export const Profile = ({ open, onClose }: Props) => {
 			}}>
 				<Box sx={{ position: 'relative', mb: 2 }}>
 					<Avatar
+						aria-label="Profile avatar"
 						src={currentAvatar}
 						sx={{ width: 100, height: 100, boxShadow: 3, border: '4px solid white' }}
 					/>
 					<IconButton
 						onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+						onKeyUp={(e) => {
+ 						  if (e.key === 'Enter' || e.key === ' ') {
+ 						    setShowAvatarPicker(!showAvatarPicker);
+ 						  }
+ 						}}
+						aria-label="Edit profile avatar"
 						sx={{
 							position: 'absolute',
 							bottom: 0,
@@ -132,7 +138,7 @@ export const Profile = ({ open, onClose }: Props) => {
 
 				{/* Selector de Avatares (Collapse) */}
 				<Collapse in={showAvatarPicker} sx={{ width: '100%', px: 3 }}>
-					<Typography variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
+					<Typography aria-label="Choose from the pictures bellow:" variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
 						{t('profile.selectAvatar')}
 					</Typography>
 					<Box sx={{
@@ -148,6 +154,7 @@ export const Profile = ({ open, onClose }: Props) => {
 							const url = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 							return (
 								<Avatar
+									aria-label={`Choose ${seed} as your profile avatar`}
 									key={seed}
 									src={url}
 									onClick={() => handleSelectAvatar(seed)}
@@ -163,10 +170,10 @@ export const Profile = ({ open, onClose }: Props) => {
 						})}
 					</Box>
 				</Collapse>
-				<Typography variant="h5" fontWeight="bold">
-					{t('profile.username') || 'Guest'}
+				<Typography variant="h5" fontWeight="bold" aria-label="Profile username">
+					{user?.username || 'Guest'}
 				</Typography>
-				<Typography variant="body2" color="text.secondary">
+				<Typography variant="body2" color="text.secondary" aria-label="Profile role">
 					{t('profile.role') || 'Standard Member'}
 				</Typography>
 			</Box>
@@ -176,7 +183,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				{/* Username Field */}
 				<ListItem
 					secondaryAction={
-						<IconButton edge="end" onClick={() => setEditName(p => ({ ...p, open: !p.open }))}>
+						<IconButton edge="end" aria-label="Edit profile username" onClick={() => setEditName(p => ({ ...p, open: !p.open }))}>
 							<EditIcon fontSize="small" />
 						</IconButton>
 					}
@@ -185,13 +192,15 @@ export const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'primary.light' }}><PersonOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
+						aria-label="Profile username"
 						primary={t('profile.username')}
-						secondary={t('profile.username') || 'Not set'}
+						secondary={user?.username || 'Not set'}
 					/>
 				</ListItem>
 
 				<Collapse in={editName.open} sx={{ px: 2, mb: 2 }}>
 					<TextField
+						aria-label="Input new username"
 						fullWidth
 						size="small"
 						label={t('profile.newUsername')}
@@ -199,7 +208,7 @@ export const Profile = ({ open, onClose }: Props) => {
 						onChange={(e) => setEditName(p => ({ ...p, value: e.target.value }))}
 						InputProps={{
 							endAdornment: (
-								<IconButton size="small" onClick={() => handleUpdate('user')} color="primary">
+								<IconButton size="small" aria-label="Save new profile username" onClick={() => handleUpdate('user')} color="primary">
 									<SaveIcon />
 								</IconButton>
 							)
@@ -212,7 +221,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				{/* Email Field */}
 				<ListItem
 					secondaryAction={
-						<IconButton edge="end" onClick={() => setEditEmail(p => ({ ...p, open: !p.open }))}>
+						<IconButton edge="end" aria-label="Edit profile email" onClick={() => setEditEmail(p => ({ ...p, open: !p.open }))}>
 							<EditIcon fontSize="small" />
 						</IconButton>
 					}
@@ -221,13 +230,15 @@ export const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
+						aria-label="Profile email"
 						primary={t('profile.email')}
-						secondary={t('profile.email') || 'Not set'}
+						secondary={user?.email || 'Not set'}
 					/>
 				</ListItem>
 
 				<Collapse in={editEmail.open} sx={{ px: 2, mb: 2 }}>
 					<TextField
+						aria-label="Input new profile email"
 						fullWidth
 						size="small"
 						label={t('profile.newEmail')}
@@ -235,7 +246,7 @@ export const Profile = ({ open, onClose }: Props) => {
 						onChange={(e) => setEditEmail(p => ({ ...p, value: e.target.value }))}
 						InputProps={{
 							endAdornment: (
-								<IconButton size="small" onClick={() => handleUpdate('email')} color="primary">
+								<IconButton size="small" aria-label="Save new profile email" onClick={() => handleUpdate('email')} color="primary">
 									<SaveIcon />
 								</IconButton>
 							)
@@ -247,6 +258,7 @@ export const Profile = ({ open, onClose }: Props) => {
 			{/* Actions */}
 			<Box sx={{ mt: 'auto', p: 3 }}>
 				<Button
+					aria-label="Close profile modal"
 					fullWidth
 					variant="contained"
 					color="error"
