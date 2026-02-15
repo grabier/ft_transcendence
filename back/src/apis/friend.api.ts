@@ -46,18 +46,18 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 
 		const [rows] = await pool.execute(
-				'SELECT id FROM friendships WHERE sender_id = ? OR receiver_id = ?',
-				[senderId, senderId]
-			);
+			'SELECT id FROM friendships WHERE sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?',
+			[senderId, receiverId, receiverId, senderId]
+		);
 
-			const users = rows as any[];
+		const users = rows as any[];
 
-			// Verificar si la friendship existe en la databaase
-			if (users.length > 0) {
-				return reply.code(409).send({
-					error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
-				});
-			}
+		// Verificar si la friendship existe en la databaase
+		if (users.length > 0) {
+			return reply.code(409).send({
+				error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
+			});
+		}
 
 		try {
 			// Intentamos insertar
