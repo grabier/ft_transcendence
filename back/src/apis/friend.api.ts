@@ -45,6 +45,20 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.code(400).send({ error: "No puedes enviarte una petición a ti mismo" });
 		}
 
+		const [rows] = await pool.execute(
+				'SELECT id FROM friendships WHERE sender_id = ? OR receiver_id = ?',
+				[senderId, senderId]
+			);
+
+			const users = rows as any[];
+
+			// Verificar si la friendship existe en la databaase
+			if (users.length > 0) {
+				return reply.code(409).send({
+					error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
+				});
+			}
+
 		try {
 			// Intentamos insertar
 			await pool.execute(
