@@ -34,32 +34,57 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 * POST /request - Enviar una nueva petición de amistad
 	 */
 	fastify.post<{ Body: FriendRequestBody }>('/request', async (request, reply) => {
+		const sender = request.user as any;
+		const senderId = (request.user as any).id;
+		const { receiverId } = request.body;
+
+		// Variable para rastrear si la inserción fue exitosa
+		let shouldNotify = false;
+
+		if (senderId === receiverId) {
+			return reply.code(400).send({ error: "No puedes enviarte una petición a ti mismo" });
+		}
+
+		const [rows] = await pool.execute(
+			'SELECT id FROM friendships WHERE sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?',
+			[senderId, receiverId, receiverId, senderId]
+		);
+
+		const users = rows as any[];
+
+		// Verificar si la friendship existe en la databaase
+		if (users.length > 0) {
+			return reply.code(409).send({
+				error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
+			});
+		}
+
 		try {
-			const sender = request.user as any; // Datos del que envía (ID, username)
-			const senderId = (request.user as any).id; // ID del usuario logueado
-			const { receiverId } = request.body;
-
-			if (senderId === receiverId) {
-				return reply.code(400).send({ error: "No puedes enviarte una petición a ti mismo" });
-			}
-
-			// Insertamos la relación en estado 'pending'
+			// Intentamos insertar
 			await pool.execute(
 				'INSERT INTO friendships (sender_id, receiver_id, status) VALUES (?, ?, "pending")',
 				[senderId, receiverId]
 			);
 
-			socketManager.notifyUser(receiverId, 'FRIEND_REQUEST', {
-				senderId: senderId,
-				username: sender.username, // Para que el front muestre el nombre
-				message: `${sender.username} te ha enviado una solicitud.`
-			});
+			// Si llegamos aquí, la DB aceptó el registro
+			shouldNotify = true;
 			return { message: "Petición de amistad enviada con éxito" };
+
 		} catch (error: any) {
 			if (error.code === 'ER_DUP_ENTRY') {
 				return reply.code(409).send({ error: "Ya existe una petición o relación entre vosotros" });
 			}
 			return reply.code(500).send({ error: "Error interno al enviar la petición" });
+
+		} finally {
+			// Esto se ejecuta SIEMPRE, pero solo notificamos si shouldNotify es true
+			if (shouldNotify) {
+				socketManager.notifyUser(receiverId, 'FRIEND_REQUEST', {
+					senderId: senderId,
+					username: sender.username,
+					message: `${sender.username} te ha enviado una solicitud.`
+				});
+			}
 		}
 	});
 
