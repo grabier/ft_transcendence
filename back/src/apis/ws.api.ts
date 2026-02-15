@@ -23,7 +23,7 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		try {
 			// 1. Validamos el token
 			const decoded: any = fastify.jwt.verify(token);
-			const userId = decoded.id;
+			const userId = parseInt(String(decoded.id), 10);
 			const username = decoded.username;
 
 			// 2. Registramos en la Centralita (Usamos la variable 'socket' que hemos detectado)

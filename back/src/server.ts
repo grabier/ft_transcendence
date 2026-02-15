@@ -25,7 +25,8 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	// 2. Registrar Plugins (Equivalente a los middlewares globales de Express)
 	// A diferencia de Express, en Fastify se usa 'await register'
 	await app.register(cors, {
-		origin: ['http://localhost:5173', 'http://localhost:8080'],
+		//origin: ['http://localhost:5173', 'http://localhost:8080'],
+		origin : true, 
 		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 		// 🛡️ Asegúrate de permitir el header de Authorization si usas Bearer tokens
