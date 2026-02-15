@@ -1,5 +1,11 @@
 import { useEffect } from "react";
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+
 const Frontend = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
@@ -22,7 +28,7 @@ const Frontend = ({ children }: { children: React.ReactNode }) => {
 			const token = localStorage.getItem('auth_token');
 
 			if (token) {
-				fetch('http://localhost:3000/api/auth/logout', {
+				fetch(`${BASE_URL}:3000/api/auth/logout`, {
 					method: 'POST',
 					headers: {
 						'Authorization': `Bearer ${token}`,

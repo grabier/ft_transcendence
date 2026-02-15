@@ -20,6 +20,12 @@ import { useAuthModals } from "../hooks/useAuthModals";
 // Importamos tu componente de menú semicircular
 import { FriendActionsMenu } from './FriendActionsMenu';
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+
 interface Props {
 	open: boolean;
 	onClose: () => void;
@@ -62,7 +68,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		if (!token) return;
 		try {
 			const [resF, resP, resB] = await Promise.all([
-				fetch('http://localhost:3000/api/friend/list', {
+				fetch(`${BASE_URL}/api/friend/list`, {
 					headers: {
 						'Authorization': `Bearer ${token}`,
 						'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -70,14 +76,14 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						'Expires': '0'
 					}
 				}),
-				fetch('http://localhost:3000/api/friend/pending', {
+				fetch(`${BASE_URL}/api/friend/pending`, {
 					headers: {
 						'Authorization': `Bearer ${token}`,
 						'Cache-Control': 'no-cache, no-store, must-revalidate',
 						'Pragma': 'no-cache',
 						'Expires': '0'
 					}
-				}), fetch('http://localhost:3000/api/friend/blocked', {
+				}), fetch(`${BASE_URL}/api/friend/blocked`, {
 					headers: {
 						'Authorization': `Bearer ${token}`,
 						'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -118,7 +124,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		if (searchQuery.length < 2)
 			return;
 		try {
-			const res = await fetch(`http://localhost:3000/api/user/search?q=${searchQuery}`, {
+			const res = await fetch(`${BASE_URL}/api/user/search?q=${searchQuery}`, {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			const data = await res.json();
@@ -144,7 +150,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	// --- ACCIONES ---
 	const sendRequest = async (receiverId: number) => {
-		await fetch('http://localhost:3000/api/friend/request', {
+		await fetch(`${BASE_URL}/api/friend/request`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
 			body: JSON.stringify({ receiverId })
@@ -155,7 +161,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	};
 	const handleAccept = async (senderId: number) => {
 		try {
-			const res = await fetch(`http://localhost:3000/api/friend/accept/${senderId}`, {
+			const res = await fetch(`${BASE_URL}/api/friend/accept/${senderId}`, {
 				method: 'PUT',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
@@ -167,7 +173,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	};
 	const handleReject = async (senderId: number) => {
 		try {
-			const res = await fetch(`http://localhost:3000/api/friend/delete/${senderId}`, {
+			const res = await fetch(`${BASE_URL}/api/friend/delete/${senderId}`, {
 				method: 'DELETE',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
@@ -179,7 +185,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	};
 	const handleDelete = async (friendId: number) => {
 		try {
-			const res = await fetch(`http://localhost:3000/api/friend/delete/${friendId}`, {
+			const res = await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
 				method: 'DELETE',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
@@ -192,7 +198,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	const handleBlock = async (blockedId: number) => {
 		try {
-			const res = await fetch(`http://localhost:3000/api/friend/block/${blockedId}`, {
+			const res = await fetch(`${BASE_URL}/api/friend/block/${blockedId}`, {
 				method: 'PUT',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});

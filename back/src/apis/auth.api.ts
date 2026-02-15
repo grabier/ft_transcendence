@@ -1,6 +1,5 @@
 /**
- * auth.api.ts - API de autenticación
- * * CORREGIDO: Error TS18047 solucionado en el callback de GitHub
+ * auth.api.ts - API de autenticación (Versión LAN + Sin 2FA)
  */
 
 import { FastifyPluginAsync } from "fastify";
@@ -8,6 +7,7 @@ import bcrypt from "bcrypt";
 import * as userRepository from "../data-access/user.repository.js";
 import jwt from 'jsonwebtoken';
 import { authenticate } from "../middleware/auth.js";
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -23,9 +23,6 @@ interface LoginBody {
 	email: string;
 	password: string;
 }
-interface UpdateUsernameBody {
-	newUsername: string;
-}
 
 // ============================================================================
 // RUTAS DE AUTENTICACIÓN
@@ -33,15 +30,13 @@ interface UpdateUsernameBody {
 
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-
-	// --- POST /register (Sin cambios, estaba bien) ---
+	// --- POST /register ---
 	fastify.post<{ Body: RegisterBody }>("/register", async (request, reply) => {
 		const { username, email, password, avatarUrl } = request.body;
 		if (!username || !email || !password || !avatarUrl) {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });
 		}
 		try {
-			//hola soy gabri del pasado. no te olbides de parsear la contrasenia
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
 			const userId = await userRepository.create({ username, email, password: hashedPassword, avatar_url: avatarUrl });
@@ -55,7 +50,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 	});
 
-	// --- POST /login (Sin cambios, estaba bien) ---
+	// --- POST /login ---
 	fastify.post<{ Body: LoginBody }>("/login", async (request, reply) => {
 		const { email, password } = request.body;
 		if (!email || !password) {
@@ -72,7 +67,6 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			await userRepository.updateLastLogin(user.id);
 			await userRepository.updateOnlineStatus(user.id, true);
 
-			// Generar token normal (opcional, si lo necesitas en login normal)
 			const token = jwt.sign(
 				{ id: user.id, email: user.email, username: user.username },
 				process.env.JWT_SECRET || 'super_secret',
@@ -81,7 +75,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return reply.code(200).send({
 				message: "Login exitoso",
-				token, // <--- Añado el token aquí también por si acaso
+				token,
 				user: { id: user.id, username: user.username, email: user.email },
 			});
 		} catch (error: any) {
@@ -90,30 +84,42 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 	});
 
-	// --- GET /github (Sin cambios) ---
+	// --- GET /github ---
 	fastify.get("/github", async (request, reply) => {
 		const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-		const redirectUri = "http://localhost:3000/api/auth/github/callback";
+
+		// 1. Calculamos la IP dinámicamente
+		const protocol = request.protocol;
+		const host = request.headers.host; // Ej: "10.13.1.5:3000"
+
+		// 2. Le decimos a GitHub que vuelva a ESTA IP
+		const redirectUri = `${protocol}://${host}/api/auth/github/callback`;
+
 		const url = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&scope=user:email`;
 		return reply.redirect(url);
 	});
 
-	// ========================================================================
-	// GET /github/callback - AQUÍ ESTÁ LA CORRECCIÓN 🛠️
-	// ========================================================================
+	// --- GET /github/callback ---
 	fastify.get("/github/callback", async (request, reply) => {
-		const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL } = process.env;
+		const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 		const { code } = request.query as { code: string };
+
+		// 🔥 FIX CRÍTICO PARA LAN: Calculamos dónde está el Frontend (IP:5173)
+		// Si usáramos process.env.FRONTEND_URL, mandaría a tu amigo a localhost (error)
+		const protocol = request.protocol;
+		const hostIp = request.hostname.split(':')[0]; // Quitamos el puerto 3000
+		const DYNAMIC_FRONTEND_URL = `${protocol}://${hostIp}:5173`;
+
+		console.log(`🔙 Callback recibido. Redirigiendo a: ${DYNAMIC_FRONTEND_URL}`);
 
 		if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
 			request.log.error("Faltan variables de entorno de OAuth");
-			return reply.redirect(`${FRONTEND_URL}?error=server_config_error`);
+			return reply.redirect(`${DYNAMIC_FRONTEND_URL}?error=server_config_error`);
 		}
-		if (!code) return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
-
+		if (!code) return reply.redirect(`${DYNAMIC_FRONTEND_URL}?error=oauth_failed`);
 
 		try {
-			// A. Obtener Token de GitHub
+			// A. Token de GitHub
 			const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -122,7 +128,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const tokenData = await tokenResponse.json() as { access_token: string };
 			if (!tokenData.access_token) throw new Error("GitHub no devolvió token");
 
-			// B. Obtener Datos del Usuario
+			// B. Datos Usuario
 			const userResponse = await fetch("https://api.github.com/user", {
 				headers: { Authorization: `Bearer ${tokenData.access_token}` },
 			});
@@ -143,59 +149,46 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.login || 'Guest'}`;
 
 			if (!user) {
-				// CASO: Nuevo Usuario
 				await userRepository.create({
 					username: userData.login,
 					email: email,
 					password: "",
-					avatar_url : defaultAvatar,
+					avatar_url: defaultAvatar,
 				});
-
-				// Acabamos de crearlo, pero la variable 'user' sigue siendo null.
-				// TENEMOS QUE BUSCARLO OTRA VEZ para llenar la variable.
 				user = await userRepository.findByEmail(email);
 			} else if (user.password) {
-				// CASO: Usuario existe con contraseña (conflicto)
-				return reply.redirect(`${FRONTEND_URL}?error=user_exists`);
+				return reply.redirect(`${DYNAMIC_FRONTEND_URL}?error=user_exists`);
 			}
 
-			// Ahora le aseguramos a TypeScript que 'user' no es null
-			if (!user) {
-				throw new Error("Error crítico: El usuario debería existir pero no se encontró.");
-			}
-			await userRepository.updateLastLogin(user.id);       // Actualiza fecha
+			if (!user) throw new Error("Error crítico user creation");
+
+			await userRepository.updateLastLogin(user.id);
 			await userRepository.updateOnlineStatus(user.id, true);
+
 			// D. Generar JWT
 			const token = jwt.sign(
-				{
-					id: user.id,
-					email: user.email,
-					username: user.username
-				},
+				{ id: user.id, email: user.email, username: user.username },
 				process.env.JWT_SECRET || 'super_secret',
 				{ expiresIn: '7d' }
 			);
 
-			return reply.redirect(`${FRONTEND_URL}?token=${token}`);
+			// Redirigimos a la IP correcta
+			return reply.redirect(`${DYNAMIC_FRONTEND_URL}?token=${token}`);
 
 		} catch (error: any) {
 			request.log.error("Error en GitHub OAuth:", error.message);
-			return reply.redirect(`${FRONTEND_URL}?error=oauth_failed`);
+			return reply.redirect(`${DYNAMIC_FRONTEND_URL}?error=oauth_failed`);
 		}
 	});
 
-
+	// --- POST /logout ---
 	fastify.post("/logout",
-		{ preHandler: [authenticate] }, // <--- ESTA ES LA CLAVE MÁGICA 🗝️
+		{ preHandler: [authenticate] },
 		async (request, reply) => {
 			try {
 				const userId = (request.user as any).id;
-
-				console.log(`🔌 Logout user ${userId}...`);
-
 				await userRepository.updateLastLogin(userId);
-				await userRepository.updateOnlineStatus(userId, false); // <--- Ahora sí funciona
-
+				await userRepository.updateOnlineStatus(userId, false);
 				return { message: "Desconectado" };
 			} catch (err) {
 				request.log.error(err);
@@ -203,9 +196,6 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		}
 	);
-	// auth.api.ts
-
-
 };
 
 export default authRoutes;

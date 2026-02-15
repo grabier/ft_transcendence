@@ -14,6 +14,12 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove'; // O DeleteIcon
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+
 interface Props {
 	open: boolean;
 	onClose: () => void;
@@ -23,7 +29,7 @@ const token = localStorage.getItem('auth_token');
 
 const handleDelete = async (friendId: number) => {
 	try {
-		const res = await fetch(`http://localhost:3000/api/friend/delete/${friendId}`, {
+		const res = await fetch(`${BASE_URL}:3000/api/friend/delete/${friendId}`, {
 			method: 'DELETE',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});
@@ -34,7 +40,7 @@ const handleDelete = async (friendId: number) => {
 
 const handleBlock = async (blockedId: number) => {
 	try {
-		const res = await fetch(`http://localhost:3000/api/friend/block/${blockedId}`, {
+		const res = await fetch(`${BASE_URL}/api/friend/block/${blockedId}`, {
 			method: 'PUT',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});
@@ -44,7 +50,7 @@ const handleBlock = async (blockedId: number) => {
 	}
 };
 const sendRequest = async (receiverId: number) => {
-	await fetch('http://localhost:3000/api/friend/request', {
+	await fetch(`${BASE_URL}/api/friend/request`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
 		body: JSON.stringify({ receiverId })

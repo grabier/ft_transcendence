@@ -3,6 +3,12 @@ import { useSocket } from './SocketContext';
 import { useAuth } from './AuthContext';
 import { DM, Message } from '../types/chat';
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+
 interface ChatContextType {
 	chats: DM[];
 	activeChat: DM | null;
@@ -34,7 +40,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		if (!token)
 			return;
 		try {
-			const res = await fetch('http://localhost:3000/api/chat/me', { // Crearemos esto ahora
+			const res = await fetch(`${BASE_URL}/api/chat/me`, { // Crearemos esto ahora
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			if (res.ok) {
@@ -58,7 +64,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		setIsLoading(true);
 		try {
 			// A. Obtener ID del Chat
-			const res = await fetch('http://localhost:3000/api/chat/dm', {
+			const res = await fetch(`${BASE_URL}/api/chat/dm`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
 				body: JSON.stringify({ targetUserId })
@@ -69,7 +75,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 				throw new Error("No DM ID returned");
 
 			// B. Cargar historial
-			const msgsRes = await fetch(`http://localhost:3000/api/chat/${data.dmId}/messages?limit=50`, {
+			const msgsRes = await fetch(`${BASE_URL}/api/chat/${data.dmId}/messages?limit=50`, {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			const msgsData = await msgsRes.json();
