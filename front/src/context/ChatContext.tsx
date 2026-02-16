@@ -79,6 +79,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			const msgsData = await msgsRes.json();
+			//console.log(`👈 👈 👈 👈 👈 👈 👈 👈 👈 👈 👈 👈 👈 bbbbbbdddddd score: ${msgsData.id}`);
 
 			// C. Construir objeto DM activo
 			const chatInfo = chats.find(c => c.id === data.dmId);

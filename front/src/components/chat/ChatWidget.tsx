@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Box, Fab, Badge, Paper, IconButton, Typography, Tooltip } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -10,6 +9,13 @@ import { ChatWindow } from './ChatWindow';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import {
+	Box, Paper, TextField, IconButton, Typography, Avatar, Stack, Button,
+	Menu, MenuItem, ListItemIcon, ListItemText, Tooltip, Fab, Badge
+} from '@mui/material';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+
 
 export const ChatWidget = () => {
 	const [isOpen, setIsOpen] = useState(false); // ¿Está el widget abierto?

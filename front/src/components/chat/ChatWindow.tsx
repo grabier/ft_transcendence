@@ -12,7 +12,6 @@ import TimerIcon from '@mui/icons-material/Timer'; // Icono para partidas largas
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
 // --- INTERFAZ EXTENDIDA PARA MENSAJES ---
 // Asegúrate de que tu tipo Message en el frontend tenga esta propiedad opcional
 interface MessageWithScore {
@@ -28,6 +27,7 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 	const navigate = useNavigate();
 
 	// Si es un mensaje antiguo sin score, asumimos 5 por defecto
+	console.log(`Score: ${score}`);
 	const pointsToWin = score || 5;
 
 	const handleJoinGame = () => {

@@ -164,12 +164,13 @@ const initializeTables = async (): Promise<void> => {
                 type ENUM('text', 'game_invite', 'system') DEFAULT 'text',
                 is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                invite_score INT NOT NULL,
                 FOREIGN KEY (dm_id) REFERENCES direct_messages(id) ON DELETE CASCADE,
                 FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
-	console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages');
+		console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages');
 	} finally {
 		// Siempre liberamos la conexión, incluso si hay error
 		connection.release();
