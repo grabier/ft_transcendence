@@ -166,6 +166,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (state.status === 'ended') {
 				console.log(`Partida terminada sala ${roomId}`);
 				destroyRoom(roomId);
+				return ;
 			}
 		}, 1000 / 60);
 	}

@@ -15,7 +15,7 @@ interface ChatContextType {
 	messages: Message[];
 	isLoading: boolean;
 	selectChat: (targetUserId: number, targetUser?: any) => Promise<void>; // Actualizado
-	sendMessage: (content: string, type?: 'text' | 'game_invite') => void;
+	sendMessage: (content: string, points: number, type?: 'text' | 'game_invite') => void;
 	closeChat: () => void;
 	refreshChats: () => void; // Para recargar la lista manual
 }
@@ -112,7 +112,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	}, [token, chats, fetchChats]);
 
 	// 3. ENVIAR MENSAJE
-	const sendMessage = useCallback((content: string, type: 'text' | 'game_invite' = 'text') => {
+	const sendMessage = useCallback((content: string, score: number, type: 'text' | 'game_invite' = 'text') => {
 		if (!socket || !activeChat) return;
 
 		const payload = {
@@ -120,7 +120,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 			payload: {
 				dmId: activeChat.id,
 				content,
-				type
+				type,
+				score
 			}
 		};
 		socket.send(JSON.stringify(payload));
