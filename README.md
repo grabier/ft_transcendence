@@ -12,7 +12,7 @@ MODULES: WEB
 
 
 
------------TERMINADO-----------13 points
+-----------TERMINADO-----------15 points
 2 - Use a framework for both the frontend and backend
 2 - Implement real-time features using WebSockets or similar technology.
 2 - Allow users to interact with other users.
@@ -20,20 +20,20 @@ MODULES: WEB
 2 - Implement a complete web-based game where users can play against each other
 1 - Implement remote authentication with OAuth 2.0
 2 - Remote players — Enable two players on separate computers to play the same game in real-time
+2  A public API to interact with the database
 
-----------EN PROGRESO----------8 points
+----------EN PROGRESO----------7 points
 1 - Custom-made design system with reusable components, including a proper color palette, typography, and icons(hay que hacer cuentas de cuantos tenemos)
-2  A public API to interact with the database- Falta documentarla , rate limit(casi listo)
 2  Standard user management and authentication.(falta lo del upload avatar)
-2 - Advanced chat features(falta invitar, game invitation, acces profile from chat, typing indicator and read receipst)
+2 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
 1 - Support for multiple languages
+1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)
 
------------NO EMPEZADO----------------9 points
-1 - Right-to-left (RTL) language support
-1 - Support for additional browsers
-2 - Complete accessibility compliance (WCAG 2.1 AA) with screen reader support, keyboard navigation, and assistive technologies.
-1 - Game statistics and match history
+-----------NO EMPEZADO----------------8 points
 2 - Multiplayer game (more than two players).
+2 - Complete accessibility compliance (WCAG 2.1 AA) with screen reader support, keyboard navigation, and assistive technologies.
+1 - Right-to-left (RTL) language support
+1 - Game statistics and match history
 1 - Implement a tournament system
 1 - Implement spectator mode for games.
 
