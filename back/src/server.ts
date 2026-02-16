@@ -24,9 +24,9 @@ dotenv.config();
 export const createAPIServer = async (): Promise<FastifyInstance> => {
 	const app = Fastify({
 		logger: true,
-		ajv: {
+		ajv: {//para docu de las apis
 			customOptions: {
-				strict: false, // Permite palabras como 'example' sin que explote
+				strict: false,
 				allErrors: true
 			}
 		}
@@ -47,7 +47,7 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 
 	// 👇 2. RATE LIMIT (Protección)
 	await app.register(rateLimit, {
-		max: 100,             // Máximo 100 peticiones...
+		max: 1000,             // Máximo 100 peticiones...
 		timeWindow: '1 minute' // ...por minuto por IP.
 		// Puedes excluir rutas si quieres:
 		// allowList: ['127.0.0.1'],

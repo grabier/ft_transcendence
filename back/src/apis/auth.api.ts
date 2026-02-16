@@ -31,7 +31,14 @@ interface LoginBody {
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	// --- POST /register ---
-	fastify.post<{ Body: RegisterBody }>("/register", { schema: registerSchema }, async (request, reply) => {
+	fastify.post<{ Body: RegisterBody }>("/register", {
+		schema: registerSchema, config: {
+			rateLimit: {
+				max: 10,
+				timeWindow: '1 minute'
+			}
+		}
+	}, async (request, reply) => {
 		const { username, email, password, avatarUrl } = request.body;
 		if (!username || !email || !password || !avatarUrl) {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });
@@ -51,7 +58,14 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 	// --- POST /login ---
-	fastify.post<{ Body: LoginBody }>("/login", { schema: loginSchema }, async (request, reply) => {
+	fastify.post<{ Body: LoginBody }>("/login", {
+		schema: loginSchema, config: {
+			rateLimit: {
+				max: 10,
+				timeWindow: '1 minute'
+			}
+		}
+	}, async (request, reply) => {
 		const { email, password } = request.body;
 		if (!email || !password) {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });

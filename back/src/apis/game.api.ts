@@ -26,8 +26,8 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		websocket: true,
 		schema: gameSocketSchema, // 👈 Documentamos el handshake del socket
 		config: {
-            rateLimit: false // 👈 Excluimos el juego del límite de peticiones
-        }
+			rateLimit: false // 👈 Excluimos el juego del límite de peticiones
+		}
 	}, (connection: any, req: any) => {
 		const socket = connection.socket || connection;
 

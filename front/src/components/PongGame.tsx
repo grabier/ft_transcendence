@@ -163,7 +163,6 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 				// 2. INICIO DE PARTIDA (El servidor nos asigna lado)
 				if (msg.type === 'SIDE_ASSIGNED') {
 					console.log("Partida encontrada. Soy:", msg.side);
-					// ¡AHORA SÍ ARRANCAMOS LA CUENTA ATRÁS! 🚀
 					startCountdownSequence();
 				}
 
@@ -171,7 +170,8 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 					const s = msg.state;
 					const PREDICTION = 0.05;
 
-					// ... (tu lógica de interpolación y update igual que antes) ...
+					//para predecir. el mensaje puede tardar en llegar, asi q si dibujamos lo q nos manda el back
+					//siempre estaremos dibujando el pasado>
 					if (Math.abs(s.ball.speedX) > 0) {
 						serverTarget.current.ball.x = s.ball.x + (s.ball.speedX * PREDICTION);
 						serverTarget.current.ball.y = s.ball.y + (s.ball.speedY * PREDICTION);

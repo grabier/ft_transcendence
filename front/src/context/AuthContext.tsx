@@ -148,7 +148,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					try {
 						const decoded = jwtDecode<UserPayload>(currentToken);
 						setUser(decoded);
-						// 👇 CAMBIO AQUÍ
 						fetch(`${BASE_URL}/api/user/persistence`, {
 							headers: { 'Authorization': `Bearer ${currentToken}` }
 						}).catch(() => {

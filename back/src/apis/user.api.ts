@@ -51,9 +51,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const [rows] = await pool.execute(
 				'SELECT id, username, email, avatar_url, is_online, created_at, last_login FROM users'
 			);
-
 			return rows;
-
 		} catch (error: any) {
 			request.log.error(error);
 			return reply.send({
@@ -87,9 +85,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						error: 'Usuario no encontrado'
 					});
 				}
-
 				return users[0];
-
 			} catch (error: any) {
 				request.log.error(error);
 				return reply.code(500).send({
@@ -190,8 +186,6 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				return reply.code(500).send({ error: "Internal server error", details: error.message });
 			}
 		}
-
-
 	);
 	fastify.patch<{ Body: UpdateAvatarUrlBody }>(
 		"/update-avatarUrl",
@@ -222,11 +216,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				return reply.code(500).send({ error: "Internal server error", details: error.message });
 			}
 		}
-
-
 	);
-
-
 };
 
 export default userRoutes;
