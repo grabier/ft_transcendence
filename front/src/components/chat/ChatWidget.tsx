@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-// Importa tus componentes existentes
 import { ChatSidebar } from './ChatSidebar';
 import { ChatWindow } from './ChatWindow';
 import { useChat } from '../../context/ChatContext';
@@ -18,7 +16,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 
 export const ChatWidget = () => {
-	const [isOpen, setIsOpen] = useState(false); // ¿Está el widget abierto?
+	const [isOpen, setIsOpen] = useState(false);
 	const { activeChat, closeChat, chats, refreshChats: fetchChats} = useChat();
 	const { unreadMessages, markAsReadMessage } = useSocket();
 	const { user } = useAuth();

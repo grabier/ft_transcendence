@@ -118,7 +118,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 		const { code } = request.query as { code: string };
 
-		// 🔥 FIX CRÍTICO PARA LAN: Calculamos dónde está el Frontend (IP:5173)
+		// FIX CRÍTICO PARA LAN: Calculamos dónde está el Frontend (IP:5173)
 		// Si usáramos process.env.FRONTEND_URL, mandaría a tu amigo a localhost (error)
 		const protocol = request.protocol;
 		const hostIp = request.hostname.split(':')[0]; // Quitamos el puerto 3000

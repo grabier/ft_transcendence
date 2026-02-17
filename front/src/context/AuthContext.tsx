@@ -3,8 +3,6 @@ import { jwtDecode } from "jwt-decode";
 import { useNotification } from "./NotificationContext";
 import { useSearchParams } from "react-router-dom";
 
-// --- 🛠️ FIX MÁGICO PARA LA LAN DE 42 🛠️ ---
-// Si estoy en localhost, usa localhost. Si entro por IP (10.12...), usa la IP.
 const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
 const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
 const PORT = '3000';                       // Tu puerto de backend
@@ -57,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [errorType, setSearchParams, notifyError]);
 
 	const [user, setUser] = useState<UserPayload | null>(null);
-	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null); // Nota: Esto parece redundante con 'user', pero lo mantengo como lo tenías
+	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const lastTokenRef = useRef<string | null>(null);
 
@@ -65,7 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const login = async (email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
-			// 👇 CAMBIO AQUÍ: Usamos BASE_URL
 			const response = await fetch(`${BASE_URL}/api/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -96,7 +93,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || 'Guest'}`;
 
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -123,7 +119,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const logout = () => {
 		const token = localStorage.getItem('auth_token');
 		if (token) {
-			// 👇 CAMBIO AQUÍ
 			fetch(`${BASE_URL}/api/auth/logout`, {
 				method: 'POST',
 				headers: { 'Authorization': `Bearer ${token}` }
@@ -174,7 +169,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/user/update-username`, {
 				method: 'PATCH',
 				headers: {
@@ -208,7 +202,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/user/update-avatarUrl`, {
 				method: 'PATCH',
 				headers: {
@@ -242,7 +235,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return null;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/generate`, {
 				method: 'POST',
 				headers: {
@@ -267,7 +259,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		const token = localStorage.getItem('auth_token');
 		if (!token) return false;
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-on`, {
 				method: 'POST',
 				headers: {
@@ -295,7 +286,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-off`, {
 				method: 'POST',
 				headers: {

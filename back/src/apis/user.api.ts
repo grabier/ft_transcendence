@@ -94,10 +94,8 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				});
 			}
 		});
-
-	// user.api.ts
-
-	// Nuevo Endpoint de búsqueda
+	
+	//endpoint de busqueda
 	fastify.get(
 		'/search',
 		{ schema: searchUsersSchema },
@@ -129,11 +127,8 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		},
 		async (req, reply) => {
 			const userToken = req.user as any; // El usuario del token
-
 			await userRepository.updateOnlineStatus(userToken.id, true);
 			await userRepository.updateLastLogin(userToken.id);
-
-			// 2. Buscamos los datos...
 		});
 
 
@@ -193,20 +188,12 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		async (request, reply) => {
 			try {
 				const { newUrl } = request.body;
-				// Forzamos el tipado para evitar el error de "id does not exist on type user"
 				const currentUser = request.user as { id: number; email: string; username: string; avatarUrl: string; };
-
 				if (!currentUser) {
 					return reply.code(401).send({ error: "Unauthorized: No user found in token" });
 				}
-
 				const userId = currentUser.id;
-
-
-				// 2. Actualizar DB
 				await userRepository.updateAvatarUrl(userId, newUrl);
-
-				// 4. Enviar respuesta con el token
 				return reply.code(200).send({
 					message: "Avatar updated successfully",
 					newUrl: newUrl

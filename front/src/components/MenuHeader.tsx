@@ -9,8 +9,6 @@ import {
 	Badge
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-
-// Importamos Modales y Hooks
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import ResetPasswordModal from "./ResetPasswordModal";

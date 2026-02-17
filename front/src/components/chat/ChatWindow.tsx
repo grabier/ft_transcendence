@@ -7,8 +7,8 @@ import SendIcon from '@mui/icons-material/Send';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import SpeedIcon from '@mui/icons-material/Speed'; // Icono para partidas rápidas
-import TimerIcon from '@mui/icons-material/Timer'; // Icono para partidas largas
+import SpeedIcon from '@mui/icons-material/Speed';
+import TimerIcon from '@mui/icons-material/Timer';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ interface MessageWithScore {
 	content: string;
 	type: 'text' | 'game_invite';
 	sender_id: number;
-	invite_score?: number; // 👈 El nuevo campo
+	invite_score?: number;
 }
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
@@ -31,14 +31,14 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 	const pointsToWin = score || 5;
 
 	const handleJoinGame = () => {
-		// 👇 AHORA LA URL INCLUYE EL SCORE DINÁMICO
+		// LA URL INCLUYE EL SCORE DINÁMICO
 		navigate(`/?mode=pvp&roomId=${gameId}&score=${pointsToWin}`);
 	};
 
 	return (
 		<Paper sx={{
 			p: 2,
-			maxWidth: '90%', // Un pelín más ancho
+			maxWidth: '90%',
 			bgcolor: isMe ? '#2c3e50' : '#f1c40f',
 			color: isMe ? 'white' : 'black',
 			borderRadius: 3,
@@ -122,9 +122,6 @@ export const ChatWindow = () => {
 	const handleInvite = (points: number) => {
 		handleCloseInviteMenu();
 		const roomId = `duel-${user?.id}-${Date.now().toString().slice(-4)}`;
-
-		// 👇 Enviamos el tercer argumento 'score'
-		// IMPORTANTE: Asegúrate de actualizar tu ChatContext para recibir este argumento
 		sendMessage(roomId, points, 'game_invite');
 		console.log("patatatt");
 	};
@@ -178,7 +175,7 @@ export const ChatWindow = () => {
 								<GameInviteBubble
 									gameId={msg.content}
 									isMe={isMe}
-									score={msg.invite_score} // 👈 Pasamos el score que viene del back
+									score={msg.invite_score} // Pasamos el score que viene del back
 								/>
 							) : (
 								<Paper sx={{

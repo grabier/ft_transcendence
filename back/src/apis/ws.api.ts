@@ -11,11 +11,11 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.get('/', {
 		websocket: true,
-		schema: mainSocketSchema, // 👈 Añadimos la documentación
+		schema: mainSocketSchema,
 		config: {
-			rateLimit: false // 👈 Protegemos la conexión de cortes por spam
+			rateLimit: false
 		}
-	}, (connection, req) => {		// 🛡️ BLINDAJE: Detectamos qué es 'connection' exactamente
+	}, (connection, req) => {
 		// A veces llega como SocketStream ({ socket: ... }) y a veces como WebSocket directo
 		const socket = (connection as any).socket || connection;
 
@@ -54,7 +54,6 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				try {
 					const data = JSON.parse(msgString);
 
-					// Aquí actúa como un Router: ¿Qué quieres hacer?
 					switch (data.type) {
 						case 'SEND_MESSAGE':
 							// Delegamos la lógica dura al handler que creamos antes

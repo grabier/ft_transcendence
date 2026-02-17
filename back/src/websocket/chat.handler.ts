@@ -5,11 +5,10 @@ interface ChatPayload {
 	dmId: number;
 	content: string;
 	type?: 'text' | 'game_invite';
-	score?: number; // 👈 1. AÑADIDO: Recibimos los puntos
+	score?: number;
 }
 
 export const handleChatMessage = async (senderId: number, payload: ChatPayload) => {
-	// 👈 2. AÑADIDO: Extraemos score con un valor por defecto seguro (undefined)
 	const { dmId, content, type = 'text', score } = payload;
 
 	try {
@@ -29,7 +28,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			return;
 		}
 
-		// 2. BLOQUEOS (Igual que antes)
+		// 2. BLOQUEOS
 		const [blockCheck]: any = await pool.execute(
 			`SELECT 1 FROM friendships WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND status = 'blocked'`,
 			[receiverId, senderId, senderId, receiverId]
@@ -42,7 +41,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 
 		// 3. PERSISTENCIA: Guardar en BBDD con el SCORE
 
-		// 🧠 Lógica del Score:
+		// Lógica del Score:
 		// Si es invitación y no mandan score, ponemos 5 por defecto.
 		// Si es texto normal, forzamos NULL.
 		let inviteScore = null;
@@ -52,7 +51,6 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		}
 
 		const [result]: any = await pool.execute(
-			// 👇 3. AÑADIDO: Insertamos invite_score en la query
 			'INSERT INTO messages (dm_id, sender_id, content, type, invite_score) VALUES (?, ?, ?, ?, ?)',
 			[dmId, senderId, content, type, inviteScore]
 		);
@@ -73,7 +71,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			content: content,
 			type: type,
 			created_at: createdAt,
-			invite_score: inviteScore // 👈 4. AÑADIDO: Se lo mandamos al front para generar la URL
+			invite_score: inviteScore
 		};
 
 		socketManager.notifyUser(receiverId, 'NEW_MESSAGE', messageToSend);

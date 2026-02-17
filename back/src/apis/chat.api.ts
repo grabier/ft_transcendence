@@ -91,7 +91,6 @@ const chatRoutes: FastifyPluginAsync = async (fastify, opts) => {
             `, [dmId, limit.toString(), offset.toString()]); // toString por compatibilidad mysql2
 
 				// Invertimos el array para enviarlo en orden cronológico (viejo -> nuevo)
-				console.log(`👈 👈 👈 BACKEND👈 👈 👈 👈 bbbbbbdddddd score: ${messages}`);
 				return (messages as any[]).reverse();
 
 			} catch (error) {

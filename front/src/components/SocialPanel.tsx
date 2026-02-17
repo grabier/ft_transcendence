@@ -16,15 +16,8 @@ import { useSocket } from "../context/SocketContext";
 import { useChat } from '../context/ChatContext';
 import ProfileFriend from './ProfileFriend';
 import { useAuthModals } from "../hooks/useAuthModals";
-
-// Importamos tu componente de menú semicircular
 import { FriendActionsMenu } from './FriendActionsMenu';
-
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
-
+import { BASE_URL } from '../config';
 
 interface Props {
 	open: boolean;

@@ -10,14 +10,11 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useAuthModals } from '../hooks/useAuthModals';
 import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove'; // O DeleteIcon
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+import { BASE_URL } from '../config';
 
 
 interface Props {

@@ -15,10 +15,7 @@ import {
 } from "../style/AuthModalStyle";
 import { validateEmail } from "../utils/validation";
 
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+import { BASE_URL } from '../config';
 
 
 interface Props {

@@ -24,9 +24,9 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.get('/', {
 		websocket: true,
-		schema: gameSocketSchema, // 👈 Documentamos el handshake del socket
+		schema: gameSocketSchema, // Documentamos el handshake del socket
 		config: {
-			rateLimit: false // 👈 Excluimos el juego del límite de peticiones
+			rateLimit: false //Excluimos el juego del límite de peticiones
 		}
 	}, (connection: any, req: any) => {
 		const socket = connection.socket || connection;
@@ -69,12 +69,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 		else {
 			// --- MODO PVP (Remoto) ---
-			// Aquí iría tu lógica de Matchmaking o Desafío directo
-			// Si hay query.roomId (desafío), intenta unirse a esa sala. Si no, usa la cola.
-
-			// ... (Tu lógica de cola existente va aquí) ...
-
-			// COPIAR PEGAR TU LOGICA DE COLA DE ANTES PERO CON ESTA PEQUEÑA MEJORA:
 			if (waitingQueue.length > 0) {
 				const opponent = waitingQueue.shift();
 				if (opponent && opponent.socket.readyState === 1) {
@@ -120,7 +114,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		});
 
 		socket.on('close', () => {
-			// ... (Tu lógica de desconexión existente) ...
 			const idx = waitingQueue.findIndex(item => item.socket === socket);
 			if (idx !== -1) waitingQueue.splice(idx, 1);
 			const room = getRoomBySocket(socket);
@@ -129,7 +122,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 	// --- HELPER FUNCTIONS ---
-	function createRoom(id: string, score: number, mode: 'pvp' | 'ai' | 'local') { // Añadimos 'local'
+	function createRoom(id: string, score: number, mode: 'pvp' | 'ai' | 'local') {
 		const game = new PongGame();
 		game.winningScore = score;
 		game.gameMode = mode as any; // Cast para calmar a TS si PongGame solo espera pvp/ai
@@ -147,8 +140,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	function startGame(roomId: string) {
 		const room = rooms.get(roomId);
 		if (!room) return;
-
-		// ... Envío de nombres (MATCH_INFO) ...
 
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
@@ -171,7 +162,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}, 1000 / 60);
 	}
 
-	// ... getRoomBySocket y destroyRoom igual que antes ...
 	function destroyRoom(roomId: string) {
 		const room = rooms.get(roomId);
 		if (room) {

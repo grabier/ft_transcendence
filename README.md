@@ -20,11 +20,11 @@ MODULES: WEB
 2 - Implement a complete web-based game where users can play against each other
 1 - Implement remote authentication with OAuth 2.0
 2 - Remote players — Enable two players on separate computers to play the same game in real-time
-2  A public API to interact with the database
+2 - A public API to interact with the database
 
 ----------EN PROGRESO----------7 points
 1 - Custom-made design system with reusable components, including a proper color palette, typography, and icons(hay que hacer cuentas de cuantos tenemos)
-2  Standard user management and authentication.(falta lo del upload avatar)
+2 - Standard user management and authentication.(falta lo del upload avatar)
 2 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
 1 - Support for multiple languages
 1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)

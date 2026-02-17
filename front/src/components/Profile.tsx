@@ -24,7 +24,7 @@ export const Profile = ({ open, onClose }: Props) => {
 	const modals = useAuthModals();
 	const navigate = useNavigate();
 	const { updateAvatarUrl } = useAuth();
-	const { updateUsername } = useAuth(); // Importas la función
+	const { updateUsername } = useAuth();
 
 	// Independent states for editing
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
@@ -61,7 +61,6 @@ export const Profile = ({ open, onClose }: Props) => {
 				setEditName(prev => ({ ...prev, open: false }));
 			}
 		}
-		// ... resto de lógica
 	}, [editName.value, updateUsername]);
 
 	const onLogoutClick = () => {
