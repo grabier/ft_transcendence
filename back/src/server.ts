@@ -13,10 +13,16 @@ import gameRoutes from './apis/game.api.js';
 import friendRoutes from './apis/friend.api.js';
 import wsRoutes from './apis/ws.api.js';
 import chatRoutes from './apis/chat.api.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 
 import { API_ROUTES } from './routes/routes.js';
 
 dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const createAPIServer = async (): Promise<FastifyInstance> => {
 	const app = Fastify({
@@ -40,6 +46,17 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	await app.register(cookie);
 	await app.register(fastifyJwt, {
 		secret: process.env.JWT_SECRET || 'super_secret'
+	});
+
+	//for file uploads
+	await app.register(multipart, {
+		limits: { fileSize: 5 * 1024 * 1024 }
+	});
+
+	await app.register(fastifyStatic, {
+		root: path.join(__dirname, '../uploads'),
+		prefix: '/public/',
+		decorateReply: false // Importante para evitar conflictos con otros plugins
 	});
 
 	//  RATE LIMIT (Protección)

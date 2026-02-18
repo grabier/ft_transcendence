@@ -12,6 +12,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModals } from '../../hooks/useAuthModals';
 import { useNavigate } from 'react-router-dom';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
 
 
 interface Props {
@@ -23,8 +24,7 @@ export const Profile = ({ open, onClose }: Props) => {
 	const { user, logout } = useAuth();
 	const modals = useAuthModals();
 	const navigate = useNavigate();
-	const { updateAvatarUrl } = useAuth();
-	const { updateUsername } = useAuth();
+	const { updateAvatarUrl, updateUsername, uploadAvatarFile } = useAuth();
 
 	// Independent states for editing
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
@@ -51,6 +51,18 @@ export const Profile = ({ open, onClose }: Props) => {
 			// Si falla, volvemos a la original
 			setCurrentAvatar(user?.avatarUrl || defaultAvatar);
 			alert("Error al actualizar el avatar");
+		}
+	};
+
+	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file) {
+			// Validación básica (2MB)
+			if (file.size > 2 * 1024 * 1024) {
+				alert("File too large (max 2MB)");
+				return;
+			}
+			await uploadAvatarFile(file);
 		}
 	};
 	const handleUpdate = useCallback(async (type: 'user' | 'email') => {
@@ -95,6 +107,7 @@ export const Profile = ({ open, onClose }: Props) => {
 			</Box>
 
 			{/* Hero Section */}
+			{/* Hero Section */}
 			<Box sx={{
 				py: 4,
 				display: 'flex',
@@ -104,26 +117,64 @@ export const Profile = ({ open, onClose }: Props) => {
 				borderBottom: '1px solid',
 				borderColor: 'divider'
 			}}>
-				<Box sx={{ position: 'relative', mb: 2 }}>
+				{/* TRUCO: Fijamos width y height en el Box padre.
+                    Así 'absolute' sabe exactamente dónde están los bordes.
+                */}
+				<Box sx={{ position: 'relative', width: 100, height: 100, mb: 2 }}>
 					<Avatar
-						src={currentAvatar}
-						sx={{ width: 100, height: 100, boxShadow: 3, border: '4px solid white' }}
+						src={user?.avatarUrl || currentAvatar}
+						sx={{ width: '100%', height: '100%', boxShadow: 3, border: '4px solid white' }}
 					/>
+
+					{/* 📸 IZQUIERDA: Botón para SUBIR FOTO (Input File) */}
+					<input
+						type="file"
+						id="avatar-upload-input"
+						hidden
+						accept="image/png, image/jpeg, image/gif"
+						onChange={handleFileChange}
+					/>
+					<label htmlFor="avatar-upload-input">
+						<IconButton
+							component="span"
+							size="small"
+							sx={{
+								position: 'absolute',
+								bottom: -5,   // Un poco más abajo
+								left: -10,    // Saliendo por la izquierda
+								bgcolor: 'secondary.main',
+								color: 'white',
+								'&:hover': { bgcolor: 'secondary.dark' },
+								boxShadow: 3,
+								border: '2px solid white',
+								zIndex: 10,
+								width: 35,    // Forzamos tamaño para que se vea bien
+								height: 35
+							}}
+						>
+							<PhotoCamera sx={{ fontSize: 18 }} />
+						</IconButton>
+					</label>
+
+					{/* 🎭 DERECHA: Botón para GALERÍA (Dicebear) */}
 					<IconButton
 						onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+						size="small"
 						sx={{
 							position: 'absolute',
-							bottom: 0,
-							right: -5,
+							bottom: -5,   // Un poco más abajo
+							right: -10,   // Saliendo por la derecha
 							bgcolor: 'primary.main',
 							color: 'white',
 							'&:hover': { bgcolor: 'primary.dark' },
-							width: 30,
-							height: 30,
-							boxShadow: 2
+							boxShadow: 3,
+							border: '2px solid white',
+							zIndex: 10,
+							width: 35,
+							height: 35
 						}}
 					>
-						<EditIcon sx={{ fontSize: 16 }} />
+						<PersonOutlineIcon sx={{ fontSize: 20 }} />
 					</IconButton>
 				</Box>
 

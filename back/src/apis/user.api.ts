@@ -19,6 +19,14 @@ import {
 	persistenceSchema
 } from "../schemas/user.schema.js";
 
+import { pipeline } from 'stream/promises';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -94,7 +102,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				});
 			}
 		});
-	
+
 	//endpoint de busqueda
 	fastify.get(
 		'/search',
@@ -204,6 +212,44 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		}
 	);
+
+	// POST /api/user/upload-avatar
+	fastify.post('/upload-avatar', { preHandler: [authenticate] }, async (request, reply) => {
+		const data = await request.file();
+		if (!data) return reply.code(400).send({ error: "No file uploaded" });
+
+		const currentUser = request.user as { id: number };
+
+		// 1. Crear nombre único: userId-timestamp.ext
+		const extension = path.extname(data.filename);
+		const fileName = `${currentUser.id}-${Date.now()}${extension}`;
+
+		// 2. Definir ruta física (back/uploads/avatars)
+		const uploadDir = path.join(__dirname, '../../uploads/avatars');
+		const uploadPath = path.join(uploadDir, fileName);
+
+		// 3. Crear carpeta si no existe
+		if (!fs.existsSync(uploadDir)) {
+			fs.mkdirSync(uploadDir, { recursive: true });
+		}
+
+		// 4. Guardar archivo en disco
+		await pipeline(data.file, fs.createWriteStream(uploadPath));
+
+		// 5. Generar URL pública dinámica
+		// Usamos request.protocol y request.hostname para que funcione en LAN/IP
+		const protocol = request.protocol;
+		const host = request.hostname; // Ej: 10.13.1.5:3000
+		const newAvatarUrl = `${protocol}://${host}:3000/public/avatars/${fileName}`;
+		console.log("📸 Nueva URL generada:", newAvatarUrl);
+		// 6. Actualizar Base de Datos
+		await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);
+
+		return {
+			message: "Avatar uploaded successfully",
+			avatarUrl: newAvatarUrl
+		};
+	});
 };
 
 export default userRoutes;
