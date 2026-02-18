@@ -8,6 +8,15 @@ import { FastifyPluginAsync } from 'fastify';
 import { authenticate } from "../middleware/auth.js";
 import { pool } from '../../db/database.js';
 import { socketManager } from '../websocket/connection-manager.js';
+import {
+	sendRequestSchema,
+	listFriendsSchema,
+	listBlockedSchema,
+	listPendingSchema,
+	acceptFriendSchema,
+	deleteFriendSchema,
+	blockUserSchema
+} from "../schemas/friend.schema.js";
 
 // ============================================================================
 // INTERFACES
@@ -33,40 +42,68 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	/**
 	 * POST /request - Enviar una nueva petición de amistad
 	 */
-	fastify.post<{ Body: FriendRequestBody }>('/request', async (request, reply) => {
-		try {
-			const sender = request.user as any; // Datos del que envía (ID, username)
-			const senderId = (request.user as any).id; // ID del usuario logueado
+	fastify.post<{ Body: FriendRequestBody }>(
+		'/request',
+		{ schema: sendRequestSchema },
+		async (request, reply) => {
+			const sender = request.user as any;
+			const senderId = (request.user as any).id;
 			const { receiverId } = request.body;
+
+			// Variable para rastrear si la inserción fue exitosa
+			let shouldNotify = false;
 
 			if (senderId === receiverId) {
 				return reply.code(400).send({ error: "No puedes enviarte una petición a ti mismo" });
 			}
 
-			// Insertamos la relación en estado 'pending'
-			await pool.execute(
-				'INSERT INTO friendships (sender_id, receiver_id, status) VALUES (?, ?, "pending")',
-				[senderId, receiverId]
+			const [rows] = await pool.execute(
+				'SELECT id FROM friendships WHERE sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?',
+				[senderId, receiverId, receiverId, senderId]
 			);
 
-			socketManager.notifyUser(receiverId, 'FRIEND_REQUEST', {
-				senderId: senderId,
-				username: sender.username, // Para que el front muestre el nombre
-				message: `${sender.username} te ha enviado una solicitud.`
-			});
-			return { message: "Petición de amistad enviada con éxito" };
-		} catch (error: any) {
-			if (error.code === 'ER_DUP_ENTRY') {
-				return reply.code(409).send({ error: "Ya existe una petición o relación entre vosotros" });
+			const users = rows as any[];
+
+			// Verificar si la friendship existe en la databaase
+			if (users.length > 0) {
+				return reply.code(409).send({
+					error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
+				});
 			}
-			return reply.code(500).send({ error: "Error interno al enviar la petición" });
-		}
-	});
+
+			try {
+				// Intentamos insertar
+				await pool.execute(
+					'INSERT INTO friendships (sender_id, receiver_id, status) VALUES (?, ?, "pending")',
+					[senderId, receiverId]
+				);
+
+				// Si llegamos aquí, la DB aceptó el registro
+				shouldNotify = true;
+				return { message: "Petición de amistad enviada con éxito" };
+
+			} catch (error: any) {
+				if (error.code === 'ER_DUP_ENTRY') {
+					return reply.code(409).send({ error: "Ya existe una petición o relación entre vosotros" });
+				}
+				return reply.code(500).send({ error: "Error interno al enviar la petición" });
+
+			} finally {
+				// Esto se ejecuta SIEMPRE, pero solo notificamos si shouldNotify es true
+				if (shouldNotify) {
+					socketManager.notifyUser(receiverId, 'FRIEND_REQUEST', {
+						senderId: senderId,
+						username: sender.username,
+						message: `${sender.username} te ha enviado una solicitud.`
+					});
+				}
+			}
+		});
 
 	/**
 	 * GET /list - Obtener la lista de amigos aceptados (Para la barra lateral)
 	 */
-	fastify.get('/list', async (request, reply) => {
+	fastify.get('/list', { schema: listFriendsSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
 
@@ -82,10 +119,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return friends;
 		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al obtener la lista de amigos" });
+			return reply.send({ error: "Error al obtener la lista de amigos" });
 		}
 	});
-	fastify.get('/blocked', async (request, reply) => {
+	fastify.get('/blocked', { schema: listBlockedSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
 
@@ -101,14 +138,14 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return blockade;
 		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al obtener la lista de amigos" });
+			return reply.send({ error: "Error al obtener la lista de amigos" });
 		}
 	});
 
 	/**
 	 * GET /pending - Ver peticiones recibidas que están pendientes
 	 */
-	fastify.get('/pending', async (request, reply) => {
+	fastify.get('/pending', { schema: listPendingSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
 
@@ -121,7 +158,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return requests;
 		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al obtener peticiones pendientes" });
+			return reply.send({ error: "Error al obtener peticiones pendientes" });
 		}
 	});
 
@@ -132,58 +169,64 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	//gabri del futuro.. si tienes tiempo prueba esto
 	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
-	fastify.put<{ Params: FriendParams, }>('/accept/:id', async (request, reply) => {
-		try {
-			const userId = (request.user as any).id;
-			const senderId = (request.params as any).id;
+	fastify.put<{ Params: FriendParams }>(
+		'/accept/:id',
+		{ schema: acceptFriendSchema },
+		async (request, reply) => {
+			try {
+				const userId = (request.user as any).id;
+				const senderId = (request.params as any).id;
 
-			const [result]: any = await pool.execute(
-				'UPDATE friendships SET status = "accepted" WHERE receiver_id = ? AND sender_id = ? AND status = "pending"',
-				[userId, senderId]
-			);
+				const [result]: any = await pool.execute(
+					'UPDATE friendships SET status = "accepted" WHERE receiver_id = ? AND sender_id = ? AND status = "pending"',
+					[userId, senderId]
+				);
 
-			if (result.affectedRows === 0) {
-				return reply.code(404).send({ error: "Petición no encontrada o ya aceptada" });
+				if (result.affectedRows === 0) {
+					return reply.code(404).send({ error: "Petición no encontrada o ya aceptada" });
+				}
+				const aidi = parseInt(senderId);
+				socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
+					senderId: aidi,
+					username: userId.username, // Para que el front muestre el nombre
+					message: `${(request.params as any).username} has accepted your request.`
+				});
+				return { message: "Ahora sois amigos" };
+			} catch (error: any) {
+				return reply.code(500).send({ error: "Error al aceptar la amistad" });
 			}
-			const aidi = parseInt(senderId);
-			socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
-				senderId: aidi,
-				username: userId.username, // Para que el front muestre el nombre
-				message: `${(request.params as any).username} has accepted your request.`
-			});
-			return { message: "Ahora sois amigos" };
-		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al aceptar la amistad" });
-		}
-	});
+		});
 
 	/**
 	 * DELETE /:id - Eliminar un amigo o rechazar una petición
 	 * El :id es el ID del otro usuario
 	 */
-	fastify.delete<{ Params: FriendParams }>('/delete/:id', async (request, reply) => {
-		try {
-			const userId = (request.user as any).id;
-			const otherId = (request.params as any).id;
+	fastify.delete<{ Params: FriendParams }>(
+		'/delete/:id',
+		{ schema: deleteFriendSchema },
+		async (request, reply) => {
+			try {
+				const userId = (request.user as any).id;
+				const otherId = (request.params as any).id;
 
-			// Borra la relación sin importar quién la empezó
-			await pool.execute(`
+				// Borra la relación sin importar quién la empezó
+				await pool.execute(`
                 DELETE FROM friendships 
                 WHERE (sender_id = ? AND receiver_id = ?) 
                    OR (sender_id = ? AND receiver_id = ?)
             `, [userId, otherId, otherId, userId]);
 
-			const aidi = parseInt(otherId);
-			socketManager.notifyUser(aidi, 'DELETE', {
-				senderId: aidi,
-				message: `${(request.params as any).username} has removed you as a frien.`
-			});
+				const aidi = parseInt(otherId);
+				socketManager.notifyUser(aidi, 'DELETE', {
+					senderId: aidi,
+					message: `${(request.params as any).username} has removed you as a frien.`
+				});
 
-			return { message: "Relación eliminada correctamente" };
-		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al eliminar la relación" });
-		}
-	});
+				return { message: "Relación eliminada correctamente" };
+			} catch (error: any) {
+				return reply.code(500).send({ error: "Error al eliminar la relación" });
+			}
+		});
 
 
 	/**
@@ -193,30 +236,33 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	//gabri del futuro.. si tienes tiempo prueba esto
 	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
-	fastify.put<{ Params: FriendParams, }>('/block/:id', async (request, reply) => {
-		try {
-			const userId = (request.user as any).id;
-			const blockedId = (request.params as any).id;
+	fastify.put<{ Params: FriendParams }>(
+		'/block/:id',
+		{ schema: blockUserSchema },
+		async (request, reply) => {
+			try {
+				const userId = (request.user as any).id;
+				const blockedId = (request.params as any).id;
 
-			const [result]: any = await pool.execute(
-				'UPDATE friendships SET status = "blocked" WHERE receiver_id = ? AND sender_id = ? AND status = "pending" OR status = "accepted"',
-				[userId, blockedId]
-			);
+				const [result]: any = await pool.execute(
+					'UPDATE friendships SET status = "blocked" WHERE receiver_id = ? AND sender_id = ? AND status = "pending" OR status = "accepted"',
+					[userId, blockedId]
+				);
 
-			if (result.affectedRows === 0) {
-				return reply.code(404).send({ error: "Petición no encontrada o ya bloqueada" });
+				if (result.affectedRows === 0) {
+					return reply.code(404).send({ error: "Petición no encontrada o ya bloqueada" });
+				}
+				const aidi = parseInt(blockedId);
+				socketManager.notifyUser(aidi, 'BLOCKED', {
+					blockedId: aidi,
+					username: userId.username, // Para que el front muestre el nombre
+					message: `${(request.params as any).username} has blocked you.`
+				});
+				return { message: "youve been blocked" };
+			} catch (error: any) {
+				return reply.code(500).send({ error: "Error al bloquear usuario" });
 			}
-			const aidi = parseInt(blockedId);
-			socketManager.notifyUser(aidi, 'BLOCKED', {
-				blockedId: aidi,
-				username: userId.username, // Para que el front muestre el nombre
-				message: `${(request.params as any).username} has blocked you.`
-			});
-			return { message: "Tan blokeao por pajas" };
-		} catch (error: any) {
-			return reply.code(500).send({ error: "Error al bloquear usuario" });
-		}
-	});
+		});
 
 };
 

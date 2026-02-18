@@ -17,6 +17,12 @@ import {
     PrimaryAuthButton
 } from "../style/AuthModalStyle"; // Asegúrate de que la ruta sea correcta
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+
 interface User {
     id: number;
     username: string;
@@ -44,7 +50,7 @@ export const UserList = ({ open, onClose }: Props) => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/user', {
+            const response = await fetch(`${BASE_URL}/api/user`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -3,31 +3,40 @@ import { jwtDecode } from "jwt-decode";
 import { useNotification } from "./NotificationContext";
 import { useSearchParams } from "react-router-dom";
 
-// Definimos la forma de nuestro usuario (copiado de Header)
+// --- 🛠️ FIX MÁGICO PARA LA LAN DE 42 🛠️ ---
+// Si estoy en localhost, usa localhost. Si entro por IP (10.12...), usa la IP.
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+
+// Definimos la forma de nuestro usuario
 interface UserPayload {
 	id: number;
 	username: string;
 	email: string;
 	avatarUrl: string;
+	is_two_factor_enabled: boolean;
 }
 
-// Definimos qué funciones y datos "regalamos" al resto de la app
 interface AuthContextType {
 	user: UserPayload | null;
-	isLoading: boolean; // Para mostrar spinners si quieres
-	login: (email: string, pass: string) => Promise<boolean>; // Devuelve true si fue bien
+	isLoading: boolean;
+	login: (email: string, pass: string) => Promise<boolean>;
 	register: (username: string, email: string, pass: string) => Promise<boolean>;
 	logout: () => void;
 	updateUsername: (newUsername: string) => Promise<boolean>;
 	updateAvatarUrl: (newAvatarUrl: string) => Promise<boolean>;
+	generate2FA: () => Promise<string | null>;
+	verify2FA: (code: string) => Promise<boolean>;
+	disable2FA: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
 	const context = useContext(AuthContext);
-	if (!context)
-		throw new Error("useAuth must be used within an AuthProvider");
+	if (!context) throw new Error("useAuth must be used within an AuthProvider");
 	return context;
 };
 
@@ -35,33 +44,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const { notifySuccess, notifyError } = useNotification();
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	// OAuth Error
+	// OAuth Error Handler
 	const errorType = searchParams.get("error");
 	useEffect(() => {
-
 		if (errorType) {
 			const message = errorType === "user_exists"
 				? "Email already registered"
 				: "External auth error";
 			notifyError(message);
-
 			setSearchParams({}, { replace: true });
 		}
 	}, [errorType, setSearchParams, notifyError]);
 
 	const [user, setUser] = useState<UserPayload | null>(null);
-	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null);
-	
+	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null); // Nota: Esto parece redundante con 'user', pero lo mantengo como lo tenías
 	const [isLoading, setIsLoading] = useState(false);
-
-	// Referencia para el polling
 	const lastTokenRef = useRef<string | null>(null);
 
 	// --- 1. FUNCIÓN LOGIN ---
 	const login = async (email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
-			const response = await fetch('http://localhost:3000/api/auth/login', {
+			// 👇 CAMBIO AQUÍ: Usamos BASE_URL
+			const response = await fetch(`${BASE_URL}/api/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password: pass })
@@ -70,13 +75,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			if (!response.ok) throw new Error(data.message || data.error || 'Credential error');
 
-			// Guardar token y decodificar
 			localStorage.setItem('auth_token', data.token);
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 			lastTokenRef.current = data.token;
 
-			notifySuccess(`Finally here, ${decoded.username}`);
+			notifySuccess(`Welcome back, ${decoded.username}`);
 			return true;
 		} catch (error: any) {
 			notifyError(error.message);
@@ -92,7 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || 'Guest'}`;
 
-			const response = await fetch('http://localhost:3000/api/auth/register', {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/auth/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ username, email, password: pass, avatarUrl: defaultAvatar })
@@ -118,8 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const logout = () => {
 		const token = localStorage.getItem('auth_token');
 		if (token) {
-			// Avisar al back (fire and forget)
-			fetch('http://localhost:3000/api/auth/logout', {
+			// 👇 CAMBIO AQUÍ
+			fetch(`${BASE_URL}/api/auth/logout`, {
 				method: 'POST',
 				headers: { 'Authorization': `Bearer ${token}` }
 			}).catch(console.error);
@@ -131,12 +136,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		notifySuccess("Logged out successfully");
 	};
 
-	// --- 4. POLLING Y PERSISTENCIA (El useEffect complejo del Header) ---
+	// --- 4. POLLING Y PERSISTENCIA ---
 	useEffect(() => {
 		const checkToken = () => {
 			const currentToken = localStorage.getItem('auth_token');
 
-			// Si el token cambió (login desde otra pestaña, o expiró)
 			if (currentToken !== lastTokenRef.current) {
 				lastTokenRef.current = currentToken;
 
@@ -144,11 +148,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					try {
 						const decoded = jwtDecode<UserPayload>(currentToken);
 						setUser(decoded);
-						// Validar con back
-						fetch('http://localhost:3000/api/user/persistence', {
+						fetch(`${BASE_URL}/api/user/persistence`, {
 							headers: { 'Authorization': `Bearer ${currentToken}` }
 						}).catch(() => {
-							// Si falla, limpiar
 							localStorage.removeItem('auth_token');
 							setUser(null);
 						});
@@ -161,90 +163,161 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				}
 			}
 		};
-		checkToken(); // Check inicial
-		const interval = setInterval(checkToken, 500); // Polling
+		checkToken();
+		const interval = setInterval(checkToken, 500);
 		return () => clearInterval(interval);
 	}, []);
 
+	// --- OTROS MÉTODOS (Update, 2FA...) ---
 	const updateUsername = async (newUsername: string): Promise<boolean> => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return false;
+		const token = localStorage.getItem('auth_token');
+		if (!token) return false;
 
-    try {
-        const response = await fetch('http://localhost:3000/api/user/update-username', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Asegúrate de que el backend espera "Bearer"
-            },
-            body: JSON.stringify({ newUsername })
-        });
+		try {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/user/update-username`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({ newUsername })
+			});
 
-        const data = await response.json();
+			const data = await response.json();
+			if (!response.ok) {
+				notifyError(data.error || "Update failed");
+				return false;
+			}
 
-        if (!response.ok) {
-            notifyError(data.error || "Update failed");
-            return false;
-        }
+			if (data.token) {
+				lastTokenRef.current = data.token;
+				localStorage.setItem('auth_token', data.token);
+			}
+			setUser(prev => prev ? { ...prev, username: newUsername } : null);
+			notifySuccess("Username updated successfully!");
+			return true;
+		} catch (error: any) {
+			notifyError("Server connection error");
+			return false;
+		}
+	};
 
-        if (data.token) {
-            // Actualizamos la referencia ANTES que el storage para que el polling no se raye
-            lastTokenRef.current = data.token; 
-            localStorage.setItem('auth_token', data.token);
-        }
+	const updateAvatarUrl = async (newUrl: string): Promise<boolean> => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return false;
 
-        // Actualizamos estado de React
-        setUser(prev => prev ? { ...prev, username: newUsername } : null);
+		try {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/user/update-avatarUrl`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({ newUrl })
+			});
 
-        notifySuccess("Username updated successfully!");
-        return true;
-        
-    } catch (error: any) {
-        notifyError("Server connection error");
-        return false;
-    }
-};
-const updateAvatarUrl = async (newUrl: string): Promise<boolean> => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return false;
+			const data = await response.json();
+			if (!response.ok) {
+				notifyError(data.error || "Update failed");
+				return false;
+			}
 
-    try {
-        const response = await fetch('http://localhost:3000/api/user/update-avatarUrl', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Asegúrate de que el backend espera "Bearer"
-            },
-            body: JSON.stringify({ newUrl })
-        });
+			if (data.token) {
+				lastTokenRef.current = data.token;
+				localStorage.setItem('auth_token', data.token);
+			}
+			setAvatarUrl(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
+			notifySuccess("Avatar updated successfully!");
+			return true;
+		} catch (error: any) {
+			notifyError("Server connection error");
+			return false;
+		}
+	};
 
-        const data = await response.json();
+	const generate2FA = async (): Promise<string | null> => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return null;
 
-        if (!response.ok) {
-            notifyError(data.error || "Update failed");
-            return false;
-        }
+		try {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/auth/2fa/generate`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({})
+			});
+			const data = await response.json();
+			if (!response.ok) {
+				notifyError(data.error || "2FA Generation failed");
+				return null;
+			}
+			return data.qrCodeImage;
+		} catch (error: any) {
+			notifyError("Server connection error");
+			return null;
+		}
+	};
 
-        if (data.token) {
-            // Actualizamos la referencia ANTES que el storage para que el polling no se raye
-            lastTokenRef.current = data.token; 
-            localStorage.setItem('auth_token', data.token);
-        }
+	const verify2FA = async (code: string): Promise<boolean> => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return false;
+		try {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-on`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({ code })
+			});
 
-        // Actualizamos estado de React
-        setAvatarUrl(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
+			if (!response.ok) {
+				notifyError("Invalid Code");
+				return false;
+			}
+			setUser(prev => prev ? { ...prev, is_two_factor_enabled: true } : null);
+			notifySuccess("2FA Enabled Successfully!");
+			return true;
+		} catch (error) {
+			notifyError("Verification failed");
+			return false;
+		}
+	};
 
-        notifySuccess("Username updated successfully!");
-        return true;
-        
-    } catch (error: any) {
-        notifyError("Server connection error");
-        return false;
-    }
-};
+	const disable2FA = async (): Promise<boolean> => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return false;
+
+		try {
+			// 👇 CAMBIO AQUÍ
+			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-off`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({})
+			});
+
+			if (!response.ok) throw new Error("Error disabling 2FA");
+
+			setUser(prev => prev ? { ...prev, is_two_factor_enabled: false } : null);
+			notifySuccess("2FA Disabled");
+			return true;
+		} catch (error) {
+			notifyError("Failed to disable 2FA");
+			return false;
+		}
+	};
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername, updateAvatarUrl}}>
+		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername, updateAvatarUrl, generate2FA, verify2FA, disable2FA, }}>
 			{children}
 		</AuthContext.Provider>
 	);

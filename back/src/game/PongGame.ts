@@ -45,7 +45,7 @@ export class PongGame {
 		}
 	}
 
-	private updateAi() {
+	public updateAi() {
 		const paddleCenter = this.state.paddleRight.y + this.state.paddleRight.height / 2;
 		const ballCenter = this.state.ball.y + this.state.ball.height / 2;
 		const deadZone = 10;
@@ -107,7 +107,7 @@ export class PongGame {
 		}, delay);
 	}
 
-	private update() {
+	public update() {
 		const now = Date.now();
 		const dt = (now - this.lastTime) / 1000;
 		this.lastTime = now;

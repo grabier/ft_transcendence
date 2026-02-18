@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { socketManager } from '../websocket/connection-manager.js';
 import { handleChatMessage } from '../websocket/chat.handler.js';
+import { mainSocketSchema } from '../schemas/ws.schema.js';
 
 interface QueryParams {
 	token: string;
@@ -8,8 +9,13 @@ interface QueryParams {
 
 const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-	fastify.get('/', { websocket: true }, (connection, req) => {
-		// 🛡️ BLINDAJE: Detectamos qué es 'connection' exactamente
+	fastify.get('/', {
+		websocket: true,
+		schema: mainSocketSchema, // 👈 Añadimos la documentación
+		config: {
+			rateLimit: false // 👈 Protegemos la conexión de cortes por spam
+		}
+	}, (connection, req) => {		// 🛡️ BLINDAJE: Detectamos qué es 'connection' exactamente
 		// A veces llega como SocketStream ({ socket: ... }) y a veces como WebSocket directo
 		const socket = (connection as any).socket || connection;
 
@@ -23,7 +29,7 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		try {
 			// 1. Validamos el token
 			const decoded: any = fastify.jwt.verify(token);
-			const userId = decoded.id;
+			const userId = parseInt(String(decoded.id), 10);
 			const username = decoded.username;
 
 			// 2. Registramos en la Centralita (Usamos la variable 'socket' que hemos detectado)

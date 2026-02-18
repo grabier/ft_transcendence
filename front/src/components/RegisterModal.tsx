@@ -15,6 +15,11 @@ import {
 } from "../style/AuthModalStyle";
 import { validateEmail } from "../utils/validation";
 
+const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
+const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
+const PORT = '3000';                       // Tu puerto de backend
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`;
+
 interface Props {
     open: boolean;
     onClose: () => void;
@@ -97,7 +102,7 @@ const RegisterModal = ({
                 <Stack spacing={2} sx={{ mb: 3 }}>
                     <OAuthButton 
                         component="a" 
-                        href="http://localhost:3000/api/auth/google"
+                        href={`${BASE_URL}/api/auth/google`}
                         sx={oAuthStyle}
                     >
                         Sign up with Google
@@ -105,7 +110,7 @@ const RegisterModal = ({
 
                     <OAuthButton 
                         component="a" 
-                        href="http://localhost:3000/api/auth/github"
+                        href={`${BASE_URL}/api/auth/github`}
                         sx={oAuthStyle}
                     >
                         Sign up with Github

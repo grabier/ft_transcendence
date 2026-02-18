@@ -28,7 +28,7 @@ const start = async () => {
 
 		// Fastify requiere host '0.0.0.0' para que Docker pueda acceder
 		await app.listen({
-			port: Number(ENV.PORT) || 3000,
+			port:  3000,
 			host: '0.0.0.0'
 		});
 
