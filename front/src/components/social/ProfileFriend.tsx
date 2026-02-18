@@ -57,8 +57,8 @@ const sendRequest = async (receiverId: number) => {
 export const ProfileFriend = ({ open, onClose, friend }: Props) => {
 	const modals = useAuthModals();
 	// avatar
-	const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatarUrl || defaultAvatar);
+	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
+	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
 
 	return (
     <Drawer
@@ -96,7 +96,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
         }}>
             <Box sx={{ position: 'relative', mb: 2 }}>
                 <Avatar
-                    src={currentAvatar}
+                    src={friend?.avatar_url}
                     sx={{ width: 100, height: 100, boxShadow: 3, border: '4px solid white' }}
                 />
             </Box>

@@ -23,7 +23,21 @@ import { pipeline } from 'stream/promises';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import os from 'os';
 
+//  Esta función busca la IP real de tu máquina (ej: 10.13.1.5)
+const getServerIp = () => {
+	const interfaces = os.networkInterfaces();
+	for (const name of Object.keys(interfaces)) {
+		for (const iface of interfaces[name] || []) {
+			// Buscamos una dirección IPv4 que NO sea interna (no sea 127.0.0.1)
+			if (iface.family === 'IPv4' && !iface.internal) {
+				return iface.address;
+			}
+		}
+	}
+	return 'localhost'; // Fallback por si acaso
+};
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -239,8 +253,8 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		// 5. Generar URL pública dinámica
 		// Usamos request.protocol y request.hostname para que funcione en LAN/IP
 		const protocol = request.protocol;
-		const host = request.hostname; // Ej: 10.13.1.5:3000
-		const newAvatarUrl = `${protocol}://${host}:3000/public/avatars/${fileName}`;
+		const serverIp = getServerIp();
+		const newAvatarUrl = `${protocol}://${serverIp}:3000/public/avatars/${fileName}`;
 		console.log("📸 Nueva URL generada:", newAvatarUrl);
 		// 6. Actualizar Base de Datos
 		await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);

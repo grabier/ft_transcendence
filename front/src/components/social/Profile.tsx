@@ -31,8 +31,8 @@ export const Profile = ({ open, onClose }: Props) => {
 	const [editEmail, setEditEmail] = useState({ open: false, value: user?.email || '' });
 
 	// avatar
-	const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(user?.avatarUrl || defaultAvatar);
+	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
+	const [currentAvatar, setCurrentAvatar] = useState(user?.avatarUrl);
 
 	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -49,7 +49,7 @@ export const Profile = ({ open, onClose }: Props) => {
 			setShowAvatarPicker(false);
 		} else {
 			// Si falla, volvemos a la original
-			setCurrentAvatar(user?.avatarUrl || defaultAvatar);
+			setCurrentAvatar(user?.avatarUrl);
 			alert("Error al actualizar el avatar");
 		}
 	};
@@ -107,7 +107,6 @@ export const Profile = ({ open, onClose }: Props) => {
 			</Box>
 
 			{/* Hero Section */}
-			{/* Hero Section */}
 			<Box sx={{
 				py: 4,
 				display: 'flex',
@@ -122,7 +121,7 @@ export const Profile = ({ open, onClose }: Props) => {
                 */}
 				<Box sx={{ position: 'relative', width: 100, height: 100, mb: 2 }}>
 					<Avatar
-						src={user?.avatarUrl || currentAvatar}
+						src={user?.avatarUrl}
 						sx={{ width: '100%', height: '100%', boxShadow: 3, border: '4px solid white' }}
 					/>
 
