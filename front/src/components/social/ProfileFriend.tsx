@@ -7,14 +7,14 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuthModals } from '../hooks/useAuthModals';
+import { useAuthModals } from '../../hooks/useAuthModals';
 import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 
-import { BASE_URL } from '../config';
+import { BASE_URL } from '../../config';
 
 
 interface Props {

@@ -9,16 +9,17 @@ import {
 	Badge
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import LoginModal from "./LoginModal";
-import RegisterModal from "./RegisterModal";
-import ResetPasswordModal from "./ResetPasswordModal";
-import UserList from "./UserList";
-import { SocialPanel } from "./SocialPanel";
-import {Profile} from "./Profile";
+import LoginModal from "../auth/LoginModal";
+import RegisterModal from "../auth/RegisterModal";
+import ResetPasswordModal from "../auth/ResetPasswordModal";
+import UserList from "../social/UserList";
+import UserAvatar from "../ui/UserAvatar";
+import { SocialPanel } from "../social/SocialPanel";
+import { Profile } from "../social/Profile";
 
-import { useSocket } from "../context/SocketContext";
-import { useAuth } from "../context/AuthContext";
-import { useAuthModals } from "../hooks/useAuthModals";
+import { useSocket } from "../../context/SocketContext";
+import { useAuth } from "../../context/AuthContext";
+import { useAuthModals } from "../../hooks/useAuthModals";
 
 // Ya no recibe children, se pinta él solo
 const MenuHeader = () => {
@@ -69,11 +70,14 @@ const MenuHeader = () => {
 					flexShrink: 0
 				}}
 			>
-				<Badge badgeContent={unreadCount} color="error" overlap="circular" >
+				<Badge badgeContent={unreadCount} color="error" overlap="circular">
 					{user ? (
-						<Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main", color: "primary.dark", fontWeight: "bold", fontSize: "1.2rem", border: "2px solid #000" }}>
-							{user.username.charAt(0).toUpperCase()}
-						</Avatar>
+						<UserAvatar
+							name={user.username}
+							src={user.avatarUrl} // Asumiendo que user tiene avatarUrl
+							size={32}
+							sx={{ border: "2px solid #000" }} // Estilo específico que tenías
+						/>
 					) : (
 						<MenuIcon sx={{ color: "background.default" }} />
 					)}
@@ -88,11 +92,11 @@ const MenuHeader = () => {
 				{!user && <MenuItem onClick={() => handleNavigate("/stats")}>Rankings</MenuItem>}
 
 				{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>Hola, {user.username}</MenuItem>}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>Profile</MenuItem>) :<MenuItem disabled >Profile</MenuItem >}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>) :<MenuItem disabled >Social</MenuItem >}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin:Ver Lista Usuarios</MenuItem>) :<MenuItem disabled> Admin:Ver Lista Usuarios</MenuItem>}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>Profile</MenuItem>) : <MenuItem disabled >Profile</MenuItem >}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>) : <MenuItem disabled >Social</MenuItem >}
+				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin:Ver Lista Usuarios</MenuItem>) : <MenuItem disabled> Admin:Ver Lista Usuarios</MenuItem>}
 
-	
+
 				{user && <MenuItem onClick={onLogoutClick}>Logout</MenuItem>}
 			</Menu>
 

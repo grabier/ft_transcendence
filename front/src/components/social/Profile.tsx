@@ -9,8 +9,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Check';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuth } from "../context/AuthContext";
-import { useAuthModals } from '../hooks/useAuthModals';
+import { useAuth } from "../../context/AuthContext";
+import { useAuthModals } from '../../hooks/useAuthModals';
 import { useNavigate } from 'react-router-dom';
 
 
