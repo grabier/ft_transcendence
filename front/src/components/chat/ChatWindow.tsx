@@ -12,26 +12,15 @@ import TimerIcon from '@mui/icons-material/Timer';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-// --- INTERFAZ EXTENDIDA PARA MENSAJES ---
-// Asegúrate de que tu tipo Message en el frontend tenga esta propiedad opcional
-interface MessageWithScore {
-	id: number;
-	content: string;
-	type: 'text' | 'game_invite';
-	sender_id: number;
-	invite_score?: number;
-}
+import { ProfileFriend } from '../social/ProfileFriend'; // <--- 1. IMPORTAR COMPONENTE
+
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
 const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boolean, score?: number }) => {
 	const navigate = useNavigate();
-
-	// Si es un mensaje antiguo sin score, asumimos 5 por defecto
-	console.log(`Score: ${score}`);
 	const pointsToWin = score || 5;
 
 	const handleJoinGame = () => {
-		// LA URL INCLUYE EL SCORE DINÁMICO
 		navigate(`/?mode=pvp&roomId=${gameId}&score=${pointsToWin}`);
 	};
 
@@ -86,10 +75,13 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 
 // --- CHAT WINDOW PRINCIPAL ---
 export const ChatWindow = () => {
-	// @ts-ignore - Ignoramos error de tipado si sendMessage no está actualizado aún en tu contexto
+	// @ts-ignore
 	const { activeChat, messages, sendMessage, closeChat } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
+
+	// --- 2. ESTADO PARA EL PERFIL DEL AMIGO ---
+	const [profileOpen, setProfileOpen] = useState(false);
 
 	// Estado para el menú de puntos
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -109,7 +101,6 @@ export const ChatWindow = () => {
 		setInputText('');
 	};
 
-	// Abrir menú al hacer click en el mando
 	const handleOpenInviteMenu = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
 	};
@@ -118,12 +109,10 @@ export const ChatWindow = () => {
 		setAnchorEl(null);
 	};
 
-	// Enviar la invitación con los puntos seleccionados
 	const handleInvite = (points: number) => {
 		handleCloseInviteMenu();
 		const roomId = `duel-${user?.id}-${Date.now().toString().slice(-4)}`;
 		sendMessage(roomId, points, 'game_invite');
-		console.log("patatatt");
 	};
 
 	return (
@@ -132,7 +121,8 @@ export const ChatWindow = () => {
 				display: 'flex',
 				flexDirection: 'column',
 				height: '100%',
-				bgcolor: 'background.paper'
+				bgcolor: 'background.paper',
+				position: 'relative' // Necesario por si el Drawer se renderiza dentro
 			}}
 		>
 			{/* --- CABECERA --- */}
@@ -149,7 +139,18 @@ export const ChatWindow = () => {
 					<IconButton size="small" onClick={closeChat} sx={{ color: 'white', mr: 1 }}>
 						<ArrowBackIcon />
 					</IconButton>
-					<Avatar src={activeChat.otherUser.avatar_url} sx={{ width: 32, height: 32 }} />
+					
+					{/* --- 3. AVATAR CLICABLE --- */}
+					<Avatar 
+						src={activeChat.otherUser.avatar_url} 
+						sx={{ 
+							width: 32, 
+							height: 32, 
+							cursor: 'pointer', // Indicador visual de click
+							'&:hover': { opacity: 0.8 } 
+						}} 
+						onClick={() => setProfileOpen(true)} // Abre el perfil
+					/>
 					<Typography variant="subtitle2" color="white" fontWeight="bold">
 						{activeChat.otherUser.username}
 					</Typography>
@@ -175,7 +176,7 @@ export const ChatWindow = () => {
 								<GameInviteBubble
 									gameId={msg.content}
 									isMe={isMe}
-									score={msg.invite_score} // Pasamos el score que viene del back
+									score={msg.invite_score}
 								/>
 							) : (
 								<Paper sx={{
@@ -201,17 +202,10 @@ export const ChatWindow = () => {
 
 			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-
-				{/* Botón de Invitar con Menú */}
-				<IconButton
-					color="warning"
-					onClick={handleOpenInviteMenu}
-					title="Desafiar a Pong"
-				>
+				<IconButton color="warning" onClick={handleOpenInviteMenu} title="Desafiar a Pong">
 					<VideogameAssetIcon />
 				</IconButton>
 
-				{/* Menú de Selección de Puntos */}
 				<Menu
 					anchorEl={anchorEl}
 					open={openMenu}
@@ -247,6 +241,13 @@ export const ChatWindow = () => {
 					<SendIcon />
 				</IconButton>
 			</Box>
+
+			{/* --- 4. RENDERIZADO DEL PERFIL --- */}
+			<ProfileFriend 
+				open={profileOpen} 
+				onClose={() => setProfileOpen(false)} 
+				friend={activeChat.otherUser} 
+			/>
 		</Box>
 	);
 };
