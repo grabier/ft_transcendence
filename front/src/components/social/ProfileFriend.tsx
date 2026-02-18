@@ -26,7 +26,7 @@ const token = localStorage.getItem('auth_token');
 
 const handleDelete = async (friendId: number) => {
 	try {
-		const res = await fetch(`${BASE_URL}:3000/api/friend/delete/${friendId}`, {
+		const res = await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
 			method: 'DELETE',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});

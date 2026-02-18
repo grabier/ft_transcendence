@@ -134,7 +134,8 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
                 WHERE (f.sender_id = ? OR f.receiver_id = ?) 
                   AND f.status = 'blocked' 
                   AND u.id != ?
-            `, [userId, userId, userId]);
+				  AND blocked_by = ?
+            `, [userId, userId, userId, userId]);
 
 			return blockade;
 		} catch (error: any) {
@@ -241,25 +242,37 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		{ schema: blockUserSchema },
 		async (request, reply) => {
 			try {
-				const userId = (request.user as any).id;
+				// Asumo que request.user tiene id y username
+				const user = request.user as any;
+				const userId = user.id;
 				const blockedId = (request.params as any).id;
 
+				// QUERY CORREGIDA
 				const [result]: any = await pool.execute(
-					'UPDATE friendships SET status = "blocked" WHERE receiver_id = ? AND sender_id = ? AND status = "pending" OR status = "accepted"',
-					[userId, blockedId]
+					`UPDATE friendships 
+                 SET status = 'blocked', blocked_by = ? 
+                 WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+                 AND status IN ('pending', 'accepted')`,
+					[userId, userId, blockedId, blockedId, userId]
 				);
 
 				if (result.affectedRows === 0) {
-					return reply.code(404).send({ error: "Petición no encontrada o ya bloqueada" });
+					return reply.code(404).send({ error: "Amistad no encontrada o ya bloqueada" });
 				}
-				const aidi = parseInt(blockedId);
-				socketManager.notifyUser(aidi, 'BLOCKED', {
-					blockedId: aidi,
-					username: userId.username, // Para que el front muestre el nombre
-					message: `${(request.params as any).username} has blocked you.`
+
+				const blockedIdInt = parseInt(blockedId);
+
+				// Notificar (Opcional: normalmente no se avisa al bloqueado, pero si es tu lógica, está bien)
+				socketManager.notifyUser(blockedIdInt, 'BLOCKED', {
+					blockedId: blockedIdInt,
+					username: user.username,
+					message: `${user.username} has blocked you.`
 				});
-				return { message: "youve been blocked" };
+
+				return { message: "User blocked successfully" };
+
 			} catch (error: any) {
+				console.error(error); // Es bueno loguear el error real
 				return reply.code(500).send({ error: "Error al bloquear usuario" });
 			}
 		});
