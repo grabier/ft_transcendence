@@ -1,13 +1,12 @@
-import { Box } from "@mui/material";
-import { OAuthButton } from "../../style/AuthModalStyle"; // Reutilizamos tu estilo base
+import { OAuthButton } from "@/style/AuthModalStyle";
 
-interface SocialLoginProps {
+interface Props {
   provider: "google" | "github" | "42"; // Añade los que necesites
   href: string;
   children: React.ReactNode;
 }
 
-const SocialLoginButton = ({ provider, href, children }: SocialLoginProps) => {
+const SocialLoginButton = ({ provider, href, children }: Props) => {
   // Mapeo de iconos para no repetir el SVG en cada uso
   const iconId = `icon-${provider}`; 
   const iconSize = provider === "github" ? 24 : 20;

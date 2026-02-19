@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
 	Typography, Divider, IconButton, Box,
@@ -10,11 +11,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Check';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuth } from "../../context/AuthContext";
-import { useAuthModals } from '../../hooks/useAuthModals';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 
-import { useTranslation } from 'react-i18next';
+import { useAuth } from "@/context/AuthContext";
+import { useAuthModals } from '@/hooks/useAuthModals';
 
 interface Props {
 	open: boolean;
@@ -33,7 +33,7 @@ export const Profile = ({ open, onClose }: Props) => {
 
 	// avatar
 	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(user?.avatarUrl);
+	const [, setCurrentAvatar] = useState(user?.avatarUrl);
 	console.log(`profile   : ${user?.avatarUrl}`);
 
 	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];

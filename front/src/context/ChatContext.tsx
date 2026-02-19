@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useSocket } from './SocketContext';
-import { useAuth } from './AuthContext';
-import { DM, Message } from '../types/chat';
+
+import { DM, Message } from '@/types/chat';
+import { useSocket } from '@/context/SocketContext';
+import { useAuth } from '@/context/AuthContext';
 
 const PROTOCOL = window.location.protocol;
 const HOST = window.location.hostname;

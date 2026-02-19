@@ -8,6 +8,9 @@
 		"talkToFriends": "Talk to someone from your friends list!",
 		"newConversation": "New conversation"
 	},
+	"chatWidget": {
+		"chat": "Chat"
+	},
 	"chatWindow": {
 		"challengeSent": "CHALLENGE SENT",
 		"pongChallenge": "PONG CHALLENGE",
@@ -16,7 +19,30 @@
 		"enterRoom": "ENTER THE ROOM",
 		"acceptDuel": "ACCEPT DUEL",
 		"challengeToPong": "Challenge to Pong",
-		"writeMessage": "Write a message..."
+		"writeMessage": "Write a message...",
+		"proposedMatch": "You proposed a match to {{points}} points.",
+		"challengedTo": "You've been challenged to a duel at {{points}} points.",
+		"acceptPoints": "ACCEPT ({{points}} PTS)",
+		"quickMatch": "Quick (3 pts)",
+		"standardMatch": "Standard (5 pts)",
+		"longMatch": "Long (11 pts)",
+		"marathonMatch": "Marathon (21 pts)"
+	},
+	"footer": {
+		"logo": "Transcendence",
+		"copyright": "© 2026 All Rights Reserved"
+	},
+	"loginModal": {
+		"signInTo": "Sign in to",
+		"title": "Transcendence",
+		"continueWithGoogle": "Continue with Google",
+		"continueWithGithub": "Continue with Github",
+		"emailLabel": "EMAIL",
+		"passwordLabel": "PASSWORD",
+		"loginButton": "Log in",
+		"resetPassword": "Reset password",
+		"noAccount": "No account?",
+		"createOne": "Create one"
 	},
 	"profile": {
 		"title": "My Profile",
@@ -28,6 +54,18 @@
 		"standardMember": "Standard Member",
 		"selectAvatar": "Select a new avatar:",
 		"logout": "Logout"
+	},
+	"registerModal": {
+		"signUpFor": "Sign up for",
+		"title": "Transcendence",
+		"signUpWithGoogle": "Sign up with Google",
+		"signUpWithGithub": "Sign up with Github",
+		"usernameLabel": "USERNAME",
+		"emailLabel": "EMAIL",
+		"passwordLabel": "PASSWORD",
+		"createAccount": "Create Account",
+		"alreadyHaveAccount": "Already have an account?",
+		"logIn": "Log in"
 	},
 	"resetPassword": {
 		"title": "Reset your password",
@@ -50,5 +88,29 @@
 		"pointsToWin": "Points to win",
 		"cancel": "CANCEL",
 		"startGame": "START GAME"
+	},
+	"menuHeader": {
+		"login": "Login",
+		"register": "Register",
+		"rankings": "Rankings",
+		"hello": "Hi, {{username}}",
+		"profile": "Profile",
+		"social": "Social",
+		"adminUserList": "Admin: View User List",
+		"logout": "Logout"
+	},
+	"profileFriend": {
+		"title": "{{username}}'s profile",
+		"guest": "Guest",
+		"standardMember": "Standard Member",
+		"addFriend": "Add friend",
+		"remove": "Remove",
+		"block": "Block",
+		"username": "Username",
+		"notSet": "Not set"
+	},
+	"gamesPage": {
+		"pongSubtitle": "The original arcade legend. Pure reflex gaming.",
+		"breakerSubtitle": "Break through the chaos. Precision meets destruction."
 	}
 }

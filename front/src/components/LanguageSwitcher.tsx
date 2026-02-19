@@ -27,8 +27,6 @@ export const LanguageSwitcher = () => {
     handleClose();
   };
 
-  const currentLang = languages.find(lang => lang.code === i18n.language) || languages[0];
-
   return (
     <>
       <IconButton onClick={handleClick} color="inherit">

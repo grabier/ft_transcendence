@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { BASE_URL} from "../src/config.ts"
+
+import { BASE_URL } from "@/config";
 
 const Frontend = ({ children }: { children: React.ReactNode }) => {
 

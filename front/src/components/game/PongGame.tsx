@@ -129,9 +129,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
 
-		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const host = window.location.hostname; // Esto cogerá "10.12.x.x" automáticamente
-		const port = '3000';
 
 		console.log(`Connecting to WS: Mode=${mode}, Score=${scoreToWin}`);
 

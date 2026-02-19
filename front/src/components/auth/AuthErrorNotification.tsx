@@ -60,7 +60,7 @@ const AuthErrorNotification = ({ open, message, onClose }: Props) => {
                                 letterSpacing: "1px",
                             }}
                         >
-                            {t('systemError')}
+                            {t('authErrorNotification.systemError')}
                         </Typography>
                     </Box>
                     <IconButton

@@ -1,20 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
 	Typography, Divider, IconButton, Box,
-	TextField, Collapse, Drawer, Button
+	Drawer, Tooltip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuthModals } from '../../hooks/useAuthModals';
-import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
-import Tooltip from '@mui/material/Tooltip';
 
-import { BASE_URL } from '../../config';
+import { BASE_URL } from '@/config';
 
 
 interface Props {
@@ -26,7 +22,7 @@ const token = localStorage.getItem('auth_token');
 
 const handleDelete = async (friendId: number) => {
 	try {
-		const res = await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
+		await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
 			method: 'DELETE',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});
@@ -37,11 +33,10 @@ const handleDelete = async (friendId: number) => {
 
 const handleBlock = async (blockedId: number) => {
 	try {
-		const res = await fetch(`${BASE_URL}/api/friend/block/${blockedId}`, {
+		await fetch(`${BASE_URL}/api/friend/block/${blockedId}`, {
 			method: 'PUT',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});
-
 	} catch (err) {
 		console.error(err);
 	}
@@ -55,10 +50,7 @@ const sendRequest = async (receiverId: number) => {
 };
 
 export const ProfileFriend = ({ open, onClose, friend }: Props) => {
-	const modals = useAuthModals();
-	// avatar
-	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
+	const { t } = useTranslation();
 
 	return (
     <Drawer
@@ -78,7 +70,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
             bgcolor: 'primary.main',
             color: 'white'
         }}>
-            <Typography variant="h6" fontWeight="600">{friend.username}'s profile</Typography>
+            <Typography variant="h6" fontWeight="600">{t('profileFriend.title', { username: friend.username })}</Typography>
             <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
                 <CloseIcon />
             </IconButton>
@@ -102,15 +94,15 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
             </Box>
 
             <Typography variant="h5" fontWeight="bold">
-                {friend?.username || 'Guest'}
+                {friend?.username || t('profileFriend.guest')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {friend?.role || 'Standard Member'}
+                {friend?.role || t('profileFriend.standardMember')}
             </Typography>
 
             {/* BOTONES DE ACCIÓN: Ahora centrados y con espacio */}
             <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                <Tooltip title="Añadir amigo">
+                <Tooltip title={t('profileFriend.addFriend')}>
                     <IconButton 
                         onClick={() => sendRequest(friend.id)} 
                         color="primary"
@@ -120,7 +112,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Eliminar">
+                <Tooltip title={t('profileFriend.remove')}>
                     <IconButton 
                         onClick={() => handleDelete(friend.id)} 
                         color="error"
@@ -130,7 +122,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Bloquear">
+                <Tooltip title={t('profileFriend.block')}>
                     <IconButton 
                         onClick={() => handleBlock(friend.id)} 
                         sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
@@ -148,8 +140,8 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
                     <Avatar sx={{ bgcolor: 'primary.light' }}><PersonOutlineIcon /></Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                    primary="Username"
-                    secondary={friend?.username || 'Not set'}
+                    primary={t('profileFriend.username')}
+                    secondary={friend?.username || t('profileFriend.notSet')}
                 />
             </ListItem>
             <Divider variant="inset" component="li" />

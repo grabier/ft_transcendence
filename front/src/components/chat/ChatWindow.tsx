@@ -11,9 +11,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SpeedIcon from '@mui/icons-material/Speed';
 import TimerIcon from '@mui/icons-material/Timer';
-import { useChat } from '../../context/ChatContext';
-import { useAuth } from '../../context/AuthContext';
-import { ProfileFriend } from '../social/ProfileFriend'; // <--- 1. IMPORTAR COMPONENTE
+
+import { useChat } from '@/context/ChatContext';
+import { useAuth } from '@/context/AuthContext';
+import { ProfileFriend } from '@/components/social/ProfileFriend';
 
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
@@ -42,14 +43,14 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 				<Stack direction="row" spacing={1} alignItems="center">
 					<SportsEsportsIcon fontSize="large" />
 					<Typography variant="subtitle1" fontWeight="bold">
-						{isMe ? t('challengeSent') : t('pongChallenge')}
+						{isMe ? t('chatWindow.challengeSent') : t('chatWindow.pongChallenge')}
 					</Typography>
 				</Stack>
 
 				<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
 					{isMe
-						? `Has propuesto una partida a ${pointsToWin} puntos.`
-						: `Te han retado a un duelo a ${pointsToWin} puntos.`}
+						? t('chatWindow.proposedMatch', { points: pointsToWin })
+						: t('chatWindow.challengedTo', { points: pointsToWin })}
 				</Typography>
 
 				<Button
@@ -68,7 +69,7 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 						}
 					}}
 				>
-					{isMe ? 'ENTRAR A LA SALA' : `ACEPTAR (${pointsToWin} PTS)`}
+					{isMe ? t('chatWindow.enterRoom') : t('chatWindow.acceptPoints', { points: pointsToWin })}
 				</Button>
 			</Stack>
 		</Paper>
@@ -204,7 +205,7 @@ export const ChatWindow = () => {
 
 			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-				<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('challengeToPong')}>
+<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
 					<VideogameAssetIcon />
 				</IconButton>
 
@@ -217,24 +218,24 @@ export const ChatWindow = () => {
 				>
 					<MenuItem onClick={() => handleInvite(3)}>
 						<ListItemIcon><SpeedIcon fontSize="small" /></ListItemIcon>
-						<ListItemText>Rápida (3 pts)</ListItemText>
-					</MenuItem>
-					<MenuItem onClick={() => handleInvite(5)}>
-						<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
-						<ListItemText>Estándar (5 pts)</ListItemText>
-					</MenuItem>
-					<MenuItem onClick={() => handleInvite(11)}>
-						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-						<ListItemText>Larga (11 pts)</ListItemText>
-					</MenuItem>
-					<MenuItem onClick={() => handleInvite(21)}>
-						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-						<ListItemText>Maratón (21 pts)</ListItemText>
+					<ListItemText>{t('chatWindow.quickMatch')}</ListItemText>
+				</MenuItem>
+				<MenuItem onClick={() => handleInvite(5)}>
+					<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
+					<ListItemText>{t('chatWindow.standardMatch')}</ListItemText>
+				</MenuItem>
+				<MenuItem onClick={() => handleInvite(11)}>
+					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+					<ListItemText>{t('chatWindow.longMatch')}</ListItemText>
+				</MenuItem>
+				<MenuItem onClick={() => handleInvite(21)}>
+					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+					<ListItemText>{t('chatWindow.marathonMatch')}</ListItemText>
 					</MenuItem>
 				</Menu>
 
 				<TextField
-					fullWidth size="small" placeholder={t('writeMessage')} value={inputText}
+				fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
 					onChange={(e) => setInputText(e.target.value)}
 					onKeyDown={(e) => e.key === 'Enter' && handleSend()}
 					sx={{ '& .MuiOutlinedInput-root': { borderRadius: 5 } }}

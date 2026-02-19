@@ -8,11 +8,12 @@ import {
     Alert,
     Link,
 } from "@mui/material";
+
 import {
     StyledDialog,
     StyledTextField,
     PrimaryAuthButton,
-} from "../../style/AuthModalStyle";
+} from "@/style/AuthModalStyle";
 
 interface Props {
     open: boolean;
@@ -21,7 +22,6 @@ interface Props {
     onSwitchToLogin: () => void;
     isLoading?: boolean;
     error?: string;
-    success?: boolean;
 }
 
 const ResetPasswordModal = ({
@@ -31,7 +31,6 @@ const ResetPasswordModal = ({
     onSwitchToLogin,
     isLoading = false,
     error,
-    success = false,
 }: Props) => {
     const [email, setEmail] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);

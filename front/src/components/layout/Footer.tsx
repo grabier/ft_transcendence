@@ -1,6 +1,9 @@
 import { Box, Container, Typography } from "@mui/material";
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+
+	const { t } = useTranslation();
 
 	return (
 		<Box
@@ -30,7 +33,7 @@ const Footer = () => {
 				/>
 				<Box sx={{ p: 0.5 }}>
 					<Typography sx={{ color: "inherit", fontWeight: 700, fontSize: "0.875rem" }}>
-						© 2026 All Rights Reserved
+						{t('footer.copyright')}
 					</Typography>
 				</Box>
 			</Container>

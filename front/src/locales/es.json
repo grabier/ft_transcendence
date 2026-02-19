@@ -8,6 +8,9 @@
 		"talkToFriends": "¡Habla con alguien desde la lista de amigos!",
 		"newConversation": "Nueva conversación"
 	},
+	"chatWidget": {
+		"chat": "Chat"
+	},
 	"chatWindow": {
 		"challengeSent": "DESAFÍO ENVIADO",
 		"pongChallenge": "DESAFÍO DE PONG",
@@ -16,7 +19,30 @@
 		"enterRoom": "ENTRAR A LA SALA",
 		"acceptDuel": "ACEPTAR DUELO",
 		"challengeToPong": "Desafiar a Pong",
-		"writeMessage": "Escribe un mensaje..."
+		"writeMessage": "Escribe un mensaje...",
+		"proposedMatch": "Has propuesto una partida a {{points}} puntos.",
+		"challengedTo": "Te han retado a un duelo a {{points}} puntos.",
+		"acceptPoints": "ACEPTAR ({{points}} PTS)",
+		"quickMatch": "Rápida (3 pts)",
+		"standardMatch": "Estándar (5 pts)",
+		"longMatch": "Larga (11 pts)",
+		"marathonMatch": "Maratón (21 pts)"
+	},
+	"footer": {
+		"logo": "Transcendence",
+		"copyright": "© 2026 Todos los Derechos Reservados"
+	},
+	"loginModal": {
+		"signInTo": "Inicia sesión en",
+		"title": "Transcendence",
+		"continueWithGoogle": "Continuar con Google",
+		"continueWithGithub": "Continuar con Github",
+		"emailLabel": "CORREO",
+		"passwordLabel": "CONTRASEÑA",
+		"loginButton": "Iniciar sesión",
+		"resetPassword": "Recuperar contraseña",
+		"noAccount": "¿No tienes cuenta?",
+		"createOne": "Crear una"
 	},
 	"profile": {
 		"title": "Mi Perfil",
@@ -28,6 +54,18 @@
 		"standardMember": "Miembro Estándar",
 		"selectAvatar": "Selecciona un nuevo avatar:",
 		"logout": "Cerrar sesión"
+	},
+	"registerModal": {
+		"signUpFor": "Regístrate en",
+		"title": "Transcendence",
+		"signUpWithGoogle": "Registrarse con Google",
+		"signUpWithGithub": "Registrarse con Github",
+		"usernameLabel": "USUARIO",
+		"emailLabel": "CORREO",
+		"passwordLabel": "CONTRASEÑA",
+		"createAccount": "Crear Cuenta",
+		"alreadyHaveAccount": "¿Ya tienes cuenta?",
+		"logIn": "Iniciar sesión"
 	},
 	"resetPassword": {
 		"title": "Recupera tu contraseña",
@@ -50,5 +88,29 @@
 		"pointsToWin": "Puntos para ganar",
 		"cancel": "CANCELAR",
 		"startGame": "INICIAR PARTIDA"
+	},
+	"menuHeader": {
+		"login": "Entrar",
+		"register": "Registrarse",
+		"rankings": "Rankings",
+		"hello": "Hola, {{username}}",
+		"profile": "Perfil",
+		"social": "Social",
+		"adminUserList": "Admin: Ver Lista de Usuarios",
+		"logout": "Cerrar sesión"
+	},
+	"profileFriend": {
+		"title": "Perfil de {{username}}",
+		"guest": "Invitado",
+		"standardMember": "Miembro Estándar",
+		"addFriend": "Añadir amigo",
+		"remove": "Eliminar",
+		"block": "Bloquear",
+		"username": "Nombre de usuario",
+		"notSet": "No establecido"
+	},
+	"gamesPage": {
+		"pongSubtitle": "La leyenda arcade original. Juego de reflejos puros.",
+		"breakerSubtitle": "Rompe el caos. La precisión se encuentra con la destrucción."
 	}
 }

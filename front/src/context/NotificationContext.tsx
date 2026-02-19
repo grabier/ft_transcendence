@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { Snackbar, Alert } from "@mui/material";
-import AuthErrorNotification from "../components/auth/AuthErrorNotification";
-import { useSearchParams } from "react-router-dom";
+
+import AuthErrorNotification from "@/components/auth/AuthErrorNotification";
 
 // Definimos qué funciones "regalamos" al resto de la app
 interface NotificationContextType {

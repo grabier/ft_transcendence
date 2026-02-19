@@ -1,30 +1,30 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import {
 	IconButton,
 	Menu,
 	MenuItem,
-	Divider,
-	Avatar,
 	Badge,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import LoginModal from "../auth/LoginModal";
-import RegisterModal from "../auth/RegisterModal";
-import ResetPasswordModal from "../auth/ResetPasswordModal";
-import UserList from "../social/UserList";
-import UserAvatar from "../ui/UserAvatar";
-import { SocialPanel } from "../social/SocialPanel";
-import { Profile } from "../social/Profile";
 
-import { useSocket } from "../context/SocketContext";
-import { useAuth } from "../context/AuthContext";
-import { useAuthModals } from "../hooks/useAuthModals";
-import { LanguageSwitcher } from "./LanguageSwitcher";
+import LoginModal from "@/components/auth/LoginModal";
+import RegisterModal from "@/components/auth/RegisterModal";
+import ResetPasswordModal from "@/components/auth/ResetPasswordModal";
+import UserList from "@/components/social/UserList";
+import UserAvatar from "@/components/ui/UserAvatar";
+import { SocialPanel } from "@/components/social/SocialPanel";
+import { Profile } from "@/components/social/Profile";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useSocket } from "@/context/SocketContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAuthModals } from "@/hooks/useAuthModals";
 
 // Ya no recibe children, se pinta él solo
 const MenuHeader = () => {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const { user, login, register, logout } = useAuth();
 	const { unreadCount } = useSocket();
 	// Necesitamos esto para el Badge
@@ -112,61 +112,61 @@ const MenuHeader = () => {
 							modals.openLogin();
 						}}
 					>
-						Login
-					</MenuItem>
-				)}
-				{!user && (
-					<MenuItem
-						onClick={() => {
-							handleMenuClose();
-							modals.openRegister();
-						}}
-					>
-						Register
-					</MenuItem>
-				)}
+					{t('menuHeader.login')}
+				</MenuItem>
+			)}
+			{!user && (
+				<MenuItem
+					onClick={() => {
+						handleMenuClose();
+						modals.openRegister();
+					}}
+				>
+					{t('menuHeader.register')}
+				</MenuItem>
+			)}
 
-				{!user && (
-					<MenuItem onClick={() => handleNavigate("/stats")}>
-						Rankings
-					</MenuItem>
-				)}
+			{!user && (
+				<MenuItem onClick={() => handleNavigate("/stats")}>
+					{t('menuHeader.rankings')}
+				</MenuItem>
+			)}
 
-				{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>Hola, {user.username}</MenuItem>}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>Profile</MenuItem>) : <MenuItem disabled >Profile</MenuItem >}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>Social</MenuItem>) : <MenuItem disabled >Social</MenuItem >}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>Admin:Ver Lista Usuarios</MenuItem>) : <MenuItem disabled> Admin:Ver Lista Usuarios</MenuItem>}
+			{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>{t('menuHeader.hello', { username: user.username })}</MenuItem>}
+			{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>{t('menuHeader.profile')}</MenuItem>) : <MenuItem disabled >{t('menuHeader.profile')}</MenuItem >}
+			{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleSocial(); }}>{t('menuHeader.social')}</MenuItem>) : <MenuItem disabled >{t('menuHeader.social')}</MenuItem >}
+			{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>{t('menuHeader.adminUserList')}</MenuItem>) : <MenuItem disabled>{t('menuHeader.adminUserList')}</MenuItem>}
 
 
-				{user && <MenuItem onClick={onLogoutClick}>Logout</MenuItem>}
-			</Menu>
+			{user && <MenuItem onClick={onLogoutClick}>{t('menuHeader.logout')}</MenuItem>}
+		</Menu>
 
-			{/* 3. LOS MODALES */}
-			<LoginModal
-				open={modals.loginOpen}
-				onClose={modals.closeAll}
-				onLogin={onLoginSubmit}
-				onSwitchToRegister={modals.switchToRegister}
-				onSwitchToResetPassword={modals.switchToReset}
-			/>
-			<RegisterModal
-				open={modals.registerOpen}
-				onClose={modals.closeAll}
-				onRegister={onRegisterSubmit}
-				onSwitchToLogin={modals.switchToLogin}
-			/>
-			<ResetPasswordModal
-				open={modals.resetPasswordOpen}
-				onClose={modals.closeAll}
-				onResetPassword={async () => {}}
-				onSwitchToLogin={modals.switchToLogin}
-			/>
+		{/* 3. LOS MODALES */}
+		<LoginModal
+			open={modals.loginOpen}
+			onClose={modals.closeAll}
+			onLogin={onLoginSubmit}
+			onSwitchToRegister={modals.switchToRegister}
+			onSwitchToResetPassword={modals.switchToReset}
+		/>
+		<RegisterModal
+			open={modals.registerOpen}
+			onClose={modals.closeAll}
+			onRegister={onRegisterSubmit}
+			onSwitchToLogin={modals.switchToLogin}
+		/>
+		<ResetPasswordModal
+			open={modals.resetPasswordOpen}
+			onClose={modals.closeAll}
+			onResetPassword={async () => {}}
+			onSwitchToLogin={modals.switchToLogin}
+		/>
 
-			<UserList open={modals.seeAllUsers} onClose={modals.closeAll} />
-			<SocialPanel open={modals.socialOpen} onClose={modals.closeAll} />
-			<Profile open={modals.profileOpen} onClose={modals.closeAll} />
-		</>
-	);
+		<UserList open={modals.seeAllUsers} onClose={modals.closeAll} />
+		<SocialPanel open={modals.socialOpen} onClose={modals.closeAll} />
+		<Profile open={modals.profileOpen} onClose={modals.closeAll} />
+	</>
+);
 };
 
 export default MenuHeader;
