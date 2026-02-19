@@ -99,6 +99,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		}
 	}, [token]);
 
+	const handleCloseProfile = useCallback(() => {
+		modals.closeAll(); // Cierra el modal/drawer
+		fetchData();       // Refresca la lista de amigos, pendientes y bloqueados
+	}, [modals, fetchData]);
+
 	useEffect(() => {
 		if (open) {
 			markAsRead();
@@ -459,7 +464,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			{selectedFriend && (
 				<ProfileFriend
 					open={modals.profileFriendsOpen}
-					onClose={modals.closeAll}
+					onClose={handleCloseProfile}
 					friend={selectedFriend}
 				/>
 			)}
