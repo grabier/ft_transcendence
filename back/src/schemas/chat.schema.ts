@@ -62,7 +62,8 @@ export const getMessagesSchema = {
 					created_at: { type: 'string', format: 'date-time' },
 					sender_id: { type: 'number' },
 					username: { type: 'string' },
-					avatar_url: { type: 'string' }
+					avatar_url: { type: 'string' },
+					invite_score: { type: ['number', 'null'] }
 				}
 			}
 		},

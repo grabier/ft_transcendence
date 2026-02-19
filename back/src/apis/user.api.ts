@@ -19,6 +19,28 @@ import {
 	persistenceSchema
 } from "../schemas/user.schema.js";
 
+import { pipeline } from 'stream/promises';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import os from 'os';
+
+//  Esta función busca la IP real de tu máquina (ej: 10.13.1.5)
+const getServerIp = () => {
+	const interfaces = os.networkInterfaces();
+	for (const name of Object.keys(interfaces)) {
+		for (const iface of interfaces[name] || []) {
+			// Buscamos una dirección IPv4 que NO sea interna (no sea 127.0.0.1)
+			if (iface.family === 'IPv4' && !iface.internal) {
+				return iface.address;
+			}
+		}
+	}
+	return 'localhost'; // Fallback por si acaso
+};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -95,9 +117,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		});
 
-	// user.api.ts
-
-	// Nuevo Endpoint de búsqueda
+	//endpoint de busqueda
 	fastify.get(
 		'/search',
 		{ schema: searchUsersSchema },
@@ -129,11 +149,8 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		},
 		async (req, reply) => {
 			const userToken = req.user as any; // El usuario del token
-
 			await userRepository.updateOnlineStatus(userToken.id, true);
 			await userRepository.updateLastLogin(userToken.id);
-
-			// 2. Buscamos los datos...
 		});
 
 
@@ -193,20 +210,12 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		async (request, reply) => {
 			try {
 				const { newUrl } = request.body;
-				// Forzamos el tipado para evitar el error de "id does not exist on type user"
 				const currentUser = request.user as { id: number; email: string; username: string; avatarUrl: string; };
-
 				if (!currentUser) {
 					return reply.code(401).send({ error: "Unauthorized: No user found in token" });
 				}
-
 				const userId = currentUser.id;
-
-
-				// 2. Actualizar DB
 				await userRepository.updateAvatarUrl(userId, newUrl);
-
-				// 4. Enviar respuesta con el token
 				return reply.code(200).send({
 					message: "Avatar updated successfully",
 					newUrl: newUrl
@@ -217,6 +226,44 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		}
 	);
+
+	// POST /api/user/upload-avatar
+	fastify.post('/upload-avatar', { preHandler: [authenticate] }, async (request, reply) => {
+		const data = await request.file();
+		if (!data) return reply.code(400).send({ error: "No file uploaded" });
+
+		const currentUser = request.user as { id: number };
+
+		// 1. Crear nombre único: userId-timestamp.ext
+		const extension = path.extname(data.filename);
+		const fileName = `${currentUser.id}-${Date.now()}${extension}`;
+
+		// 2. Definir ruta física (back/uploads/avatars)
+		const uploadDir = path.join(__dirname, '../../uploads/avatars');
+		const uploadPath = path.join(uploadDir, fileName);
+
+		// 3. Crear carpeta si no existe
+		if (!fs.existsSync(uploadDir)) {
+			fs.mkdirSync(uploadDir, { recursive: true });
+		}
+
+		// 4. Guardar archivo en disco
+		await pipeline(data.file, fs.createWriteStream(uploadPath));
+
+		// 5. Generar URL pública dinámica
+		// Usamos request.protocol y request.hostname para que funcione en LAN/IP
+		const protocol = request.protocol;
+		const serverIp = getServerIp();
+		const newAvatarUrl = `${protocol}://${serverIp}:3000/public/avatars/${fileName}`;
+		console.log("📸 Nueva URL generada:", newAvatarUrl);
+		// 6. Actualizar Base de Datos
+		await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);
+
+		return {
+			message: "Avatar uploaded successfully",
+			avatarUrl: newAvatarUrl
+		};
+	});
 };
 
 export default userRoutes;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import ButtonGame from './ButtonGame';
+import ButtonGame from '../ui/GameButton';
 // Importamos las escenas atomizadas
 import { PongPanel } from './PongPanel';
 import { BreakerPanel } from './BreakPanel';

@@ -3,7 +3,7 @@ import { useChat } from '../../context/ChatContext';
 import CircleIcon from '@mui/icons-material/Circle';
 
 export const ChatSidebar = () => {
-	// 🛡️ SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
+	// SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
 	const { chats = [], activeChat, selectChat } = useChat() || {};
 
 	// Si no hay chats (o es null/undefined), mostramos mensaje vacío

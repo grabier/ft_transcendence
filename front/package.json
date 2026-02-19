@@ -9,11 +9,11 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
+		"@types/node": "^25.3.0",
 		"@types/react-dom": "^19.2.3",
 		"vite": "^7.2.2"
 	},
 	"dependencies": {
-		"react-icons": "^5.5.0",
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
 		"@fontsource/montserrat": "^5.2.8",
@@ -22,8 +22,10 @@
 		"@mui/styled-engine": "^7.3.6",
 		"@vitejs/plugin-react": "^5.1.2",
 		"jwt-decode": "^4.0.0",
+		"os": "^0.1.2",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
+		"react-icons": "^5.5.0",
 		"react-router-dom": "^7.10.1"
 	}
 }

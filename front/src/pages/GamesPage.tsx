@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import GamePanel from '../components/GamePanel';
-import ScoreModal from '../components/ScoreModal';
-import PongGame from '../components/PongGame';
+import GamePanel from '../components/game/GamePanel';
+import ScoreModal from '../components/game/ScoreModal';
+import PongGame from '../components/game/PongGame';
 
 const GamesPage: React.FC = () => {
 	// UI States

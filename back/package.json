@@ -14,7 +14,9 @@
 		"@fastify/cookie": "^11.0.2",
 		"@fastify/cors": "^11.1.0",
 		"@fastify/jwt": "^10.0.0",
+		"@fastify/multipart": "^9.4.0",
 		"@fastify/rate-limit": "^10.3.0",
+		"@fastify/static": "^9.0.0",
 		"@fastify/swagger": "^9.7.0",
 		"@fastify/swagger-ui": "^5.2.5",
 		"@fastify/websocket": "^11.2.0",
@@ -23,6 +25,7 @@
 		"fastify": "^5.6.2",
 		"jsonwebtoken": "^9.0.3",
 		"mysql2": "^3.11.0",
+		"ngrok": "^5.0.0-beta.2",
 		"tsx": "^4.20.6"
 	},
 	"devDependencies": {
