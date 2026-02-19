@@ -95,7 +95,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			await userRepository.updateOnlineStatus(user.id, true);
 
 			const token = jwt.sign(
-				{ id: user.id, email: user.email, username: user.username },
+				{ id: user.id, email: user.email, username: user.username, avatarUrl: user.avatar_url },
 				process.env.JWT_SECRET || 'super_secret',
 				{ expiresIn: '7d' }
 			);

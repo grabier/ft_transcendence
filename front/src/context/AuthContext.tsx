@@ -2,12 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, ReactNod
 import { jwtDecode } from "jwt-decode";
 import { useNotification } from "./NotificationContext";
 import { useSearchParams } from "react-router-dom";
-
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
-
+import { BASE_URL} from "../../src/config"
 // Definimos la forma de nuestro usuario
 interface UserPayload {
 	id: number;
