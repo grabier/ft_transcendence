@@ -130,6 +130,7 @@ const initializeTables = async (): Promise<void> => {
 					status ENUM('pending', 'accepted', 'blocked') DEFAULT 'pending',
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 					updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					blocked_by INT DEFAULT NULL,
 					-- Claves foráneas para mantener integridad
 					FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
 					FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -164,12 +165,13 @@ const initializeTables = async (): Promise<void> => {
                 type ENUM('text', 'game_invite', 'system') DEFAULT 'text',
                 is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                invite_score INT DEFAULT NULL,
                 FOREIGN KEY (dm_id) REFERENCES direct_messages(id) ON DELETE CASCADE,
                 FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
-	console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages');
+		console.log('✓ Tablas verificadas/creadas: users, friendships, direct_messages, messages');
 	} finally {
 		// Siempre liberamos la conexión, incluso si hay error
 		connection.release();

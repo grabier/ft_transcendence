@@ -1,30 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Box, Paper, TextField, IconButton, Typography, Avatar, Stack, Button } from '@mui/material';
+import {
+	Box, Paper, TextField, IconButton, Typography, Avatar, Stack, Button,
+	Menu, MenuItem, ListItemIcon, ListItemText
+} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports'; // Icono para el invite
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TimerIcon from '@mui/icons-material/Timer';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
+import { ProfileFriend } from '../social/ProfileFriend'; // <--- 1. IMPORTAR COMPONENTE
+
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
-const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) => {
+const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boolean, score?: number }) => {
 	const navigate = useNavigate();
+	const pointsToWin = score || 5;
 	const { t } = useTranslation();
 
-	// Busca la función handleJoinGame y déjala así:
 	const handleJoinGame = () => {
-		// 👇 CAMBIO: Quitamos '/games'. Vamos a la raíz '/' con los parámetros.
-		navigate(`/?mode=pvp&roomId=${gameId}&score=5`);
+		navigate(`/?mode=pvp&roomId=${gameId}&score=${pointsToWin}`);
 	};
 
 	return (
 		<Paper sx={{
 			p: 2,
-			maxWidth: '85%',
-			bgcolor: isMe ? '#2c3e50' : '#f1c40f', // Azul oscuro para mí, Dorado para el rival
+			maxWidth: '90%',
+			bgcolor: isMe ? '#2c3e50' : '#f1c40f',
 			color: isMe ? 'white' : 'black',
 			borderRadius: 3,
 			border: '2px solid',
@@ -42,8 +48,8 @@ const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) =
 
 				<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
 					{isMe
-						? t('waitingForAcceptance')
-						: t('challengeMessage')}
+						? `Has propuesto una partida a ${pointsToWin} puntos.`
+						: `Te han retado a un duelo a ${pointsToWin} puntos.`}
 				</Typography>
 
 				<Button
@@ -62,7 +68,7 @@ const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) =
 						}
 					}}
 				>
-					{isMe ? t('enterRoom') : t('acceptDuel')}
+					{isMe ? 'ENTRAR A LA SALA' : `ACEPTAR (${pointsToWin} PTS)`}
 				</Button>
 			</Stack>
 		</Paper>
@@ -75,6 +81,14 @@ export const ChatWindow = () => {
 	const { activeChat, messages, sendMessage, closeChat } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
+
+	// --- 2. ESTADO PARA EL PERFIL DEL AMIGO ---
+	const [profileOpen, setProfileOpen] = useState(false);
+
+	// Estado para el menú de puntos
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const openMenu = Boolean(anchorEl);
+
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -85,15 +99,22 @@ export const ChatWindow = () => {
 
 	const handleSend = () => {
 		if (!inputText.trim()) return;
-		sendMessage(inputText, 'text');
+		sendMessage(inputText, 0, 'text');
 		setInputText('');
 	};
 
-	const handleInvite = () => {
-		// Generamos un ID de sala único y corto
-		// Usamos Math.random para evitar conflictos simples
+	const handleOpenInviteMenu = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handleCloseInviteMenu = () => {
+		setAnchorEl(null);
+	};
+
+	const handleInvite = (points: number) => {
+		handleCloseInviteMenu();
 		const roomId = `duel-${user?.id}-${Date.now().toString().slice(-4)}`;
-		sendMessage(roomId, 'game_invite');
+		sendMessage(roomId, points, 'game_invite');
 	};
 
 	return (
@@ -102,10 +123,11 @@ export const ChatWindow = () => {
 				display: 'flex',
 				flexDirection: 'column',
 				height: '100%',
-				bgcolor: 'background.paper'
+				bgcolor: 'background.paper',
+				position: 'relative' // Necesario por si el Drawer se renderiza dentro
 			}}
 		>
-			{/* --- CABECERA FIJA --- */}
+			{/* --- CABECERA --- */}
 			<Box sx={{
 				p: 1.5,
 				bgcolor: 'primary.main',
@@ -119,31 +141,45 @@ export const ChatWindow = () => {
 					<IconButton size="small" onClick={closeChat} sx={{ color: 'white', mr: 1 }}>
 						<ArrowBackIcon />
 					</IconButton>
-					<Avatar src={activeChat.otherUser.avatar_url} sx={{ width: 32, height: 32 }} />
+					
+					{/* --- 3. AVATAR CLICABLE --- */}
+					<Avatar 
+						src={activeChat.otherUser.avatar_url} 
+						sx={{ 
+							width: 32, 
+							height: 32, 
+							cursor: 'pointer', // Indicador visual de click
+							'&:hover': { opacity: 0.8 } 
+						}} 
+						onClick={() => setProfileOpen(true)} // Abre el perfil
+					/>
 					<Typography variant="subtitle2" color="white" fontWeight="bold">
 						{activeChat.otherUser.username}
 					</Typography>
 				</Stack>
 			</Box>
 
-			{/* --- CUERPO MENSAJES --- */}
+			{/* --- LISTA DE MENSAJES --- */}
 			<Box sx={{
 				flexGrow: 1,
 				p: 2,
 				overflowY: 'auto',
-				bgcolor: '#e5e5f7', // Un fondo con patrón o color suave queda mejor
-				backgroundImage: 'radial-gradient(#444cf7 0.5px, #e5e5f7 0.5px)', // Patrón de puntos opcional
+				bgcolor: '#e5e5f7',
+				backgroundImage: 'radial-gradient(#444cf7 0.5px, #e5e5f7 0.5px)',
 				backgroundSize: '10px 10px',
 				display: 'flex',
 				flexDirection: 'column'
 			}}>
-				{messages.map((msg) => {
+				{messages.map((msg: any) => {
 					const isMe = msg.sender_id === user?.id;
 					return (
 						<Box key={msg.id} sx={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', mb: 2 }}>
 							{msg.type === 'game_invite' ? (
-								// 👇 Aquí renderizamos la burbuja mágica
-								<GameInviteBubble gameId={msg.content} isMe={isMe} />
+								<GameInviteBubble
+									gameId={msg.content}
+									isMe={isMe}
+									score={msg.invite_score}
+								/>
 							) : (
 								<Paper sx={{
 									p: 1, px: 2,
@@ -152,7 +188,6 @@ export const ChatWindow = () => {
 									color: isMe ? 'white' : 'text.primary',
 									borderRadius: 2,
 									boxShadow: 1,
-									// Pequeño triángulo para el bocadillo
 									borderTopRightRadius: isMe ? 0 : 2,
 									borderTopLeftRadius: isMe ? 2 : 0,
 								}}>
@@ -167,11 +202,37 @@ export const ChatWindow = () => {
 				<div ref={messagesEndRef} />
 			</Box>
 
-			{/* --- INPUT FIJO --- */}
+			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-				<IconButton color="warning" onClick={handleInvite} title={t('challengeToPong')}>
+				<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('challengeToPong')}>
 					<VideogameAssetIcon />
 				</IconButton>
+
+				<Menu
+					anchorEl={anchorEl}
+					open={openMenu}
+					onClose={handleCloseInviteMenu}
+					anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+					transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+				>
+					<MenuItem onClick={() => handleInvite(3)}>
+						<ListItemIcon><SpeedIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>Rápida (3 pts)</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(5)}>
+						<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>Estándar (5 pts)</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(11)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>Larga (11 pts)</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(21)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>Maratón (21 pts)</ListItemText>
+					</MenuItem>
+				</Menu>
+
 				<TextField
 					fullWidth size="small" placeholder={t('writeMessage')} value={inputText}
 					onChange={(e) => setInputText(e.target.value)}
@@ -182,6 +243,13 @@ export const ChatWindow = () => {
 					<SendIcon />
 				</IconButton>
 			</Box>
+
+			{/* --- 4. RENDERIZADO DEL PERFIL --- */}
+			<ProfileFriend 
+				open={profileOpen} 
+				onClose={() => setProfileOpen(false)} 
+				friend={activeChat.otherUser} 
+			/>
 		</Box>
 	);
 };

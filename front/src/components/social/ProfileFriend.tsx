@@ -7,17 +7,14 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuthModals } from '../hooks/useAuthModals';
+import { useAuthModals } from '../../hooks/useAuthModals';
 import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove'; // O DeleteIcon
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+import { BASE_URL } from '../../config';
 
 
 interface Props {
@@ -29,7 +26,7 @@ const token = localStorage.getItem('auth_token');
 
 const handleDelete = async (friendId: number) => {
 	try {
-		const res = await fetch(`${BASE_URL}:3000/api/friend/delete/${friendId}`, {
+		const res = await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
 			method: 'DELETE',
 			headers: { 'Authorization': `Bearer ${token}` }
 		});
@@ -60,8 +57,8 @@ const sendRequest = async (receiverId: number) => {
 export const ProfileFriend = ({ open, onClose, friend }: Props) => {
 	const modals = useAuthModals();
 	// avatar
-	const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatarUrl || defaultAvatar);
+	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
+	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
 
 	return (
     <Drawer
@@ -99,7 +96,7 @@ export const ProfileFriend = ({ open, onClose, friend }: Props) => {
         }}>
             <Box sx={{ position: 'relative', mb: 2 }}>
                 <Avatar
-                    src={currentAvatar}
+                    src={friend?.avatar_url}
                     sx={{ width: 100, height: 100, boxShadow: 3, border: '4px solid white' }}
                 />
             </Box>

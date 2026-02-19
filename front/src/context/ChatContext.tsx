@@ -3,10 +3,10 @@ import { useSocket } from './SocketContext';
 import { useAuth } from './AuthContext';
 import { DM, Message } from '../types/chat';
 
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
+const PROTOCOL = window.location.protocol;
+const HOST = window.location.hostname;
+const PORT = '3000';
+const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`;// http://10.13.1.5:3000
 
 
 interface ChatContextType {
@@ -14,10 +14,10 @@ interface ChatContextType {
 	activeChat: DM | null;
 	messages: Message[];
 	isLoading: boolean;
-	selectChat: (targetUserId: number, targetUser?: any) => Promise<void>; // Actualizado
-	sendMessage: (content: string, type?: 'text' | 'game_invite') => void;
+	selectChat: (targetUserId: number, targetUser?: any) => Promise<void>;
+	sendMessage: (content: string, points: number, type?: 'text' | 'game_invite') => void;
 	closeChat: () => void;
-	refreshChats: () => void; // Para recargar la lista manual
+	refreshChats: () => void;
 }
 
 const ChatContext = createContext<ChatContextType>({} as any);
@@ -27,9 +27,7 @@ export const useChat = () => useContext(ChatContext);
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const { socket } = useSocket();
 	const { user } = useAuth();
-	// 🛠️ FIX: Leemos el token directamente del almacén
 	const token = localStorage.getItem('auth_token');
-
 	const [chats, setChats] = useState<DM[]>([]);
 	const [activeChat, setActiveChat] = useState<DM | null>(null);
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -40,7 +38,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		if (!token)
 			return;
 		try {
-			const res = await fetch(`${BASE_URL}/api/chat/me`, { // Crearemos esto ahora
+			const res = await fetch(`${BASE_URL}/api/chat/me`, {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			if (res.ok) {
@@ -112,7 +110,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	}, [token, chats, fetchChats]);
 
 	// 3. ENVIAR MENSAJE
-	const sendMessage = useCallback((content: string, type: 'text' | 'game_invite' = 'text') => {
+	const sendMessage = useCallback((content: string, score: number, type: 'text' | 'game_invite' = 'text') => {
 		if (!socket || !activeChat) return;
 
 		const payload = {
@@ -120,7 +118,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 			payload: {
 				dmId: activeChat.id,
 				content,
-				type
+				type,
+				score
 			}
 		};
 		socket.send(JSON.stringify(payload));

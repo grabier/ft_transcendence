@@ -12,7 +12,7 @@ import {
     StyledDialog,
     StyledTextField,
     PrimaryAuthButton,
-} from "../style/AuthModalStyle";
+} from "../../style/AuthModalStyle";
 
 interface Props {
     open: boolean;

@@ -2,14 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, ReactNod
 import { jwtDecode } from "jwt-decode";
 import { useNotification } from "./NotificationContext";
 import { useSearchParams } from "react-router-dom";
-
-// --- 🛠️ FIX MÁGICO PARA LA LAN DE 42 🛠️ ---
-// Si estoy en localhost, usa localhost. Si entro por IP (10.12...), usa la IP.
-const PROTOCOL = window.location.protocol; // 'http:' o 'https:'
-const HOST = window.location.hostname;     // 'localhost' o '10.13.1.5'
-const PORT = '3000';                       // Tu puerto de backend
-const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`; // Resultado: http://10.13.1.5:3000
-
+import { BASE_URL} from "../../src/config"
 // Definimos la forma de nuestro usuario
 interface UserPayload {
 	id: number;
@@ -30,6 +23,7 @@ interface AuthContextType {
 	generate2FA: () => Promise<string | null>;
 	verify2FA: (code: string) => Promise<boolean>;
 	disable2FA: () => Promise<boolean>;
+	uploadAvatarFile: (file: File) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [errorType, setSearchParams, notifyError]);
 
 	const [user, setUser] = useState<UserPayload | null>(null);
-	const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null); // Nota: Esto parece redundante con 'user', pero lo mantengo como lo tenías
+	//const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const lastTokenRef = useRef<string | null>(null);
 
@@ -65,7 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const login = async (email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
-			// 👇 CAMBIO AQUÍ: Usamos BASE_URL
 			const response = await fetch(`${BASE_URL}/api/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -79,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 			lastTokenRef.current = data.token;
+			console.log(`use auth   : ${user?.avatarUrl}`);
 
 			notifySuccess(`Welcome back, ${decoded.username}`);
 			return true;
@@ -96,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || 'Guest'}`;
 
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -123,7 +116,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const logout = () => {
 		const token = localStorage.getItem('auth_token');
 		if (token) {
-			// 👇 CAMBIO AQUÍ
 			fetch(`${BASE_URL}/api/auth/logout`, {
 				method: 'POST',
 				headers: { 'Authorization': `Bearer ${token}` }
@@ -174,7 +166,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/user/update-username`, {
 				method: 'PATCH',
 				headers: {
@@ -208,7 +199,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/user/update-avatarUrl`, {
 				method: 'PATCH',
 				headers: {
@@ -228,11 +218,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				lastTokenRef.current = data.token;
 				localStorage.setItem('auth_token', data.token);
 			}
-			setAvatarUrl(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
+			setUser(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
 			notifySuccess("Avatar updated successfully!");
 			return true;
 		} catch (error: any) {
 			notifyError("Server connection error");
+			return false;
+		}
+	};
+
+	const uploadAvatarFile = async (file: File): Promise<boolean> => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return false;
+
+		// FormData es clave para enviar archivos
+		const formData = new FormData();
+		formData.append('avatar', file);
+
+		try {
+			const response = await fetch(`${BASE_URL}/api/user/upload-avatar`, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`
+					// NO poner 'Content-Type': 'multipart/form-data'.
+					// El navegador lo pone automático con el boundary correcto.
+				},
+				body: formData
+			});
+
+			const data = await response.json();
+			if (!response.ok) throw new Error(data.error);
+
+			// Actualizamos estado local (User Payload)
+			setUser(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
+			notifySuccess("Avatar uploaded!");
+			return true;
+		} catch (error: any) {
+			notifyError(error.message || "Upload failed");
 			return false;
 		}
 	};
@@ -242,7 +264,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return null;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/generate`, {
 				method: 'POST',
 				headers: {
@@ -267,7 +288,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		const token = localStorage.getItem('auth_token');
 		if (!token) return false;
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-on`, {
 				method: 'POST',
 				headers: {
@@ -295,7 +315,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return false;
 
 		try {
-			// 👇 CAMBIO AQUÍ
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-off`, {
 				method: 'POST',
 				headers: {
@@ -317,7 +336,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername, updateAvatarUrl, generate2FA, verify2FA, disable2FA, }}>
+		<AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUsername, updateAvatarUrl, generate2FA, verify2FA, disable2FA, uploadAvatarFile}}>
 			{children}
 		</AuthContext.Provider>
 	);

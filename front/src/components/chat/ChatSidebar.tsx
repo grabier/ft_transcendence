@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useChat } from '../../context/ChatContext';
 
 export const ChatSidebar = () => {
-	// 🛡️ SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
+	// SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
 	const { chats = [], activeChat, selectChat } = useChat() || {};
 
 	const { t } = useTranslation();

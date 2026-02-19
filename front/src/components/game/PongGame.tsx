@@ -143,8 +143,6 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 		socket.onopen = () => {
 			console.log("WS Connected ✅");
-			// ❌ ANTES: startCountdownSequence(); -> ESTO ERA EL ERROR
-			// ✅ AHORA: Solo indicamos que estamos esperando instrucciones del servidor
 			if (mode === 'pvp') {
 				setUiState('loading');
 				setStatusMessage('Looking for opponent...');
