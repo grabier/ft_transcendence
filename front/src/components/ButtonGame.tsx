@@ -20,7 +20,6 @@ const ButtonGame: React.FC<ButtonProps> = ({ label, fillDirection = 'left-to-rig
                 bgcolor: 'transparent',
                 border: '1px solid rgba(255, 255, 255, 0.4)',
                 color: 'white',
-                fontFamily: '"Montserrat", sans-serif',
                 fontWeight: 'bold',
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em', // tracking-widest

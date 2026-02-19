@@ -1,35 +1,54 @@
 {
-  "profile": {
-    "title": "Mon Profil",
-    "username": "Nom d'utilisateur",
-    "email": "Adresse e-mail",
-    "newUsername": "Nouveau nom d'utilisateur",
-    "newEmail": "Nouveau e-mail",
-    "role": "Rôle",
-    "standardMember": "Membre Standard",
-    "selectAvatar": "Sélectionnez un nouvel avatar:",
-    "logout": "Se déconnecter"
-  },
-  "resetPassword": {
-    "title": "Réinitialisez votre mot de passe",
-    "subtitle": "Transcendence",
-    "instructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
-    "emailLabel": "E-MAIL",
-    "sendButton": "Envoyer le lien",
-    "sending": "Envoi...",
-    "emailSent": "E-mail envoyé!",
-    "successMessage": "Vérifiez votre e-mail pour le lien de réinitialisation!",
-    "backToLogin": "Vous vous souvenez de votre mot de passe?",
-    "backToLoginLink": "Retour à la connexion"
-  },
-  "scoreModal": {
-    "title": "Configurer la partie",
-    "mode": "Mode",
-    "ai": "IA",
-    "vsAI": "VS IA",
-    "vsPlayer": "1 VS 1",
-    "pointsToWin": "Points pour gagner",
-    "cancel": "ANNULER",
-    "startGame": "COMMENCER LA PARTIE"
-  }
+	"authErrorNotification": {
+		"systemError": "ERREUR_SYSTÈME"
+	},
+	"chatSidebar": {
+		"title": "Mes Messages",
+		"noConversations": "Aucune conversation.",
+		"talkToFriends": "Parlez à quelqu'un de votre liste d'amis!",
+		"newConversation": "Nouvelle conversation"
+	},
+	"chatWindow": {
+		"challengeSent": "DÉFI ENVOYÉ",
+		"pongChallenge": "DÉFI DE PONG",
+		"waitingForAcceptance": "En attente d'acceptation...",
+		"challengeMessage": "Vous avez été défié à un duel à mort avec des palettes!",
+		"enterRoom": "ENTRER DANS LA SALLE",
+		"acceptDuel": "ACCEPTER LE DÉFI",
+		"challengeToPong": "Défier à Pong",
+		"writeMessage": "Écrivez un message..."
+	},
+	"profile": {
+		"title": "Mon Profil",
+		"username": "Nom d'utilisateur",
+		"email": "Adresse e-mail",
+		"newUsername": "Nouveau nom d'utilisateur",
+		"newEmail": "Nouveau e-mail",
+		"role": "Rôle",
+		"standardMember": "Membre Standard",
+		"selectAvatar": "Sélectionnez un nouvel avatar:",
+		"logout": "Se déconnecter"
+	},
+	"resetPassword": {
+		"title": "Réinitialisez votre mot de passe",
+		"subtitle": "Transcendence",
+		"instructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+		"emailLabel": "E-MAIL",
+		"sendButton": "Envoyer le lien",
+		"sending": "Envoi...",
+		"emailSent": "E-mail envoyé!",
+		"successMessage": "Vérifiez votre e-mail pour le lien de réinitialisation!",
+		"backToLogin": "Vous vous souvenez de votre mot de passe?",
+		"backToLoginLink": "Retour à la connexion"
+	},
+	"scoreModal": {
+		"title": "Configurer la partie",
+		"mode": "Mode",
+		"ai": "IA",
+		"vsAI": "VS IA",
+		"vsPlayer": "1 VS 1",
+		"pointsToWin": "Points pour gagner",
+		"cancel": "ANNULER",
+		"startGame": "COMMENCER LA PARTIE"
+	}
 }

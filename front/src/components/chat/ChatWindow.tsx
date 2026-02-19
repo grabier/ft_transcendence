@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Box, Paper, TextField, IconButton, Typography, Avatar, Stack, Button } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
@@ -6,11 +8,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'; // Icono para el invite
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom'; // 👈 IMPORTANTE: Para navegar
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
 const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) => {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 
 	// Busca la función handleJoinGame y déjala así:
 	const handleJoinGame = () => {
@@ -34,14 +36,14 @@ const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) =
 				<Stack direction="row" spacing={1} alignItems="center">
 					<SportsEsportsIcon fontSize="large" />
 					<Typography variant="subtitle1" fontWeight="bold">
-						{isMe ? 'DESAFÍO ENVIADO' : 'DESAFÍO DE PONG'}
+						{isMe ? t('challengeSent') : t('pongChallenge')}
 					</Typography>
 				</Stack>
 
 				<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
 					{isMe
-						? 'Esperando a que acepten...'
-						: '¡Te han retado a un duelo a muerte con palas!'}
+						? t('waitingForAcceptance')
+						: t('challengeMessage')}
 				</Typography>
 
 				<Button
@@ -60,7 +62,7 @@ const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) =
 						}
 					}}
 				>
-					{isMe ? 'ENTRAR A LA SALA' : 'ACEPTAR DUELO'}
+					{isMe ? t('enterRoom') : t('acceptDuel')}
 				</Button>
 			</Stack>
 		</Paper>
@@ -69,6 +71,7 @@ const GameInviteBubble = ({ gameId, isMe }: { gameId: string, isMe: boolean }) =
 
 // --- CHAT WINDOW PRINCIPAL ---
 export const ChatWindow = () => {
+	const { t } = useTranslation();
 	const { activeChat, messages, sendMessage, closeChat } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
@@ -166,11 +169,11 @@ export const ChatWindow = () => {
 
 			{/* --- INPUT FIJO --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-				<IconButton color="warning" onClick={handleInvite} title="Desafiar a Pong">
+				<IconButton color="warning" onClick={handleInvite} title={t('challengeToPong')}>
 					<VideogameAssetIcon />
 				</IconButton>
 				<TextField
-					fullWidth size="small" placeholder="Escribe un mensaje..." value={inputText}
+					fullWidth size="small" placeholder={t('writeMessage')} value={inputText}
 					onChange={(e) => setInputText(e.target.value)}
 					onKeyDown={(e) => e.key === 'Enter' && handleSend()}
 					sx={{ '& .MuiOutlinedInput-root': { borderRadius: 5 } }}

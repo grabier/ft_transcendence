@@ -1,35 +1,54 @@
 {
-  "profile": {
-    "title": "My Profile",
-    "username": "Username",
-    "email": "Email Address",
-    "newUsername": "New Username",
-    "newEmail": "New Email",
-    "role": "Role",
-    "standardMember": "Standard Member",
-    "selectAvatar": "Select a new avatar:",
-    "logout": "Logout"
-  },
-  "resetPassword": {
-    "title": "Reset your password",
-    "subtitle": "Transcendence",
-    "instructions": "Enter your email address and we'll send you a link to reset your password.",
-    "emailLabel": "EMAIL",
-    "sendButton": "Send Reset Link",
-    "sending": "Sending...",
-    "emailSent": "Email Sent!",
-    "successMessage": "Check your email for the reset link!",
-    "backToLogin": "Remember your password?",
-    "backToLoginLink": "Back to login"
-  },
-  "scoreModal": {
-    "title": "Set Game",
-    "mode": "Mode",
-    "ai": "AI",
-    "vsAI": "VS AI",
-    "vsPlayer": "1 VS 1",
-    "pointsToWin": "Points to win",
-    "cancel": "CANCEL",
-    "startGame": "START GAME"
-  }
+	"authErrorNotification": {
+		"systemError": "SYSTEM_ERROR"
+	},
+	"chatSidebar": {
+		"title": "My Messages",
+		"noConversations": "No conversations yet.",
+		"talkToFriends": "Talk to someone from your friends list!",
+		"newConversation": "New conversation"
+	},
+	"chatWindow": {
+		"challengeSent": "CHALLENGE SENT",
+		"pongChallenge": "PONG CHALLENGE",
+		"waitingForAcceptance": "Waiting for them to accept...",
+		"challengeMessage": "You've been challenged to a death duel with paddles!",
+		"enterRoom": "ENTER THE ROOM",
+		"acceptDuel": "ACCEPT DUEL",
+		"challengeToPong": "Challenge to Pong",
+		"writeMessage": "Write a message..."
+	},
+	"profile": {
+		"title": "My Profile",
+		"username": "Username",
+		"email": "Email Address",
+		"newUsername": "New Username",
+		"newEmail": "New Email",
+		"role": "Role",
+		"standardMember": "Standard Member",
+		"selectAvatar": "Select a new avatar:",
+		"logout": "Logout"
+	},
+	"resetPassword": {
+		"title": "Reset your password",
+		"subtitle": "Transcendence",
+		"instructions": "Enter your email address and we'll send you a link to reset your password.",
+		"emailLabel": "EMAIL",
+		"sendButton": "Send Reset Link",
+		"sending": "Sending...",
+		"emailSent": "Email Sent!",
+		"successMessage": "Check your email for the reset link!",
+		"backToLogin": "Remember your password?",
+		"backToLoginLink": "Back to login"
+	},
+	"scoreModal": {
+		"title": "Set Game",
+		"mode": "Mode",
+		"ai": "AI",
+		"vsAI": "VS AI",
+		"vsPlayer": "1 VS 1",
+		"pointsToWin": "Points to win",
+		"cancel": "CANCEL",
+		"startGame": "START GAME"
+	}
 }
