@@ -33,6 +33,7 @@ export const Profile = ({ open, onClose }: Props) => {
 	// avatar
 	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
 	const [currentAvatar, setCurrentAvatar] = useState(user?.avatarUrl);
+	console.log(`profile   : ${user?.avatarUrl}`);
 
 	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);

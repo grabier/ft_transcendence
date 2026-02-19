@@ -77,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 			lastTokenRef.current = data.token;
+			console.log(`use auth   : ${user?.avatarUrl}`);
 
 			notifySuccess(`Welcome back, ${decoded.username}`);
 			return true;
