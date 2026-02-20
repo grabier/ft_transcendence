@@ -1,30 +1,22 @@
 import { useEffect, useState } from 'react';
+import {
+	Box, Paper, Tooltip, Fab, Badge
+} from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { ChatSidebar } from './ChatSidebar';
-import { ChatWindow } from './ChatWindow';
-import { useChat } from '../../context/ChatContext';
-import { useSocket } from "../../context/SocketContext";
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import {
-	Box, Paper, TextField, IconButton, Typography, Avatar, Stack, Button,
-	Menu, MenuItem, ListItemIcon, ListItemText, Tooltip, Fab, Badge
-} from '@mui/material';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+
+import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { ChatWindow } from '@/components/chat/ChatWindow';
+import { useChat } from '@/context/ChatContext';
+import { useSocket } from '@/context/SocketContext';
+import { useAuth } from '@/context/AuthContext';
 
 
 export const ChatWidget = () => {
 	const [isOpen, setIsOpen] = useState(false);
-	const { activeChat, closeChat, chats, refreshChats: fetchChats} = useChat();
+	const { activeChat, closeChat, refreshChats: fetchChats} = useChat();
 	const { unreadMessages, markAsReadMessage } = useSocket();
 	const { user } = useAuth();
-	
-
-	// Calculamos mensajes no leídos totales (opcional, para el globito rojo)
-	// Por ahora sumamos 1 si hay chats, luego lo puedes refinar con un campo 'unread' real
-	const totalUnread = 0;
 
 	// Al cerrar el widget completo, también cerramos la conversación activa para volver a la lista
 	const toggleOpen = () => {

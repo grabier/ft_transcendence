@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
-import { jwtDecode } from "jwt-decode";
-import { useNotification } from "./NotificationContext";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BASE_URL} from "../../src/config"
+import { jwtDecode } from "jwt-decode";
+
+import { BASE_URL } from "@/config";
+import { useNotification } from "@/context/NotificationContext"
 // Definimos la forma de nuestro usuario
 interface UserPayload {
 	id: number;

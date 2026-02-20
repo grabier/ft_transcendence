@@ -1,7 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 const MainPage = () => {
     return (

@@ -104,8 +104,8 @@ export const OAuthButton = styled(Button)(({ theme }) => ({
     letterSpacing: "0.05em",
     transition: "all 0.3s",
     "&:hover": {
-        backgroundColor: theme.palette.background.default,
-        color: theme.palette.secondary.main,
-        borderColor: theme.palette.secondary.main,
+        backgroundColor: "background.default",
+        color: "secondary.main",
+        borderColor: "secondary.main",
     },
 }));

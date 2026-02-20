@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Stack,
@@ -6,15 +7,16 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+
 import {
   StyledDialog,
   StyledTextField,
   PrimaryAuthButton,
-} from "../../style/AuthModalStyle";
-import { validateEmail } from "../../utils/validation";
-import { BASE_URL } from '../../config';
-import SocialLoginButton from "../ui/SocialLoginButton";
-import AuthSwitchLink from "./AuthSwitchLink";
+} from "@/style/AuthModalStyle";
+import { validateEmail } from "@/utils/validation";
+import { BASE_URL } from '@/config';
+import SocialLoginButton from "@/components/ui/SocialLoginButton";
+import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
 
 interface Props {
   open: boolean;
@@ -37,6 +39,8 @@ const RegisterModal = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
+
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,10 +79,10 @@ const RegisterModal = ({
               mb: 1,
             }}
           >
-            Sign up for
+            {t('registerModal.signUpFor')}
           </Typography>
           <Typography variant="displayTitle">
-            Transcendence
+            {t('registerModal.title')}
           </Typography>
         </Box>
 
@@ -88,14 +92,14 @@ const RegisterModal = ({
             provider="google"
             href={`${BASE_URL}/api/auth/google`}
           >
-            Sign up with Google
+            {t('registerModal.signUpWithGoogle')}
           </SocialLoginButton>
 
           <SocialLoginButton
             provider="github"
             href={`${BASE_URL}/api/auth/github`}
           >
-            Sign up with Github
+            {t('registerModal.signUpWithGithub')}
           </SocialLoginButton>
         </Stack>
 
@@ -112,7 +116,7 @@ const RegisterModal = ({
             <StyledTextField
               fullWidth
               type="text"
-              label="USERNAME"
+              label={t('registerModal.usernameLabel')}
               name="username"
               autoComplete="username"
               value={username}
@@ -124,7 +128,7 @@ const RegisterModal = ({
             <StyledTextField
               fullWidth
               type="email"
-              label="EMAIL"
+              label={t('registerModal.emailLabel')}
               name="email"
               autoComplete="email"
               value={email}
@@ -141,7 +145,7 @@ const RegisterModal = ({
             <StyledTextField
               fullWidth
               type="password"
-              label="PASSWORD"
+              label={t('registerModal.passwordLabel')}
               name="password"
               autoComplete="new-password"
               value={password}
@@ -161,7 +165,7 @@ const RegisterModal = ({
                   sx={{ color: "secondary.main" }}
                 />
               ) : (
-                "Create Account"
+                t('registerModal.createAccount')
               )}
             </PrimaryAuthButton>
           </Stack>
@@ -169,8 +173,8 @@ const RegisterModal = ({
 
         {/* --- SWITCHER REUTILIZABLE --- */}
         <AuthSwitchLink 
-            text="Already have an account?" 
-            actionText="Log in" 
+            text={t('registerModal.alreadyHaveAccount')} 
+            actionText={t('registerModal.logIn')} 
             onAction={() => {
                 resetForm();
                 onSwitchToLogin();

@@ -12,12 +12,13 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
 import ChatIcon from '@mui/icons-material/Chat';
-import { useSocket } from "../../context/SocketContext";
-import { useChat } from '../../context/ChatContext';
-import ProfileFriend from '../social/ProfileFriend';
-import { useAuthModals } from "../../hooks/useAuthModals";
-import { FriendActionsMenu } from '../social/FriendActionsMenu';
-import { BASE_URL } from '../../config';
+
+import { BASE_URL } from '@/config';
+import ProfileFriend from '@/components/social/ProfileFriend';
+import { FriendActionsMenu } from '@/components/social/FriendActionsMenu';
+import { useSocket } from "@/context/SocketContext";
+import { useChat } from '@/context/ChatContext';
+import { useAuthModals } from "@/hooks/useAuthModals";
 
 interface Props {
 	open: boolean;

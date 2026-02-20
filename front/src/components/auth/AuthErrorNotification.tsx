@@ -2,6 +2,7 @@ import { Snackbar, Box, Typography, IconButton, Slide, type SlideProps } from "@
 import CloseIcon from "@mui/icons-material/Close";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     open: boolean;
@@ -36,6 +37,7 @@ const ErrorHeader = styled(Box)(({ theme }) => ({
 
 // 1. Pasamos las Props a la función
 const AuthErrorNotification = ({ open, message, onClose }: Props) => {
+	const { t } = useTranslation();
 	
     return (
         <Snackbar
@@ -58,7 +60,7 @@ const AuthErrorNotification = ({ open, message, onClose }: Props) => {
                                 letterSpacing: "1px",
                             }}
                         >
-                            SYSTEM_ERROR
+                            {t('authErrorNotification.systemError')}
                         </Typography>
                     </Box>
                     <IconButton

@@ -40,3 +40,13 @@ We need to know the difference now between development and production:
 	* This is almost doing the same. The only difference is that 'make' creates the folders in your local PC for the volumes, while docker-compose up just builds and runs the containers.
 
 - In production, our project will be built and run by the server using our container set-up but without Makefile, and it will stay that way as long as we want and pay for. It will be available to any user of the internet, and it will be a working web-site "producing" on the internet!
+
+
+If you execute make and you already have a MariaDb instance running:
+Remove it: docker rm -f mariadb
+Or rename it: docker rename mariadb mariadb_old
+
+If your backend port is allready allocated:
+make fclean
+or:
+docker rm -f trascendence-backend (backend container)

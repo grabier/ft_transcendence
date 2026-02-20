@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import GamePanel from '../components/game/GamePanel';
-import ScoreModal from '../components/game/ScoreModal';
-import PongGame from '../components/game/PongGame';
+import { useTranslation } from 'react-i18next';
+import { Box } from '@mui/material';
 
-const GamesPage: React.FC = () => {
+import GamePanel from '@/components/game/GamePanel';
+import ScoreModal from '@/components/game/ScoreModal';
+import PongGame from '@/components/game/PongGame';
+
+const GamesPage = () => {
+	const { t } = useTranslation();
 	// UI States
 	const [leftActive, setLeftActive] = useState(false);
 	const [rightActive, setRightActive] = useState(false);
@@ -117,7 +120,7 @@ const GamesPage: React.FC = () => {
 			<GamePanel
 				title="PONG"
 				highlightWord="CLASSIC"
-				subtitle="The original arcade legend. Pure reflex gaming."
+				subtitle={t('gamesPage.pongSubtitle')}
 				buttons={['IA ', 'Local', '1v1',]}
 				align="left"
 				isActive={leftActive}
@@ -130,7 +133,7 @@ const GamesPage: React.FC = () => {
 			<GamePanel
 				title="BLOCK"
 				highlightWord="BREAKER"
-				subtitle="Break through the chaos. Precision meets destruction."
+				subtitle={t('gamesPage.breakerSubtitle')}
 				buttons={['IA ', 'Local', '1v1',]}
 				align="right"
 				isActive={rightActive}

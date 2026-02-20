@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { muiTheme } from "./style/theme";
+import './utils/i18n'
 import Frontend from "./Frontend";
 
 import { SocketProvider } from "./context/SocketContext";

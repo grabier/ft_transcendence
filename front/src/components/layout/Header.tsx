@@ -1,12 +1,7 @@
-import React, { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Box, AppBar, Toolbar } from "@mui/material"; // Menos imports!
-import { MarqueeContainer, MarqueeTrack, MarqueeContent } from "../../style/MarqueeStyle";
+import { Box, AppBar, Toolbar } from "@mui/material";
 
-// Importamos SOLO el MenuHeader
-import MenuHeader from "./MenuHeader";
-
-import { useNotification } from "../../context/NotificationContext";
+import { MarqueeContainer, MarqueeTrack, MarqueeContent } from "@/style/MarqueeStyle";
+import MenuHeader from "@/components/layout/MenuHeader";
 
 const Header = () => {
 	return (

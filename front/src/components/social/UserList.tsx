@@ -10,12 +10,13 @@ import {
 	CircularProgress,
 	Divider
 } from '@mui/material';
-import UserAvatar from "../ui/UserAvatar";
+
+import { BASE_URL } from '@/config';
+import UserAvatar from "@/components/ui/UserAvatar";
 import {
 	StyledDialog,
 	PrimaryAuthButton
-} from "../../style/AuthModalStyle";
-import { BASE_URL } from '../../config';
+} from "@/style/AuthModalStyle";
 
 interface User {
 	id: number;

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+
+import { useAuth } from '@/context/AuthContext';
 
 interface Notification {
 	type: string;

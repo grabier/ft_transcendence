@@ -21,10 +21,13 @@
 		"@mui/material": "^7.3.6",
 		"@mui/styled-engine": "^7.3.6",
 		"@vitejs/plugin-react": "^5.1.2",
+		"i18next": "^25.8.5",
+		"i18next-browser-languagedetector": "^8.2.0",
 		"jwt-decode": "^4.0.0",
 		"os": "^0.1.2",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
+		"react-i18next": "^16.5.4",
 		"react-icons": "^5.5.0",
 		"react-router-dom": "^7.10.1"
 	}

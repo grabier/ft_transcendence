@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import { Box, Stack, Typography, CircularProgress, Alert, Link } from "@mui/material";
-import { StyledDialog, StyledTextField, PrimaryAuthButton } from "../../style/AuthModalStyle";
-import { validateEmail } from "../../utils/validation";
-import { BASE_URL } from '../../config';
 
-// Importamos los nuevos componentes
-import SocialLoginButton from "../ui/SocialLoginButton";
-import AuthSwitchLink from "../auth/AuthSwitchLink"; // Asumiendo que está en auth/
+import { StyledDialog, StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
+import { validateEmail } from "@/utils/validation";
+import { BASE_URL } from '@/config';
+import SocialLoginButton from "@/components/ui/SocialLoginButton";
+import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
 
 interface Props {
   open: boolean;
@@ -30,6 +30,8 @@ const LoginModal = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
+
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -55,9 +57,9 @@ const LoginModal = ({
             variant="authSubtitle"
             sx={{ borderBottom: "2px solid", borderColor: "secondary.main", display: "inline-block", pb: 0.5, mb: 1 }}
           >
-            Sign in to
+            {t('loginModal.signInTo')}
           </Typography>
-          <Typography variant="displayTitle">Transcendence</Typography>
+          <Typography variant="displayTitle">{t('loginModal.title')}</Typography>
         </Box>
 
         {/* --- BOTONES SOCIALES REUTILIZABLES --- */}
@@ -66,14 +68,14 @@ const LoginModal = ({
             provider="google" 
             href={`${BASE_URL}/api/auth/google`}
           >
-            Continue with Google
+            {t('loginModal.continueWithGoogle')}
           </SocialLoginButton>
 
           <SocialLoginButton 
             provider="github" 
             href={`${BASE_URL}/api/auth/github`}
           >
-            Continue with Github
+            {t('loginModal.continueWithGithub')}
           </SocialLoginButton>
         </Stack>
 
@@ -88,7 +90,7 @@ const LoginModal = ({
         <form onSubmit={handleSubmit}>
           <Stack spacing={2}>
             <StyledTextField
-              fullWidth type="email" label="EMAIL" name="email"
+              fullWidth type="email" label={t('loginModal.emailLabel')} name="email"
               autoComplete="email" value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -97,14 +99,14 @@ const LoginModal = ({
               disabled={isLoading} required error={!!emailError} helperText={emailError}
             />
             <StyledTextField
-              fullWidth type="password" label="PASSWORD" name="password"
+              fullWidth type="password" label={t('loginModal.passwordLabel')} name="password"
               autoComplete="current-password" value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading} required
             />
 
             <PrimaryAuthButton type="submit" disabled={isLoading || !email || !password} sx={{ mt: 3 }}>
-              {isLoading ? <CircularProgress size={24} sx={{ color: "secondary.main" }} /> : "Log in"}
+              {isLoading ? <CircularProgress size={24} sx={{ color: "secondary.main" }} /> : t('loginModal.loginButton')}
             </PrimaryAuthButton>
           </Stack>
         </form>
@@ -119,13 +121,13 @@ const LoginModal = ({
             "&:hover": { color: "text.primary" },
           }}
         >
-          <Typography variant="subtitle1">Reset password</Typography>
+          <Typography variant="subtitle1">{t('loginModal.resetPassword')}</Typography>
         </Link>
 
         {/* --- SWITCHER REUTILIZABLE --- */}
         <AuthSwitchLink 
-            text="No account?" 
-            actionText="Create one" 
+            text={t('loginModal.noAccount')} 
+            actionText={t('loginModal.createOne')} 
             onAction={() => {
                 setEmail(""); setPassword(""); setEmailError("");
                 onSwitchToRegister();

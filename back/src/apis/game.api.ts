@@ -156,8 +156,13 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			if (state.status === 'ended') {
 				console.log(`Partida terminada sala ${roomId}`);
+				// Clear the interval IMMEDIATELY to prevent it from running again
+				if (room.interval) {
+					clearInterval(room.interval);
+					room.interval = null;
+				}
 				destroyRoom(roomId);
-				return ;
+				return;
 			}
 		}, 1000 / 60);
 	}
