@@ -12,13 +12,12 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
 import ChatIcon from '@mui/icons-material/Chat';
-
-import { BASE_URL } from '@/config';
-import ProfileFriend from '@/components/social/ProfileFriend';
-import { FriendActionsMenu } from '@/components/social/FriendActionsMenu';
-import { useSocket } from "@/context/SocketContext";
-import { useChat } from '@/context/ChatContext';
-import { useAuthModals } from "@/hooks/useAuthModals";
+import { useSocket } from "../../context/SocketContext";
+import { useChat } from '../../context/ChatContext';
+import ProfileFriend from '../social/ProfileFriend';
+import { useAuthModals } from "../../hooks/useAuthModals";
+import { FriendActionsMenu } from '../social/FriendActionsMenu';
+import { BASE_URL } from '../../config';
 
 interface Props {
 	open: boolean;
@@ -99,6 +98,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			setLoading(false);
 		}
 	}, [token]);
+
+	const handleCloseProfile = useCallback(() => {
+		modals.closeAll(); // Cierra el modal/drawer
+		fetchData();       // Refresca la lista de amigos, pendientes y bloqueados
+	}, [modals, fetchData]);
 
 	useEffect(() => {
 		if (open) {
@@ -460,8 +464,10 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			{selectedFriend && (
 				<ProfileFriend
 					open={modals.profileFriendsOpen}
-					onClose={modals.closeAll}
+					onClose={handleCloseProfile}
 					friend={selectedFriend}
+					deletefriend={handleDelete}
+					blockfriend={handleBlock}
 				/>
 			)}
 		</Drawer>
