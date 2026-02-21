@@ -14,6 +14,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { ProfileFriend } from '@/components/social/ProfileFriend';
 
 
@@ -79,7 +80,7 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 // --- CHAT WINDOW PRINCIPAL ---
 export const ChatWindow = () => {
 	const { t } = useTranslation();
-	const { activeChat, messages, sendMessage, closeChat } = useChat();
+	const { activeChat, messages, sendMessage, closeChat, sendTyping, typingChats } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
 
@@ -91,6 +92,8 @@ export const ChatWindow = () => {
 	const openMenu = Boolean(anchorEl);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	if (!activeChat) return null;
+	const isTyping = typingChats[activeChat.id] || false;
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -142,16 +145,16 @@ export const ChatWindow = () => {
 					<IconButton size="small" onClick={closeChat} sx={{ color: 'white', mr: 1 }}>
 						<ArrowBackIcon />
 					</IconButton>
-					
+
 					{/* --- 3. AVATAR CLICABLE --- */}
-					<Avatar 
-						src={activeChat.otherUser.avatar_url} 
-						sx={{ 
-							width: 32, 
-							height: 32, 
+					<Avatar
+						src={activeChat.otherUser.avatar_url}
+						sx={{
+							width: 32,
+							height: 32,
 							cursor: 'pointer', // Indicador visual de click
-							'&:hover': { opacity: 0.8 } 
-						}} 
+							'&:hover': { opacity: 0.8 }
+						}}
 						onClick={() => setProfileOpen(true)} // Abre el perfil
 					/>
 					<Typography variant="subtitle2" color="white" fontWeight="bold">
@@ -195,17 +198,31 @@ export const ChatWindow = () => {
 									<Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
 										{msg.content}
 									</Typography>
+									{isMe && (
+										<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+											<DoneAllIcon sx={{
+												fontSize: 14,
+												// Si está leído, azul brillante, si no, gris clarito
+												color: msg.is_read ? '#4fc3f7' : 'rgba(255,255,255,0.6)'
+											}} />
+										</Box>
+									)}
 								</Paper>
 							)}
 						</Box>
 					);
 				})}
+				{isTyping && (
+					<Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', ml: 2, mb: 1 }}>
+						{activeChat.otherUser.username} {t('chatWindow.isTyping', 'está escribiendo...')}
+					</Typography>
+				)}
 				<div ref={messagesEndRef} />
 			</Box>
 
 			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
+				<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
 					<VideogameAssetIcon />
 				</IconButton>
 
@@ -218,25 +235,28 @@ export const ChatWindow = () => {
 				>
 					<MenuItem onClick={() => handleInvite(3)}>
 						<ListItemIcon><SpeedIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.quickMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(5)}>
-					<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.standardMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(11)}>
-					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.longMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(21)}>
-					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.marathonMatch')}</ListItemText>
+						<ListItemText>{t('chatWindow.quickMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(5)}>
+						<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.standardMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(11)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.longMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(21)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.marathonMatch')}</ListItemText>
 					</MenuItem>
 				</Menu>
 
 				<TextField
-				fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
+					onChange={(e) => {
+						setInputText(e.target.value);
+						sendTyping();
+					}}
 					onKeyDown={(e) => e.key === 'Enter' && handleSend()}
 					sx={{ '& .MuiOutlinedInput-root': { borderRadius: 5 } }}
 				/>
@@ -246,10 +266,11 @@ export const ChatWindow = () => {
 			</Box>
 
 			{/* --- 4. RENDERIZADO DEL PERFIL --- */}
-			<ProfileFriend 
-				open={profileOpen} 
-				onClose={() => setProfileOpen(false)} 
-				friend={activeChat.otherUser} 
+			<ProfileFriend
+				open={profileOpen}
+				onClose={() => setProfileOpen(false)}
+				friend={activeChat.otherUser}
+				onActionSuccess={() => { closeChat(); }}
 			/>
 		</Box>
 	);

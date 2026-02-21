@@ -82,7 +82,7 @@ const chatRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				// 2. Obtener mensajes con datos del remitente (avatar, nombre)
 				// Ordenamos DESC primero para coger los últimos, luego el Front les dará la vuelta
 				const [messages] = await pool.execute(`
-                SELECT m.id, m.content, m.type, m.created_at, m.sender_id, m.invite_score, u.username, u.avatar_url
+                SELECT m.id, m.content, m.type, m.created_at, m.sender_id, m.invite_score, m.is_read, u.username, u.avatar_url
                 FROM messages m
                 JOIN users u ON m.sender_id = u.id
                 WHERE m.dm_id = ?

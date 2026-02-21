@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { socketManager } from '../websocket/connection-manager.js';
-import { handleChatMessage } from '../websocket/chat.handler.js';
+import { handleChatMessage, handleTyping, handleMarkAsRead } from '../websocket/chat.handler.js';
 import { mainSocketSchema } from '../schemas/ws.schema.js';
 
 interface QueryParams {
@@ -56,14 +56,16 @@ const wsRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 					switch (data.type) {
 						case 'SEND_MESSAGE':
-							// Delegamos la lógica dura al handler que creamos antes
-							// payload debe tener: { dmId, content, type }
 							await handleChatMessage(userId, data.payload);
 							break;
 
-						// Aquí añadiremos más casos en el futuro:
-						// case 'GAME_INVITE': ...
-						// case 'BLOCK_USER': ...
+						case 'TYPING':
+							await handleTyping(userId, data.payload);
+							break;
+							
+						case 'MARK_AS_READ':
+							await handleMarkAsRead(userId, data.payload);
+							break;
 
 						default:
 							console.warn(`Event type unknown: ${data.type}`);

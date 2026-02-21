@@ -18,6 +18,8 @@ MODULES: WEB
 - terms of service
 - about us con el github de cada uno
 - readme 
+- limpieza general
+- console warnings
 
 
 

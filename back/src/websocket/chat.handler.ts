@@ -81,3 +81,30 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		console.error("🔥 Error handling chat message:", error);
 	}
 };
+
+export const handleTyping = async (senderId: number, payload: { dmId: number }) => {
+	const { dmId } = payload;
+	const [rows]: any = await pool.execute('SELECT user1_id, user2_id FROM direct_messages WHERE id = ?', [dmId]);
+	if (rows.length === 0) return;
+	
+	const receiverId = rows[0].user1_id === senderId ? rows[0].user2_id : rows[0].user1_id;
+	// Le rebotamos el evento al receptor
+	socketManager.notifyUser(receiverId, 'TYPING', { dmId, senderId });
+};
+
+export const handleMarkAsRead = async (userId: number, payload: { dmId: number }) => {
+	const { dmId } = payload;
+	
+	// Marcamos en BBDD todos los mensajes NO leídos de esta sala que NO sean míos
+	await pool.execute(
+		'UPDATE messages SET is_read = TRUE WHERE dm_id = ? AND sender_id != ? AND is_read = FALSE',
+		[dmId, userId]
+	);
+
+	// Avisamos al emisor original de que ya los he leído para que le salga el check azul
+	const [rows]: any = await pool.execute('SELECT user1_id, user2_id FROM direct_messages WHERE id = ?', [dmId]);
+	if (rows.length === 0) return;
+
+	const receiverId = rows[0].user1_id === userId ? rows[0].user2_id : rows[0].user1_id;
+	socketManager.notifyUser(receiverId, 'MESSAGES_READ', { dmId });
+};

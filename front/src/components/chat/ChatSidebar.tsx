@@ -6,7 +6,7 @@ import { useChat } from '@/context/ChatContext';
 
 export const ChatSidebar = () => {
 	// SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
-	const { chats = [], activeChat, selectChat } = useChat() || {};
+	const { chats = [], activeChat, selectChat, typingChats } = useChat() || {};
 
 	const { t } = useTranslation();
 
@@ -20,7 +20,7 @@ export const ChatSidebar = () => {
 				<Paper elevation={0} sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, bgcolor: 'transparent' }}>
 					<Typography variant="body2" color="text.secondary" align="center">
 						{t('chatSidebar.noConversations')} <br />
-						{t('chatSidebar.talkToFriends')} 
+						{t('chatSidebar.talkToFriends')}
 					</Typography>
 				</Paper>
 			</Box>
@@ -64,7 +64,12 @@ export const ChatSidebar = () => {
 									primary={chat.otherUser.username}
 									secondary={
 										<Typography variant="caption" noWrap display="block" color="text.secondary">
-										{chat.lastMessage?.content || t('chatSidebar.newConversation')}
+											{/* SI ESTÁ ESCRIBIENDO, SUSTITUYE EL ÚLTIMO MENSAJE */}
+											{typingChats[chat.id] ? (
+												<i>Escribiendo...</i>
+											) : (
+												chat.lastMessage?.content || t('chatSidebar.newConversation')
+											)}
 										</Typography>
 									}
 								/>

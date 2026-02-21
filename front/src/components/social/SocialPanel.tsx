@@ -18,6 +18,7 @@ import ProfileFriend from '../social/ProfileFriend';
 import { useAuthModals } from "../../hooks/useAuthModals";
 import { FriendActionsMenu } from '../social/FriendActionsMenu';
 import { BASE_URL } from '../../config';
+import { useFriendActions } from '../../hooks/useFriendActions';
 
 interface Props {
 	open: boolean;
@@ -46,6 +47,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	// Hooks y Contexto
 	const { markAsRead, lastNotification } = useSocket();
 	const { selectChat } = useChat();
+	
 	const token = localStorage.getItem('auth_token');
 
 	const modals = useAuthModals();
@@ -98,6 +100,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			setLoading(false);
 		}
 	}, [token]);
+	const { deleteFriend, blockFriend } = useFriendActions(fetchData);
 
 	const handleCloseProfile = useCallback(() => {
 		modals.closeAll(); // Cierra el modal/drawer
@@ -173,31 +176,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		try {
 			const res = await fetch(`${BASE_URL}/api/friend/delete/${senderId}`, {
 				method: 'DELETE',
-				headers: { 'Authorization': `Bearer ${token}` }
-			});
-			if (res.ok)
-				fetchData();
-		} catch (err) {
-			console.error(err);
-		}
-	};
-	const handleDelete = async (friendId: number) => {
-		try {
-			const res = await fetch(`${BASE_URL}/api/friend/delete/${friendId}`, {
-				method: 'DELETE',
-				headers: { 'Authorization': `Bearer ${token}` }
-			});
-			if (res.ok)
-				fetchData();
-		} catch (err) {
-			console.error(err);
-		}
-	};
-
-	const handleBlock = async (blockedId: number) => {
-		try {
-			const res = await fetch(`${BASE_URL}/api/friend/block/${blockedId}`, {
-				method: 'PUT',
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			if (res.ok)
@@ -346,8 +324,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
-													onRemove={() => handleDelete(f.id)}
-													onBlock={() => handleBlock(f.id)}
+													onRemove={() => deleteFriend(f.id)}
+													onBlock={() => blockFriend(f.id)}
 												/>
 												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
 													<ChatIcon color="primary" fontSize="small" />
@@ -393,8 +371,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
-													onRemove={() => handleDelete(f.id)}
-													onBlock={() => handleBlock(f.id)}
+													onRemove={() => deleteFriend(f.id)}
+													onBlock={() => blockFriend(f.id)}
 												/>
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
@@ -434,8 +412,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
-													onRemove={() => handleDelete(f.id)}
-													onBlock={() => handleBlock(f.id)}
+													onRemove={() => deleteFriend(f.id)}
+													onBlock={() => blockFriend(f.id)}
 												/>
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
@@ -466,8 +444,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					open={modals.profileFriendsOpen}
 					onClose={handleCloseProfile}
 					friend={selectedFriend}
-					deletefriend={handleDelete}
-					blockfriend={handleBlock}
+					onActionSuccess={fetchData}
 				/>
 			)}
 		</Drawer>
