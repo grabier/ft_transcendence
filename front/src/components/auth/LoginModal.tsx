@@ -2,11 +2,13 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, Typography, CircularProgress, Alert, Link } from "@mui/material";
 
-import { StyledDialog, StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
+// Eliminamos StyledDialog de aquí
+import { StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
 import { validateEmail } from "@/utils/validation";
 import { BASE_URL } from '@/config';
 import SocialLoginButton from "@/components/ui/SocialLoginButton";
 import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
+import Modal from "@/components/ui/Modal"; // Importamos el nuevo componente
 
 interface Props {
   open: boolean;
@@ -47,11 +49,9 @@ const LoginModal = ({
   };
 
   return (
-    <StyledDialog open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleClose} maxWidth="xs">
       <Box sx={{ p: 4 }}>
         
-        {/* --- HEADER (TÍTULO) --- */}
-        {/* Nota: Esto también podría ser un componente <AuthTitle /> si se repite mucho */}
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography
             variant="authSubtitle"
@@ -62,31 +62,22 @@ const LoginModal = ({
           <Typography variant="displayTitle">{t('loginModal.title')}</Typography>
         </Box>
 
-        {/* --- BOTONES SOCIALES REUTILIZABLES --- */}
         <Stack spacing={2} sx={{ mb: 3 }}>
-          <SocialLoginButton 
-            provider="google" 
-            href={`${BASE_URL}/api/auth/google`}
-          >
+          <SocialLoginButton provider="google" href={`${BASE_URL}/api/auth/google`}>
             {t('loginModal.continueWithGoogle')}
           </SocialLoginButton>
 
-          <SocialLoginButton 
-            provider="github" 
-            href={`${BASE_URL}/api/auth/github`}
-          >
+          <SocialLoginButton provider="github" href={`${BASE_URL}/api/auth/github`}>
             {t('loginModal.continueWithGithub')}
           </SocialLoginButton>
         </Stack>
 
-        {/* --- ERROR --- */}
         {error && (
           <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>
             {error}
           </Alert>
         )}
 
-        {/* --- FORMULARIO --- */}
         <form onSubmit={handleSubmit}>
           <Stack spacing={2}>
             <StyledTextField
@@ -111,7 +102,6 @@ const LoginModal = ({
           </Stack>
         </form>
 
-        {/* --- FOOTER ACTIONS --- */}
         <Link
           component="button" type="button" onClick={onSwitchToResetPassword}
           sx={{
@@ -124,7 +114,6 @@ const LoginModal = ({
           <Typography variant="subtitle1">{t('loginModal.resetPassword')}</Typography>
         </Link>
 
-        {/* --- SWITCHER REUTILIZABLE --- */}
         <AuthSwitchLink 
             text={t('loginModal.noAccount')} 
             actionText={t('loginModal.createOne')} 
@@ -135,7 +124,7 @@ const LoginModal = ({
         />
         
       </Box>
-    </StyledDialog>
+    </Modal>
   );
 };
 

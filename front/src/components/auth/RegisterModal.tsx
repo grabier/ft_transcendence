@@ -1,22 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from 'react-i18next';
-import {
-  Box,
-  Stack,
-  Typography,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
+import { Box, Stack, Typography, CircularProgress, Alert } from "@mui/material";
 
-import {
-  StyledDialog,
-  StyledTextField,
-  PrimaryAuthButton,
-} from "@/style/AuthModalStyle";
+import { StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
 import { validateEmail } from "@/utils/validation";
 import { BASE_URL } from '@/config';
 import SocialLoginButton from "@/components/ui/SocialLoginButton";
 import AuthSwitchLink from "@/components/auth/AuthSwitchLink";
+import Modal from "@/components/ui/Modal";
 
 interface Props {
   open: boolean;
@@ -48,14 +39,6 @@ const RegisterModal = ({
     await onRegister(username, email, password);
   };
 
-  const handleClose = () => {
-    if (!isLoading) {
-      resetForm();
-      onClose();
-    }
-  };
-
-  // Función auxiliar para limpiar el estado (DRY)
   const resetForm = () => {
     setUsername("");
     setEmail("");
@@ -63,11 +46,17 @@ const RegisterModal = ({
     setEmailError("");
   };
 
+  const handleClose = () => {
+    if (!isLoading) {
+      resetForm();
+      onClose();
+    }
+  };
+
   return (
-    <StyledDialog open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleClose} maxWidth="xs">
       <Box sx={{ p: 4 }}>
         
-        {/* --- HEADER --- */}
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography
             variant="authSubtitle"
@@ -86,84 +75,51 @@ const RegisterModal = ({
           </Typography>
         </Box>
 
-        {/* --- SOCIAL BUTTONS --- */}
         <Stack spacing={2} sx={{ mb: 3 }}>
-          <SocialLoginButton
-            provider="google"
-            href={`${BASE_URL}/api/auth/google`}
-          >
+          <SocialLoginButton provider="google" href={`${BASE_URL}/api/auth/google`}>
             {t('registerModal.signUpWithGoogle')}
           </SocialLoginButton>
 
-          <SocialLoginButton
-            provider="github"
-            href={`${BASE_URL}/api/auth/github`}
-          >
+          <SocialLoginButton provider="github" href={`${BASE_URL}/api/auth/github`}>
             {t('registerModal.signUpWithGithub')}
           </SocialLoginButton>
         </Stack>
 
-        {/* --- ERROR ALERT --- */}
         {error && (
           <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>
             {error}
           </Alert>
         )}
 
-        {/* --- FORMULARIO --- */}
         <form onSubmit={handleSubmit}>
           <Stack spacing={2}>
             <StyledTextField
-              fullWidth
-              type="text"
-              label={t('registerModal.usernameLabel')}
-              name="username"
-              autoComplete="username"
-              value={username}
+              fullWidth type="text" label={t('registerModal.usernameLabel')}
+              name="username" autoComplete="username" value={username}
               onChange={(e) => setUsername(e.target.value)}
-              disabled={isLoading}
-              required
+              disabled={isLoading} required
             />
 
             <StyledTextField
-              fullWidth
-              type="email"
-              label={t('registerModal.emailLabel')}
-              name="email"
-              autoComplete="email"
-              value={email}
+              fullWidth type="email" label={t('registerModal.emailLabel')}
+              name="email" autoComplete="email" value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setEmailError(validateEmail(e.target.value));
               }}
-              disabled={isLoading}
-              required
-              error={!!emailError}
-              helperText={emailError}
+              disabled={isLoading} required error={!!emailError} helperText={emailError}
             />
 
             <StyledTextField
-              fullWidth
-              type="password"
-              label={t('registerModal.passwordLabel')}
-              name="password"
-              autoComplete="new-password"
-              value={password}
+              fullWidth type="password" label={t('registerModal.passwordLabel')}
+              name="password" autoComplete="new-password" value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
+              disabled={isLoading} required
             />
 
-            <PrimaryAuthButton
-              type="submit"
-              disabled={isLoading || !username || !email || !password}
-              sx={{ mt: 3 }}
-            >
+            <PrimaryAuthButton type="submit" disabled={isLoading || !username || !email || !password} sx={{ mt: 3 }}>
               {isLoading ? (
-                <CircularProgress
-                  size={24}
-                  sx={{ color: "secondary.main" }}
-                />
+                <CircularProgress size={24} sx={{ color: "secondary.main" }} />
               ) : (
                 t('registerModal.createAccount')
               )}
@@ -171,7 +127,6 @@ const RegisterModal = ({
           </Stack>
         </form>
 
-        {/* --- SWITCHER REUTILIZABLE --- */}
         <AuthSwitchLink 
             text={t('registerModal.alreadyHaveAccount')} 
             actionText={t('registerModal.logIn')} 
@@ -182,7 +137,7 @@ const RegisterModal = ({
         />
         
       </Box>
-    </StyledDialog>
+    </Modal>
   );
 };
 
