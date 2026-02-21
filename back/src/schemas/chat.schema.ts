@@ -63,7 +63,8 @@ export const getMessagesSchema = {
 					sender_id: { type: 'number' },
 					username: { type: 'string' },
 					avatar_url: { type: 'string' },
-					invite_score: { type: ['number', 'null'] }
+					invite_score: { type: ['number', 'null'] },
+					is_read: { type: 'boolean', default: false }
 				}
 			}
 		},

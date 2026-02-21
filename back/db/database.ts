@@ -166,6 +166,7 @@ const initializeTables = async (): Promise<void> => {
                 is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 invite_score INT DEFAULT NULL,
+				is_read BOOLEAN DEFAULT FALSE,
                 FOREIGN KEY (dm_id) REFERENCES direct_messages(id) ON DELETE CASCADE,
                 FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
