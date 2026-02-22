@@ -16,6 +16,7 @@ interface Room {
 	game: PongGame;
 	players: Player[];
 	interval: NodeJS.Timeout | null;
+	disconnectTimeout: NodeJS.Timeout | null;
 }
 
 const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
@@ -52,11 +53,47 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		// 2. LOGICA DE SALAS
 		let roomId = '';
 
-		if (mode === 'local') {
+		const existingRoom = Array.from(rooms.values()).find(r => 
+			r.players.some(p => p.id === user.id) && r.disconnectTimeout !== null
+		);
+
+		if (existingRoom) {
+			console.log(`🔄 Reconexión exitosa: ${user.username} vuelve a ${existingRoom.id}`);
+			roomId = existingRoom.id; // Guardamos el ID para no romper el resto del código
+			
+			// Cancelamos la cuenta atrás de la muerte
+			clearTimeout(existingRoom.disconnectTimeout!);
+			existingRoom.disconnectTimeout = null;
+
+			// Actualizamos el socket del jugador con el nuevo
+			const playerIndex = existingRoom.players.findIndex(p => p.id === user.id);
+			const playerSide = existingRoom.players[playerIndex].side;
+			existingRoom.players[playerIndex].socket = socket;
+
+			// ¡SÚPER IMPORTANTE! Limpiar teclas atascadas de cuando se desconectó
+			if (playerSide === 'left') existingRoom.game.inputs.left = { up: false, down: false };
+			if (playerSide === 'right') existingRoom.game.inputs.right = { up: false, down: false };
+
+			// Le recordamos su lado
+			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide }));
+
+			// Avisamos al rival de que ha vuelto
+			const survivor = existingRoom.players.find(p => p.id !== user.id);
+			if (survivor && survivor.socket.readyState === 1) {
+				survivor.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED' }));
+			}
+
+			// Reanudamos la física a los 3 segundos (Para cuadrar con el 3, 2, 1, GO del Frontend)
+			setTimeout(() => {
+				existingRoom.game.resumeGame();
+			}, 3000);
+		}
+		// --- FIN INTENTO RECONEXIÓN ---
+
+		else if (mode === 'local') {
 			// --- MODO LOCAL (1 PC, 2 Manos) ---
 			roomId = `room_${user.id}_LOCAL`;
-			createRoom(roomId, scoreToWin, 'local'); // 'local' no es 'pvp' ni 'ai', pero PongGame lo aceptará si lo tipamos o ignoramos
-			// En local, el usuario controla "ambos" lados técnicamente
+			createRoom(roomId, scoreToWin, 'local');
 			joinRoom(roomId, socket, 'both', user);
 			startGame(roomId);
 		}
@@ -114,10 +151,51 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		});
 
 		socket.on('close', () => {
+			// 1. Si estaba en la cola de espera, lo sacamos
 			const idx = waitingQueue.findIndex(item => item.socket === socket);
-			if (idx !== -1) waitingQueue.splice(idx, 1);
+			if (idx !== -1) {
+				waitingQueue.splice(idx, 1);
+				return;
+			}
+
+			// 2. Si estaba en una partida...
 			const room = getRoomBySocket(socket);
-			if (room) destroyRoom(room.id);
+			if (!room || room.game.state.status === 'ended') return;
+
+			console.log(`⚠️ Jugador desconectado de la sala ${room.id}`);
+
+			// Si es modo local o IA, destruimos la sala directamente (no hay a quien esperar)
+			if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
+				destroyRoom(room.id);
+				return;
+			}
+
+			// 3. MODO PVP: Iniciamos protocolo de gracia
+			room.game.pauseGame(); // Congelamos la física
+			
+			// Avisamos al jugador que se ha quedado (el superviviente)
+			const survivor = room.players.find(p => p.socket !== socket && p.socket.readyState === 1);
+			if (survivor) {
+				survivor.socket.send(JSON.stringify({ 
+					type: 'OPPONENT_DISCONNECTED', 
+					message: 'El rival se ha desconectado. Esperando reconexión (15s)...' 
+				}));
+			}
+
+			// 4. Iniciar la cuenta atrás de la muerte (15 segundos)
+			room.disconnectTimeout = setTimeout(() => {
+				console.log(`💀 Fin del tiempo de gracia en sala ${room.id}. Gana el superviviente.`);
+				
+				// El que se fue pierde
+				const disconnectedPlayer = room.players.find(p => p.socket === socket);
+				if (disconnectedPlayer && survivor) {
+					room.game.stopGame(survivor.side as 'left' | 'right');
+					// Mandamos una última actualización para que el front vea el "WINS"
+					survivor.socket.send(JSON.stringify({ type: 'UPDATE', state: room.game.state }));
+				}
+				
+				destroyRoom(room.id);
+			}, 15000); // 15 segundos
 		});
 	});
 
@@ -126,7 +204,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const game = new PongGame();
 		game.winningScore = score;
 		game.gameMode = mode as any; // Cast para calmar a TS si PongGame solo espera pvp/ai
-		rooms.set(id, { id, game, players: [], interval: null });
+		rooms.set(id, { id, game, players: [], interval: null, disconnectTimeout: null });
 	}
 
 	function joinRoom(roomId: string, socket: WebSocket, side: any, userData: { id: number, username: string }) {
@@ -144,9 +222,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
 		room.interval = setInterval(() => {
-			if (room.game.gameMode === 'ai') (room.game as any).updateAi();
-			(room.game as any).update();
-
 			const state = room.game.state;
 			const updateMsg = JSON.stringify({ type: 'UPDATE', state });
 
