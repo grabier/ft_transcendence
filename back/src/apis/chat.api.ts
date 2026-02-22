@@ -15,7 +15,7 @@ const chatRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 */
 	fastify.post<{ Body: { targetUserId: number } }>(
 		'/dm',
-		{ schema: getDMSchema }, // 👈 Aplicamos esquema
+		{ schema: getDMSchema },
 		async (request, reply) => {
 			try {
 				const myId = (request.user as any).id;
@@ -60,7 +60,7 @@ const chatRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 */
 	fastify.get<{ Params: { dmId: number }, Querystring: { limit?: number, offset?: number } }>(
 		'/:dmId/messages',
-		{ schema: getMessagesSchema }, // 👈 Aplicamos esquema
+		{ schema: getMessagesSchema },
 		async (request, reply) => {
 			try {
 				const userId = (request.user as any).id;
@@ -105,7 +105,7 @@ const chatRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	 */
 	fastify.get(
 		'/me',
-		{ schema: getMyChatsSchema }, // 👈 Aplicamos esquema
+		{ schema: getMyChatsSchema },
 		async (request, reply) => {
 			try {
 				const userId = (request.user as any).id;

@@ -34,7 +34,12 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			[receiverId, senderId, senderId, receiverId]
 		);
 
-		if (blockCheck.length > 0) {
+		const [isfriend]: any = await pool.execute(
+			`SELECT 1 FROM friendships WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`,
+			[receiverId, senderId, senderId, receiverId]
+		);
+
+		if (blockCheck.length > 0 || isfriend.length < 1) {
 			console.log(`🚫 Mensaje bloqueado de ${senderId} a ${receiverId}`);
 			return;
 		}
@@ -82,6 +87,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 	}
 };
 
+//typing indicators
 export const handleTyping = async (senderId: number, payload: { dmId: number }) => {
 	const { dmId } = payload;
 	const [rows]: any = await pool.execute('SELECT user1_id, user2_id FROM direct_messages WHERE id = ?', [dmId]);
@@ -92,6 +98,7 @@ export const handleTyping = async (senderId: number, payload: { dmId: number }) 
 	socketManager.notifyUser(receiverId, 'TYPING', { dmId, senderId });
 };
 
+//read receipts
 export const handleMarkAsRead = async (userId: number, payload: { dmId: number }) => {
 	const { dmId } = payload;
 	

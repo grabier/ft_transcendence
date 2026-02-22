@@ -134,7 +134,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 		console.log(`Connecting to WS: Mode=${mode}, Score=${scoreToWin}`);
 
 		// 2. Lo añadimos a la URL: ?token=...
-		const socket = new WebSocket(`ws://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
+		const socket = new WebSocket(`wss://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
 		socketRef.current = socket;
 
 

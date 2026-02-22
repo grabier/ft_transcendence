@@ -17,7 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
-
+import fs from 'fs';
 import { API_ROUTES } from './routes/routes.js';
 
 dotenv.config();
@@ -27,6 +27,10 @@ const __dirname = path.dirname(__filename);
 export const createAPIServer = async (): Promise<FastifyInstance> => {
 	const app = Fastify({
 		logger: true,
+		https: {
+			key: fs.readFileSync(path.join(__dirname, '../../.certs/server.key')),
+			cert: fs.readFileSync(path.join(__dirname, '../../.certs/server.crt'))
+		},
 		ajv: {//para docu de las apis
 			customOptions: {
 				strict: false,
