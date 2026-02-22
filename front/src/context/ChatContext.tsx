@@ -193,6 +193,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 						setMessages(prev => prev.map(m => m.sender_id === user?.id ? { ...m, is_read: true } : m));
 					}
 				}
+				else if (data.type === 'INVITE_UPDATED') {
+					const updatedMsg = data.payload;
+					if (currentChat && currentChat.id === updatedMsg.dm_id) {
+						setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
+					}
+				}
 			} catch (e) { }
 		};
 

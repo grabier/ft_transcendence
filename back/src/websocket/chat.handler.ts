@@ -50,14 +50,26 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		// Si es invitación y no mandan score, ponemos 5 por defecto.
 		// Si es texto normal, forzamos NULL.
 		let inviteScore = null;
+		let finalContent = content;
+
 		console.log(`🚫 🚫 🚫 🚫 🚫 🚫 Score: ${score}`);
 		if (type === 'game_invite') {
 			inviteScore = score || 5;
 		}
 
+		if (type === 'game_invite') {
+			inviteScore = score || 5;
+			// Formateamos el contenido como JSON
+			finalContent = JSON.stringify({ 
+				id: content, 
+				status: 'pending', 
+				result: null 
+			});
+		}
+
 		const [result]: any = await pool.execute(
 			'INSERT INTO messages (dm_id, sender_id, content, type, invite_score) VALUES (?, ?, ?, ?, ?)',
-			[dmId, senderId, content, type, inviteScore]
+			[dmId, senderId, finalContent, type, inviteScore]
 		);
 
 		const createdAt = new Date().toISOString();
@@ -73,7 +85,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			sender_id: senderId,
 			username: sender.username,
 			avatar_url: sender.avatar_url,
-			content: content,
+			content: finalContent,
 			type: type,
 			created_at: createdAt,
 			invite_score: inviteScore

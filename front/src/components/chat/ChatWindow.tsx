@@ -19,13 +19,20 @@ import { ProfileFriend } from '@/components/social/ProfileFriend';
 
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
-const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boolean, score?: number }) => {
+const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boolean, score?: number }) => {
 	const navigate = useNavigate();
 	const pointsToWin = score || 5;
 	const { t } = useTranslation();
 
+	let inviteData = { id: content, status: 'pending', result: null as string | null };
+	try {
+		const parsed = JSON.parse(content);
+		if (parsed.id) inviteData = parsed;
+	} catch (e) {
+		inviteData.id = content;
+	}
 	const handleJoinGame = () => {
-		navigate(`/?mode=pvp&roomId=${gameId}&score=${pointsToWin}`);
+		navigate(`/?mode=pvp&roomId=${inviteData.id}&score=${pointsToWin}`);
 	};
 
 	return (
@@ -48,30 +55,45 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 					</Typography>
 				</Stack>
 
-				<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
-					{isMe
-						? t('chatWindow.proposedMatch', { points: pointsToWin })
-						: t('chatWindow.challengedTo', { points: pointsToWin })}
-				</Typography>
+				{/* SI LA PARTIDA TERMINÓ, MOSTRAMOS RESULTADO */}
+				{inviteData.status === 'finished' ? (
+					<Box sx={{ mt: 1, p: 1, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2, textAlign: 'center', width: '100%' }}>
+						<Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.8 }}>
+							Partida finalizada
+						</Typography>
+						<Typography variant="h5" fontWeight="bold">
+							🏆 {inviteData.result}
+						</Typography>
+					</Box>
+				) : (
+					/* SI ESTÁ PENDIENTE, MOSTRAMOS BOTÓN DE ENTRAR */
+					<>
+						<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
+							{isMe
+								? t('chatWindow.proposedMatch', { points: pointsToWin })
+								: t('chatWindow.challengedTo', { points: pointsToWin })}
+						</Typography>
 
-				<Button
-					variant={isMe ? "outlined" : "contained"}
-					color={isMe ? "inherit" : "primary"}
-					fullWidth
-					size="small"
-					onClick={handleJoinGame}
-					sx={{
-						mt: 1,
-						fontWeight: 'bold',
-						bgcolor: isMe ? 'transparent' : 'black',
-						color: isMe ? 'white' : '#f1c40f',
-						'&:hover': {
-							bgcolor: isMe ? 'rgba(255,255,255,0.1)' : '#333'
-						}
-					}}
-				>
-					{isMe ? t('chatWindow.enterRoom') : t('chatWindow.acceptPoints', { points: pointsToWin })}
-				</Button>
+						<Button
+							variant={isMe ? "outlined" : "contained"}
+							color={isMe ? "inherit" : "primary"}
+							fullWidth
+							size="small"
+							onClick={handleJoinGame}
+							sx={{
+								mt: 1,
+								fontWeight: 'bold',
+								bgcolor: isMe ? 'transparent' : 'black',
+								color: isMe ? 'white' : '#f1c40f',
+								'&:hover': {
+									bgcolor: isMe ? 'rgba(255,255,255,0.1)' : '#333'
+								}
+							}}
+						>
+							{isMe ? t('chatWindow.enterRoom') : t('chatWindow.acceptPoints', { points: pointsToWin })}
+						</Button>
+					</>
+				)}
 			</Stack>
 		</Paper>
 	);
@@ -180,7 +202,7 @@ export const ChatWindow = () => {
 						<Box key={msg.id} sx={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', mb: 2 }}>
 							{msg.type === 'game_invite' ? (
 								<GameInviteBubble
-									gameId={msg.content}
+									content={msg.content}
 									isMe={isMe}
 									score={msg.invite_score}
 								/>

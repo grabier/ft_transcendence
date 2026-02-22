@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
-	Typography, Divider, Badge, IconButton, Box, CircularProgress,
+	Typography, Divider, IconButton, Box,
 	TextField, Collapse, Drawer, Stack
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
@@ -19,6 +19,11 @@ import { useAuthModals } from "../../hooks/useAuthModals";
 import { FriendActionsMenu } from '../social/FriendActionsMenu';
 import { BASE_URL } from '../../config';
 import { useFriendActions } from '../../hooks/useFriendActions';
+import { EmptyState } from '../ui/EmptyState';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import { Loading } from '../ui/Loading';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
+import { StatusBadge } from "../ui/StatusBadge";
 
 interface Props {
 	open: boolean;
@@ -47,7 +52,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	// Hooks y Contexto
 	const { markAsRead, lastNotification } = useSocket();
 	const { selectChat } = useChat();
-	
+
 	const token = localStorage.getItem('auth_token');
 
 	const modals = useAuthModals();
@@ -271,7 +276,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				{/* --- LISTAS DE AMIGOS --- */}
 				{loading && friends.length === 0 ? (
 					<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-						<CircularProgress size={30} />
+						<Loading variant="spinner" size="md" />
 					</Box>
 				) : (
 					<List component="nav" sx={{ p: 0 }}>
@@ -336,9 +341,9 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										}
 									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
-											<Badge variant="dot" color="success" overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+											<StatusBadge status="online">
 												<Avatar src={f.avatar_url} sx={{ width: 32, height: 32 }} />
-											</Badge>
+											</StatusBadge>
 										</ListItemAvatar>
 										<ListItemText
 											primary={f.username}
@@ -346,7 +351,15 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										/>
 									</ListItem>
 								))}
-								{online.length === 0 && <Typography variant="caption" sx={{ pl: 4, py: 1, display: 'block', color: 'text.secondary' }}>No friends online</Typography>}
+								{online.length === 0 && (
+									<Box sx={{ transform: 'scale(0.8)', mt: -2 }}>
+										<EmptyState
+											icon={<SentimentDissatisfiedIcon />}
+											title="Nadie en línea"
+											description="Tus amigos están desconectados o jugando al Pong."
+										/>
+									</Box>
+								)}
 							</List>
 						</Collapse>
 
@@ -383,7 +396,9 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										}
 									>
 										<ListItemAvatar sx={{ minWidth: 45 }}>
-											<Avatar src={f.avatar_url} sx={{ width: 32, height: 32, filter: 'grayscale(1)' }} />
+											<StatusBadge status="offline">
+												<Avatar src={f.avatar_url} sx={{ width: 32, height: 32, filter: 'grayscale(1)' }} />
+											</StatusBadge>
 										</ListItemAvatar>
 										<ListItemText
 											primary={f.username}
@@ -391,6 +406,15 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										/>
 									</ListItem>
 								))}
+								{offline.length === 0 && (
+									<Box sx={{ transform: 'scale(0.8)', mt: -2 }}>
+										<EmptyState
+											icon={<WifiOffIcon />}
+											title="Todos conectados"
+											description="No tienes amigos desconectados en este momento."
+										/>
+									</Box>
+								)}
 							</List>
 						</Collapse>
 						{/* BLOCKED */}

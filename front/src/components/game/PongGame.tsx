@@ -159,7 +159,17 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 					// 2. INICIO DE PARTIDA (El servidor nos asigna lado)
 					if (msg.type === 'SIDE_ASSIGNED') {
-						console.log("Partida encontrada. Soy:", msg.side);
+						console.log("Partida encontrada o reanudada. Soy:", msg.side);
+
+						//  Inyectamos el ID en la URL sin recargar la página
+						if (msg.roomId) {
+							window.history.replaceState(
+								null,
+								'',
+								`/?mode=${mode}&roomId=${msg.roomId}&score=${scoreToWin}`
+							);
+						}
+
 						startCountdownSequence();
 					}
 
