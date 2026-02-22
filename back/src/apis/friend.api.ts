@@ -212,7 +212,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 				// Borra la relación sin importar quién la empezó
 				await pool.execute(`
-                DELETE FROM friendships 
+                DELETE FROM friendships
                 WHERE (sender_id = ? AND receiver_id = ?) 
                    OR (sender_id = ? AND receiver_id = ?)
             `, [userId, otherId, otherId, userId]);

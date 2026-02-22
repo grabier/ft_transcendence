@@ -4,9 +4,12 @@ services:
       context: ./front
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "5173:443"
     depends_on:
       - backend
+    volumes:
+      - ./.certs:/etc/nginx/ssl
+      - ./front/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - trascendence-network
 
@@ -20,6 +23,7 @@ services:
     volumes:
       - ./back/src:/app/src
       - /app/node_modules
+      - ./.certs:/.certs
     env_file:
       - ./back/.env 
     environment:

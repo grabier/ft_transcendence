@@ -1,6 +1,6 @@
 NAME = trascendence
 
-all:
+all: certs
 	@printf "Building and setting configuration for ${NAME}...\n"
 	@docker compose -f docker-compose.yml up -d --build
 
@@ -11,6 +11,15 @@ down:
 clean: down
 	@printf "Stopping and cleaning up all docker configurations of ${NAME}."
 	@docker system prune -a
+
+certs:
+	@printf "Generating SSL certificates...\n"
+	@mkdir -p .certs
+	@if [ ! -f .certs/server.crt ]; then \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+		-keyout .certs/server.key -out .certs/server.crt \
+		-subj "/C=ES/ST=Andalucia/L=Malaga/O=42/OU=Student/CN=localhost"; \
+	fi
 
 fclean:
 	@printf "Cleaning all configuration of ${NAME} and all volumes and host data...\n"

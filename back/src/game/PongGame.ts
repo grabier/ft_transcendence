@@ -11,7 +11,7 @@ export interface GameState {
 	ball: { x: number; y: number; width: number; height: number; speedX: number; speedY: number; };
 	paddleLeft: { x: number; y: number; width: number; height: number; score: number; speed: number; };
 	paddleRight: { x: number; y: number; width: number; height: number; score: number; speed: number; };
-	status: 'menu' | 'playing' | 'ended';
+	status: 'menu' | 'playing' | 'paused' | 'ended';
 	winner: 'left' | 'right' | null;
 }
 
@@ -198,6 +198,23 @@ export class PongGame {
 			this.state.ball.x = paddle.x - this.state.ball.width - 1;
 	}
 
+	public pauseGame() {
+		if (this.state.status === 'playing') {
+			this.state.status = 'paused';
+		}
+	}
+
+	public resumeGame() {
+		if (this.state.status === 'paused') {
+			this.state.status = 'playing';
+			this.lastTime = Date.now(); // Reseteamos el reloj interno para evitar teletransportes
+
+			// Si la bola se quedó totalmente quieta por culpa de la pausa, forzamos un nuevo saque
+			if (this.state.ball.speedX === 0 && this.state.ball.speedY === 0) {
+				this.resetBall(500);
+			}
+		}
+	}
 	public stopGame(winner?: 'left' | 'right') {
 		if (this.gameInterval) {
 			clearInterval(this.gameInterval);

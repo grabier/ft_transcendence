@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useAuthModals } from '../../hooks/useAuthModals';
+import { useFriendActions } from '../../hooks/useFriendActions';
 import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
@@ -21,20 +22,17 @@ interface Props {
 	open: boolean;
 	onClose: () => void;
 	friend: any;
-	deletefriend : (friendId : number) => void;
-	blockfriend: (friendID : number) => void;
+	onActionSuccess?: () => void;
 }
-const token = localStorage.getItem('auth_token');
 
-
-
-export const ProfileFriend = ({ open, onClose, friend, deletefriend, blockfriend }: Props) => {
+export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
 	const modals = useAuthModals();
+	const { deleteFriend, blockFriend } = useFriendActions(onActionSuccess);
+	const token = localStorage.getItem('auth_token');
 	// avatar
 	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
 	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
 	console.log(`PrfileFriends: ${friend.username}`);
-	
 
 	return (
 		<Drawer
@@ -88,7 +86,10 @@ export const ProfileFriend = ({ open, onClose, friend, deletefriend, blockfriend
 				<Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
 					<Tooltip title="Eliminar">
 						<IconButton
-							onClick={() => (deletefriend(friend.id), onClose())}
+							onClick={async () => {
+								await deleteFriend(friend.id);
+								onClose();
+							}}
 							color="error"
 							sx={{ bgcolor: 'action.hover' }}
 						>
@@ -98,7 +99,10 @@ export const ProfileFriend = ({ open, onClose, friend, deletefriend, blockfriend
 
 					<Tooltip title="Bloquear">
 						<IconButton
-							onClick={() => (blockfriend(friend.id), onClose())}
+							onClick={async () => {
+								await blockFriend(friend.id);
+								onClose();
+							}}
 							sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
 						>
 							<BlockIcon />

@@ -1,19 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from 'react-i18next';
-import {
-    Box,
-    Stack,
-    Typography,
-    CircularProgress,
-    Alert,
-    Link,
-} from "@mui/material";
+import { Box, Stack, Typography, CircularProgress, Alert, Link } from "@mui/material";
 
-import {
-    StyledDialog,
-    StyledTextField,
-    PrimaryAuthButton,
-} from "@/style/AuthModalStyle";
+import { StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
+import Modal from "@/components/ui/Modal";
 
 interface Props {
     open: boolean;
@@ -60,9 +50,8 @@ const ResetPasswordModal = ({
     };
 
     return (
-        <StyledDialog open={open} onClose={handleClose}>
+        <Modal open={open} onClose={handleClose} maxWidth="xs">
             <Box sx={{ p: 4 }}>
-                {/* Title */}
                 <Box sx={{ textAlign: "center", mb: 4 }}>
                     <Typography
                         variant="authSubtitle"
@@ -81,69 +70,35 @@ const ResetPasswordModal = ({
                     </Typography>
                 </Box>
 
-                {/* Instructions */}
-                <Typography
-                    variant="body1"
-                    sx={{
-                        textAlign: "center",
-                        mb: 3,
-                        color: "text.secondary",
-                    }}
-                >
+                <Typography variant="body1" sx={{ textAlign: "center", mb: 3, color: "text.secondary" }}>
                     {t('resetPassword.instructions')}
                 </Typography>
 
-                {/* Error Alert */}
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-                {/* Success Alert */}
-                {isSuccess && ( // Change from `success` to `isSuccess`
-                    <Alert severity="success" sx={{ mb: 2 }}>
-                        {t('resetPassword.successMessage')}
-                    </Alert>
-                )}
+                {isSuccess && <Alert severity="success" sx={{ mb: 2 }}>{t('resetPassword.successMessage')}</Alert>}
 
-                {/* Form */}
                 <form onSubmit={handleSubmit}>
                     <Stack spacing={2}>
                         <StyledTextField
-                            fullWidth
-                            type="email"
-                            label={t('resetPassword.emailLabel')}
-                            name="email"
-                            autoComplete="email"
-                            value={email}
+                            fullWidth type="email" label={t('resetPassword.emailLabel')}
+                            name="email" autoComplete="email" value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            disabled={isLoading || isSuccess}
-                            required
+                            disabled={isLoading || isSuccess} required
                         />
 
-                        <PrimaryAuthButton
-                            type="submit"
-                            disabled={isLoading || !email || isSuccess}
-                            sx={{ mt: 3 }}
-                        >
+                        <PrimaryAuthButton type="submit" disabled={isLoading || !email || isSuccess} sx={{ mt: 3 }}>
                             {isLoading ? (
-                                <CircularProgress
-                                    size={24}
-                                    sx={{ color: "secondary.main" }}
-                                />
+                                <CircularProgress size={24} sx={{ color: "secondary.main" }} />
                             ) : isSuccess ? t('resetPassword.emailSent') : t('resetPassword.sendButton')}
                         </PrimaryAuthButton>
                     </Stack>
                 </form>
 
-                {/* Back to Login */}
                 <Typography variant="body1" sx={{ textAlign: "center", mt: 3 }}>
                     {t('resetPassword.backToLogin')}{" "}
                     <Link
-                        component="button"
-                        type="button"
-                        onClick={handleSwitchToLogin}
+                        component="button" type="button" onClick={handleSwitchToLogin}
                         sx={{
                             fontWeight: 900,
                             fontFamily: "'Archivo Black', sans-serif",
@@ -159,7 +114,7 @@ const ResetPasswordModal = ({
                     </Link>
                 </Typography>
             </Box>
-        </StyledDialog>
+        </Modal>
     );
 };
 

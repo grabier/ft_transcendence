@@ -35,7 +35,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	});
 
 	// --- ESTADO REACT (UI) ---
-	const [uiState, setUiState] = useState<'loading' | 'countdown' | 'playing' | 'ended'>('loading');
+	const [uiState, setUiState] = useState<'loading' | 'countdown' | 'playing' | 'ended' | 'reconnecting' | 'waiting_opponent'>('loading');
 	const [countdown, setCountdown] = useState(3);
 	const [winnerText, setWinnerText] = useState('');
 	const [statusMessage, setStatusMessage] = useState('Connecting...');
@@ -128,80 +128,115 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	// --- EFECTO PRINCIPAL (Montaje y Conexión) ---
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
-
+		let isComponentUnmounted = false;
+		let reconnectTimeout: NodeJS.Timeout;
 		const host = window.location.hostname; // Esto cogerá "10.12.x.x" automáticamente
 
 		console.log(`Connecting to WS: Mode=${mode}, Score=${scoreToWin}`);
 
 		// 2. Lo añadimos a la URL: ?token=...
-		const socket = new WebSocket(`ws://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
-		socketRef.current = socket;
+		const connectWebSocket = () => {
+			if (isComponentUnmounted) return;
+			const socket = new WebSocket(`wss://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
+			socketRef.current = socket;
 
-
-
-		socket.onopen = () => {
-			console.log("WS Connected ✅");
-			if (mode === 'pvp') {
-				setUiState('loading');
-				setStatusMessage('Looking for opponent...');
-			}
-		};
-
-		socket.onmessage = (event) => {
-			try {
-				const msg = JSON.parse(event.data);
-
-				// 1. GESTIÓN DE COLA (Mensajes de estado)
-				if (msg.type === 'STATUS') {
-					setStatusMessage(msg.message);
+			socket.onopen = () => {
+				console.log("WS Connected ✅");
+				if (mode === 'pvp') {
+					setUiState(prev => prev === 'reconnecting' ? 'loading' : prev);
+					setStatusMessage('Looking for opponent...');
 				}
+			};
 
-				// 2. INICIO DE PARTIDA (El servidor nos asigna lado)
-				if (msg.type === 'SIDE_ASSIGNED') {
-					console.log("Partida encontrada. Soy:", msg.side);
-					startCountdownSequence();
-				}
+			socket.onmessage = (event) => {
+				try {
+					const msg = JSON.parse(event.data);
 
-				if (msg.type === 'UPDATE') {
-					const s = msg.state;
-					const PREDICTION = 0.05;
-
-					//para predecir. el mensaje puede tardar en llegar, asi q si dibujamos lo q nos manda el back
-					//siempre estaremos dibujando el pasado>
-					if (Math.abs(s.ball.speedX) > 0) {
-						serverTarget.current.ball.x = s.ball.x + (s.ball.speedX * PREDICTION);
-						serverTarget.current.ball.y = s.ball.y + (s.ball.speedY * PREDICTION);
-					} else {
-						serverTarget.current.ball.x = s.ball.x;
-						serverTarget.current.ball.y = s.ball.y;
+					// 1. GESTIÓN DE COLA (Mensajes de estado)
+					if (msg.type === 'STATUS') {
+						setStatusMessage(msg.message);
 					}
 
-					serverTarget.current.paddleLeft.y = s.paddleLeft.y;
-					serverTarget.current.paddleRight.y = s.paddleRight.y;
-					serverTarget.current.paddleLeft.score = s.paddleLeft.score;
-					serverTarget.current.paddleRight.score = s.paddleRight.score;
+					// 2. INICIO DE PARTIDA (El servidor nos asigna lado)
+					if (msg.type === 'SIDE_ASSIGNED') {
+						console.log("Partida encontrada o reanudada. Soy:", msg.side);
 
-					if (s.status === 'ended' && !isGameEndedRef.current) {
-						isGameEndedRef.current = true;
-						let text = s.winner === 'left' ? "P1 WINS" : "P2 WINS";
-						if (mode === 'ai' && s.winner === 'right') text = "AI WINS 🤖";
-						setWinnerText(text);
-						setUiState('ended');
+						//  Inyectamos el ID en la URL sin recargar la página
+						if (msg.roomId) {
+							window.history.replaceState(
+								null,
+								'',
+								`/?mode=${mode}&roomId=${msg.roomId}&score=${scoreToWin}`
+							);
+						}
+
+						startCountdownSequence();
 					}
+
+					if (msg.type === 'UPDATE') {
+						const s = msg.state;
+						const PREDICTION = 0.05;
+
+						//para predecir. el mensaje puede tardar en llegar, asi q si dibujamos lo q nos manda el back
+						//siempre estaremos dibujando el pasado>
+						if (Math.abs(s.ball.speedX) > 0) {
+							serverTarget.current.ball.x = s.ball.x + (s.ball.speedX * PREDICTION);
+							serverTarget.current.ball.y = s.ball.y + (s.ball.speedY * PREDICTION);
+						} else {
+							serverTarget.current.ball.x = s.ball.x;
+							serverTarget.current.ball.y = s.ball.y;
+						}
+
+						serverTarget.current.paddleLeft.y = s.paddleLeft.y;
+						serverTarget.current.paddleRight.y = s.paddleRight.y;
+						serverTarget.current.paddleLeft.score = s.paddleLeft.score;
+						serverTarget.current.paddleRight.score = s.paddleRight.score;
+
+						if (s.status === 'ended' && !isGameEndedRef.current) {
+							isGameEndedRef.current = true;
+							let text = s.winner === 'left' ? "P1 WINS" : "P2 WINS";
+							if (mode === 'ai' && s.winner === 'right') text = "AI WINS 🤖";
+							setWinnerText(text);
+							setUiState('ended');
+						}
+					}
+					if (msg.type === 'OPPONENT_DISCONNECTED') {
+						setUiState('waiting_opponent');
+						setStatusMessage(msg.message);
+					}
+					if (msg.type === 'OPPONENT_RECONNECTED') {
+						startCountdownSequence();
+					}
+				} catch (e) { console.error(e); }
+			};
+			socket.onclose = () => {
+				if (isComponentUnmounted) return; // Si el usuario le dio al botón de salir, no reconectamos
+
+				if (!isGameEndedRef.current) {
+					console.warn("WS Desconectado inesperadamente. Reintentando en 2s...");
+					setUiState('reconnecting');
+					setStatusMessage('Conexión perdida. Reconectando...');
+					reconnectTimeout = setTimeout(connectWebSocket, 2000);
 				}
-			} catch (e) { console.error(e); }
-		};
+			};
+
+			socket.onerror = (err) => {
+				console.error("WS Error", err);
+				socket.close(); // Forzamos el onclose para que inicie la reconexión
+			};
+		}
+		connectWebSocket();
 
 		// 2. Listeners de Teclado
 		const keysPressed: Record<string, boolean> = {};
 		const sendInput = (action: string, key: string) => {
-			if (socket.readyState === WebSocket.OPEN) {
+			if (socketRef.current?.readyState === WebSocket.OPEN) {
 				// MODO LOCAL
 				if (mode === 'local') {
-					if (key === 'w' || key === 'W') socket.send(JSON.stringify({ type: 'INPUT', action, key: 'LEFT_UP' }));
-					if (key === 's' || key === 'S') socket.send(JSON.stringify({ type: 'INPUT', action, key: 'LEFT_DOWN' }));
-					if (key === 'ArrowUp') socket.send(JSON.stringify({ type: 'INPUT', action, key: 'RIGHT_UP' }));
-					if (key === 'ArrowDown') socket.send(JSON.stringify({ type: 'INPUT', action, key: 'RIGHT_DOWN' }));
+					if (key === 'w' || key === 'W') socketRef.current?.send(JSON.stringify({ type: 'INPUT', action, key: 'LEFT_UP' }));
+					if (key === 's' || key === 'S') socketRef.current?.send(JSON.stringify({ type: 'INPUT', action, key: 'LEFT_DOWN' }));
+					if (key === 'ArrowUp') socketRef.current?.send(JSON.stringify({ type: 'INPUT', action, key: 'RIGHT_UP' }));
+					if (key === 'ArrowDown') socketRef.current?.send(JSON.stringify({ type: 'INPUT', action, key: 'RIGHT_DOWN' }));
 				}
 				// MODO REMOTO
 				else {
@@ -209,7 +244,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 					if (key === 'ArrowUp' || key === 'w' || key === 'W') command = 'UP';
 					else if (key === 'ArrowDown' || key === 's' || key === 'S') command = 'DOWN';
 
-					if (command) socket.send(JSON.stringify({ type: 'INPUT', action, key: command }));
+					if (command) socketRef.current?.send(JSON.stringify({ type: 'INPUT', action, key: command }));
 				}
 			}
 		};
@@ -234,11 +269,15 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 		// 4. Cleanup (Limpieza al salir)
 		return () => {
-			console.log("Cleaning up game...");
-			if (socketRef.current) socketRef.current.close();
-			cancelAnimationFrame(reqIdRef.current);
-			window.removeEventListener('keydown', handleKeyDown);
-			window.removeEventListener('keyup', handleKeyUp);
+			if (isGameEndedRef) {
+				isComponentUnmounted = true;
+				clearTimeout(reconnectTimeout);
+				console.log("Cleaning up game...");
+				if (socketRef.current) socketRef.current.close();
+				cancelAnimationFrame(reqIdRef.current);
+				window.removeEventListener('keydown', handleKeyDown);
+				window.removeEventListener('keyup', handleKeyUp);
+			}
 		};
 	}, [mode, scoreToWin, gameLoop]);
 
@@ -261,12 +300,19 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 		<div style={{ /* ... estilos container ... */ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, margin: '0 auto', border: '2px solid white', boxSizing: 'content-box' }}>
 			<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', backgroundColor: 'black' }} />
 
-			{uiState === 'loading' && (
+			{(uiState === 'loading' || uiState === 'reconnecting') && (
 				<div style={overlayStyle}>
 					<h1>{statusMessage}</h1> {/* Mostramos "Buscando oponente..." */}
 				</div>
 			)}
 
+			{/* PANTALLA: El rival se cayó */}
+			{uiState === 'waiting_opponent' && (
+				<div style={overlayStyle}>
+					<h1>⏸️ Pausa</h1>
+					<p style={{ fontSize: '1.2em' }}>{statusMessage}</p>
+				</div>
+			)}
 			{uiState === 'countdown' && (
 				<div style={{ ...overlayStyle, backgroundColor: 'transparent' }}>
 					<h1 style={{ fontSize: '6em', color: countdown === 0 ? '#FFFF00' : 'white', textShadow: '2px 2px 4px #000' }}>

@@ -7,7 +7,6 @@ import {
 	ListItemAvatar,
 	Typography,
 	Alert,
-	CircularProgress,
 	Divider
 } from '@mui/material';
 
@@ -17,6 +16,7 @@ import {
 	StyledDialog,
 	PrimaryAuthButton
 } from "@/style/AuthModalStyle";
+import { Loading } from "@/components/ui/Loading";
 
 interface User {
 	id: number;
@@ -45,6 +45,7 @@ export const UserList = ({ open, onClose }: Props) => {
 
 		setLoading(true);
 		try {
+			await new Promise(resolve => setTimeout(resolve, 1000));
 			const response = await fetch(`${BASE_URL}/api/user`, {
 				method: 'GET',
 				headers: {
@@ -104,38 +105,48 @@ export const UserList = ({ open, onClose }: Props) => {
 
 				{/* BOTÓN REFRESH (Estilo PrimaryAuthButton) */}
 				<PrimaryAuthButton onClick={fetchUsers} disabled={loading} sx={{ mb: 3 }}>
-					{loading ? <CircularProgress size={24} color="inherit" /> : "Refresh List"}
+					{loading ? (
+						<Loading variant="spinner" size="sm" />
+					) : (
+						"Refresh List"
+					)}
 				</PrimaryAuthButton>
-
-				{/* LISTA DE USUARIOS CON ESTILO */}
+				{/* LISTA DE USUARIOS */}
 				<Box sx={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #333', borderRadius: 2 }}>
 					<List>
-						{users.map((user, index) => (
-							<Box key={user.id}>
-								<ListItem>
+						{loading ? (
+							// MODO SKELETON: Mostramos 5 filas de carga
+							[...Array(5)].map((_, i) => (
+								<ListItem key={`skeleton-${i}`}>
 									<ListItemAvatar>
-										<UserAvatar
-											name={user.username}
-											src={undefined} // O user.avatarUrl si tu backend ya lo devuelve
-											size={40}
-										/>
+										<Loading variant="circle" size="md" /> {/* Skeleton para el Avatar */}
 									</ListItemAvatar>
 									<ListItemText
-										primary={
-											<Typography variant="subtitle1" fontWeight="bold">
-												{user.username}
-											</Typography>
-										}
-										secondary={user.email}
+										primary={<Loading variant="skeleton" size="md" sx={{ mb: 1 }} />}
+										secondary={<Loading variant="skeleton" size="sm" sx={{ width: 120 }} />}
 									/>
 								</ListItem>
-								{index < users.length - 1 && <Divider component="li" />}
-							</Box>
-						))}
+							))
+						) : (
+							// MODO DATOS: Mostramos la lista real
+							users.map((user, index) => (
+								<Box key={user.id}>
+									<ListItem>
+										<ListItemAvatar>
+											<UserAvatar name={user.username} size={40} />
+										</ListItemAvatar>
+										<ListItemText
+											primary={<Typography fontWeight="bold">{user.username}</Typography>}
+											secondary={user.email}
+										/>
+									</ListItem>
+									{index < users.length - 1 && <Divider component="li" />}
+								</Box>
+							))
+						)}
+
 						{!loading && users.length === 0 && !error && (
-							<Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
-								No users found.
-							</Typography>
+							<Typography sx={{ p: 2, textAlign: 'center' }}>No users found.</Typography>
 						)}
 					</List>
 				</Box>

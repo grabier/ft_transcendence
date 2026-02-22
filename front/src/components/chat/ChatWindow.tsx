@@ -14,17 +14,25 @@ import TimerIcon from '@mui/icons-material/Timer';
 
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { ProfileFriend } from '@/components/social/ProfileFriend';
 
 
 // --- COMPONENTE BURBUJA DE INVITACIÓN ---
-const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boolean, score?: number }) => {
+const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boolean, score?: number }) => {
 	const navigate = useNavigate();
 	const pointsToWin = score || 5;
 	const { t } = useTranslation();
 
+	let inviteData = { id: content, status: 'pending', result: null as string | null };
+	try {
+		const parsed = JSON.parse(content);
+		if (parsed.id) inviteData = parsed;
+	} catch (e) {
+		inviteData.id = content;
+	}
 	const handleJoinGame = () => {
-		navigate(`/?mode=pvp&roomId=${gameId}&score=${pointsToWin}`);
+		navigate(`/?mode=pvp&roomId=${inviteData.id}&score=${pointsToWin}`);
 	};
 
 	return (
@@ -47,30 +55,45 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 					</Typography>
 				</Stack>
 
-				<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
-					{isMe
-						? t('chatWindow.proposedMatch', { points: pointsToWin })
-						: t('chatWindow.challengedTo', { points: pointsToWin })}
-				</Typography>
+				{/* SI LA PARTIDA TERMINÓ, MOSTRAMOS RESULTADO */}
+				{inviteData.status === 'finished' ? (
+					<Box sx={{ mt: 1, p: 1, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2, textAlign: 'center', width: '100%' }}>
+						<Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.8 }}>
+							Partida finalizada
+						</Typography>
+						<Typography variant="h5" fontWeight="bold">
+							🏆 {inviteData.result}
+						</Typography>
+					</Box>
+				) : (
+					/* SI ESTÁ PENDIENTE, MOSTRAMOS BOTÓN DE ENTRAR */
+					<>
+						<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
+							{isMe
+								? t('chatWindow.proposedMatch', { points: pointsToWin })
+								: t('chatWindow.challengedTo', { points: pointsToWin })}
+						</Typography>
 
-				<Button
-					variant={isMe ? "outlined" : "contained"}
-					color={isMe ? "inherit" : "primary"}
-					fullWidth
-					size="small"
-					onClick={handleJoinGame}
-					sx={{
-						mt: 1,
-						fontWeight: 'bold',
-						bgcolor: isMe ? 'transparent' : 'black',
-						color: isMe ? 'white' : '#f1c40f',
-						'&:hover': {
-							bgcolor: isMe ? 'rgba(255,255,255,0.1)' : '#333'
-						}
-					}}
-				>
-					{isMe ? t('chatWindow.enterRoom') : t('chatWindow.acceptPoints', { points: pointsToWin })}
-				</Button>
+						<Button
+							variant={isMe ? "outlined" : "contained"}
+							color={isMe ? "inherit" : "primary"}
+							fullWidth
+							size="small"
+							onClick={handleJoinGame}
+							sx={{
+								mt: 1,
+								fontWeight: 'bold',
+								bgcolor: isMe ? 'transparent' : 'black',
+								color: isMe ? 'white' : '#f1c40f',
+								'&:hover': {
+									bgcolor: isMe ? 'rgba(255,255,255,0.1)' : '#333'
+								}
+							}}
+						>
+							{isMe ? t('chatWindow.enterRoom') : t('chatWindow.acceptPoints', { points: pointsToWin })}
+						</Button>
+					</>
+				)}
 			</Stack>
 		</Paper>
 	);
@@ -79,7 +102,7 @@ const GameInviteBubble = ({ gameId, isMe, score }: { gameId: string, isMe: boole
 // --- CHAT WINDOW PRINCIPAL ---
 export const ChatWindow = () => {
 	const { t } = useTranslation();
-	const { activeChat, messages, sendMessage, closeChat } = useChat();
+	const { activeChat, messages, sendMessage, closeChat, sendTyping, typingChats } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
 
@@ -91,6 +114,8 @@ export const ChatWindow = () => {
 	const openMenu = Boolean(anchorEl);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	if (!activeChat) return null;
+	const isTyping = typingChats[activeChat.id] || false;
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -142,16 +167,16 @@ export const ChatWindow = () => {
 					<IconButton size="small" onClick={closeChat} sx={{ color: 'white', mr: 1 }}>
 						<ArrowBackIcon />
 					</IconButton>
-					
+
 					{/* --- 3. AVATAR CLICABLE --- */}
-					<Avatar 
-						src={activeChat.otherUser.avatar_url} 
-						sx={{ 
-							width: 32, 
-							height: 32, 
+					<Avatar
+						src={activeChat.otherUser.avatar_url}
+						sx={{
+							width: 32,
+							height: 32,
 							cursor: 'pointer', // Indicador visual de click
-							'&:hover': { opacity: 0.8 } 
-						}} 
+							'&:hover': { opacity: 0.8 }
+						}}
 						onClick={() => setProfileOpen(true)} // Abre el perfil
 					/>
 					<Typography variant="subtitle2" color="white" fontWeight="bold">
@@ -177,7 +202,7 @@ export const ChatWindow = () => {
 						<Box key={msg.id} sx={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', mb: 2 }}>
 							{msg.type === 'game_invite' ? (
 								<GameInviteBubble
-									gameId={msg.content}
+									content={msg.content}
 									isMe={isMe}
 									score={msg.invite_score}
 								/>
@@ -195,17 +220,31 @@ export const ChatWindow = () => {
 									<Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
 										{msg.content}
 									</Typography>
+									{isMe && (
+										<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+											<DoneAllIcon sx={{
+												fontSize: 14,
+												// Si está leído, azul brillante, si no, gris clarito
+												color: msg.is_read ? '#4fc3f7' : 'rgba(255,255,255,0.6)'
+											}} />
+										</Box>
+									)}
 								</Paper>
 							)}
 						</Box>
 					);
 				})}
+				{isTyping && (
+					<Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', ml: 2, mb: 1 }}>
+						{activeChat.otherUser.username} {t('chatWindow.isTyping', 'está escribiendo...')}
+					</Typography>
+				)}
 				<div ref={messagesEndRef} />
 			</Box>
 
 			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
-<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
+				<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
 					<VideogameAssetIcon />
 				</IconButton>
 
@@ -218,25 +257,28 @@ export const ChatWindow = () => {
 				>
 					<MenuItem onClick={() => handleInvite(3)}>
 						<ListItemIcon><SpeedIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.quickMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(5)}>
-					<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.standardMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(11)}>
-					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.longMatch')}</ListItemText>
-				</MenuItem>
-				<MenuItem onClick={() => handleInvite(21)}>
-					<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
-					<ListItemText>{t('chatWindow.marathonMatch')}</ListItemText>
+						<ListItemText>{t('chatWindow.quickMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(5)}>
+						<ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.standardMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(11)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.longMatch')}</ListItemText>
+					</MenuItem>
+					<MenuItem onClick={() => handleInvite(21)}>
+						<ListItemIcon><TimerIcon fontSize="small" /></ListItemIcon>
+						<ListItemText>{t('chatWindow.marathonMatch')}</ListItemText>
 					</MenuItem>
 				</Menu>
 
 				<TextField
-				fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
+					onChange={(e) => {
+						setInputText(e.target.value);
+						sendTyping();
+					}}
 					onKeyDown={(e) => e.key === 'Enter' && handleSend()}
 					sx={{ '& .MuiOutlinedInput-root': { borderRadius: 5 } }}
 				/>
@@ -246,10 +288,11 @@ export const ChatWindow = () => {
 			</Box>
 
 			{/* --- 4. RENDERIZADO DEL PERFIL --- */}
-			<ProfileFriend 
-				open={profileOpen} 
-				onClose={() => setProfileOpen(false)} 
-				friend={activeChat.otherUser} 
+			<ProfileFriend
+				open={profileOpen}
+				onClose={() => setProfileOpen(false)}
+				friend={activeChat.otherUser}
+				onActionSuccess={() => { closeChat(); }}
 			/>
 		</Box>
 	);

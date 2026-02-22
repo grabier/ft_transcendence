@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
-import { Snackbar, Alert } from "@mui/material";
+// 1. Importamos nuestro nuevo componente genérico y su tipo
+import Notification, { NotificationType } from "@/components/ui/Notification"; 
 
-import AuthErrorNotification from "@/components/auth/AuthErrorNotification";
-
-// Definimos qué funciones "regalamos" al resto de la app
 interface NotificationContextType {
     notifySuccess: (message: string) => void;
     notifyError: (message: string) => void;
+    // 2. Añadimos soporte para info y warning
+    notifyInfo: (message: string) => void;
+    notifyWarning: (message: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -21,45 +22,49 @@ export const useNotification = () => {
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 	
-    // --- ESTADOS (Movidos desde Header.tsx) ---
-    const [successMsg, setSuccessMsg] = useState({ open: false, message: "" });
-    const [errorMsg, setErrorMsg] = useState({ open: false, message: "" });
+    // 3. ESTADO UNIFICADO: Un solo objeto controla qué se muestra y cómo
+    const [notification, setNotification] = useState<{
+        open: boolean;
+        message: string;
+        type: NotificationType;
+    }>({
+        open: false,
+        message: "",
+        type: "info" // Valor por defecto
+    });
 
-    // --- FUNCIONES (Simplificadas) ---
+    // 4. FUNCIONES: Todas actualizan el mismo estado, solo cambian el 'type'
     const notifySuccess = useCallback((message: string) => {
-        setSuccessMsg({ open: true, message });
-    }, []); // Array vacío: la función nunca cambia su referencia
-
-    const notifyError = useCallback((message: string) => {
-        setErrorMsg({ open: true, message });
+        setNotification({ open: true, message, type: "success" });
     }, []);
 
-    const handleCloseSuccess = () => setSuccessMsg({ ...successMsg, open: false });
-    const handleCloseError = () => setErrorMsg({ ...errorMsg, open: false });
+    const notifyError = useCallback((message: string) => {
+        setNotification({ open: true, message, type: "error" });
+    }, []);
+
+    const notifyInfo = useCallback((message: string) => {
+        setNotification({ open: true, message, type: "info" });
+    }, []);
+
+    const notifyWarning = useCallback((message: string) => {
+        setNotification({ open: true, message, type: "warning" });
+    }, []);
+
+    // 5. Cierre unificado
+    const handleClose = () => {
+        setNotification(prev => ({ ...prev, open: false }));
+    };
 
     return (
-        <NotificationContext.Provider value={{ notifySuccess, notifyError }}>
+        <NotificationContext.Provider value={{ notifySuccess, notifyError, notifyInfo, notifyWarning }}>
             {children}
 
-            {/* --- RENDERIZADO GLOBAL DE ALERTAS --- */}
-            
-            {/* 1. Alerta Verde (Snackbar estándar) */}
-            <Snackbar 
-                open={successMsg.open} 
-                autoHideDuration={4000} 
-                onClose={handleCloseSuccess} 
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert severity="success" sx={{ width: '100%', fontWeight: 'bold' }}>
-                    {successMsg.message}
-                </Alert>
-            </Snackbar>
-
-            {/* 2. Alerta Roja (Tu componente personalizado) */}
-            <AuthErrorNotification 
-                open={errorMsg.open} 
-                message={errorMsg.message} 
-                onClose={handleCloseError} 
+            {/* 6. RENDERIZADO GLOBAL: Un solo componente súper limpio */}
+            <Notification 
+                open={notification.open} 
+                message={notification.message} 
+                type={notification.type}
+                onClose={handleClose} 
             />
 
         </NotificationContext.Provider>

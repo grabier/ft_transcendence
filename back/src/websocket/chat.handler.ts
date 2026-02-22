@@ -34,7 +34,12 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			[receiverId, senderId, senderId, receiverId]
 		);
 
-		if (blockCheck.length > 0) {
+		const [isfriend]: any = await pool.execute(
+			`SELECT 1 FROM friendships WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`,
+			[receiverId, senderId, senderId, receiverId]
+		);
+
+		if (blockCheck.length > 0 || isfriend.length < 1) {
 			console.log(`🚫 Mensaje bloqueado de ${senderId} a ${receiverId}`);
 			return;
 		}
@@ -45,14 +50,26 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		// Si es invitación y no mandan score, ponemos 5 por defecto.
 		// Si es texto normal, forzamos NULL.
 		let inviteScore = null;
+		let finalContent = content;
+
 		console.log(`🚫 🚫 🚫 🚫 🚫 🚫 Score: ${score}`);
 		if (type === 'game_invite') {
 			inviteScore = score || 5;
 		}
 
+		if (type === 'game_invite') {
+			inviteScore = score || 5;
+			// Formateamos el contenido como JSON
+			finalContent = JSON.stringify({ 
+				id: content, 
+				status: 'pending', 
+				result: null 
+			});
+		}
+
 		const [result]: any = await pool.execute(
 			'INSERT INTO messages (dm_id, sender_id, content, type, invite_score) VALUES (?, ?, ?, ?, ?)',
-			[dmId, senderId, content, type, inviteScore]
+			[dmId, senderId, finalContent, type, inviteScore]
 		);
 
 		const createdAt = new Date().toISOString();
@@ -68,7 +85,7 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 			sender_id: senderId,
 			username: sender.username,
 			avatar_url: sender.avatar_url,
-			content: content,
+			content: finalContent,
 			type: type,
 			created_at: createdAt,
 			invite_score: inviteScore
@@ -80,4 +97,33 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 	} catch (error) {
 		console.error("🔥 Error handling chat message:", error);
 	}
+};
+
+//typing indicators
+export const handleTyping = async (senderId: number, payload: { dmId: number }) => {
+	const { dmId } = payload;
+	const [rows]: any = await pool.execute('SELECT user1_id, user2_id FROM direct_messages WHERE id = ?', [dmId]);
+	if (rows.length === 0) return;
+	
+	const receiverId = rows[0].user1_id === senderId ? rows[0].user2_id : rows[0].user1_id;
+	// Le rebotamos el evento al receptor
+	socketManager.notifyUser(receiverId, 'TYPING', { dmId, senderId });
+};
+
+//read receipts
+export const handleMarkAsRead = async (userId: number, payload: { dmId: number }) => {
+	const { dmId } = payload;
+	
+	// Marcamos en BBDD todos los mensajes NO leídos de esta sala que NO sean míos
+	await pool.execute(
+		'UPDATE messages SET is_read = TRUE WHERE dm_id = ? AND sender_id != ? AND is_read = FALSE',
+		[dmId, userId]
+	);
+
+	// Avisamos al emisor original de que ya los he leído para que le salga el check azul
+	const [rows]: any = await pool.execute('SELECT user1_id, user2_id FROM direct_messages WHERE id = ?', [dmId]);
+	if (rows.length === 0) return;
+
+	const receiverId = rows[0].user1_id === userId ? rows[0].user2_id : rows[0].user1_id;
+	socketManager.notifyUser(receiverId, 'MESSAGES_READ', { dmId });
 };

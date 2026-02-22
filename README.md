@@ -9,10 +9,21 @@ MODULES: WEB
 - Major Websockets(falta chat) (Efficient message broadcasting.)
 - 
 
+-----------TODOLIST-----------
+- añadir tres en raya o cambiar el gamepanel
+- poner avatares en el juego
+- añadir a mecki
+- recconect y pausa en el juego
+- cambiar invites en el chat cuando se acaba la partida
+- terms of service
+- about us con el github de cada uno
+- readme 
+- limpieza general
+- console warnings
 
 
 
------------TERMINADO-----------18 points
+-----------TERMINADO-----------19 points
 2 - Use a framework for both the frontend and backend
 2 - Implement real-time features using WebSockets or similar technology.
 2 - Allow users to interact with other users.
@@ -23,11 +34,11 @@ MODULES: WEB
 2 - Standard user management and authentication.(falta lo del upload avatar)
 1 - Implement remote authentication with OAuth 2.0
 1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)
+1 - Support for multiple languages
 
 ----------EN PROGRESO----------5 points
-2 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
+1 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
 1 - Custom-made design system with reusable components, including a proper color palette, typography, and icons(hay que hacer cuentas de cuantos tenemos)
-1 - Support for multiple languages
 
 -----------NO EMPEZADO----------------8 points
 2 - Multiplayer game (more than two players).

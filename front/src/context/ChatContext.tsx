@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 import { DM, Message } from '@/types/chat';
 import { useSocket } from '@/context/SocketContext';
@@ -19,6 +19,9 @@ interface ChatContextType {
 	sendMessage: (content: string, points: number, type?: 'text' | 'game_invite') => void;
 	closeChat: () => void;
 	refreshChats: () => void;
+	typingChats: Record<number, boolean>;
+	sendTyping: () => void;
+	markAsRead: (dmId: number) => void;
 }
 
 const ChatContext = createContext<ChatContextType>({} as any);
@@ -33,6 +36,26 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const [activeChat, setActiveChat] = useState<DM | null>(null);
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [typingChats, setTypingChats] = useState<Record<number, boolean>>({});
+	const typingTimeouts = useRef<Record<number, NodeJS.Timeout>>({});
+
+	const activeChatRef = useRef<DM | null>(null);
+	useEffect(() => {
+		activeChatRef.current = activeChat;
+	}, [activeChat]);
+
+	const sendTyping = useCallback(() => {
+		if (!socket || !activeChat) return;
+		socket.send(JSON.stringify({ type: 'TYPING', payload: { dmId: activeChat.id } }));
+	}, [socket, activeChat]);
+
+	const markAsRead = useCallback((dmId: number) => {
+		if (!socket) return;
+		socket.send(JSON.stringify({ type: 'MARK_AS_READ', payload: { dmId } }));
+
+		// Actualización optimista: marcamos como leídos los que recibí yo
+		setMessages(prev => prev.map(m => m.sender_id !== user?.id ? { ...m, is_read: true } : m));
+	}, [socket, user]);
 
 	// 1. CARGAR LISTA DE CHATS (SIDEBAR)
 	const fetchChats = useCallback(async () => {
@@ -98,6 +121,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 			setActiveChat(activeDM);
 			setMessages(msgsData);
+			//marrcamos leido
+			markAsRead(data.dmId);
 
 			// Recargamos la lista por si era un chat nuevo que ahora debe aparecer
 			if (data.isNew)
@@ -134,24 +159,52 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		const handleSocketMessage = (event: MessageEvent) => {
 			try {
 				const data = JSON.parse(event.data);
+				const currentChat = activeChatRef.current;
 
 				if (data.type === 'NEW_MESSAGE' || data.type === 'MESSAGE_SENT_OK') {
 					const newMsg = data.payload as Message;
 
 					// Si tengo este chat abierto, lo pinto
-					if (activeChat && newMsg.dm_id === activeChat.id) {
+					if (currentChat && newMsg.dm_id === currentChat.id) {
 						setMessages(prev => [...prev, newMsg]);
+
+						// Si es un mensaje de la otra persona, le avisamos que lo leí
+						if (data.type === 'NEW_MESSAGE') {
+							markAsRead(currentChat.id);
+						}
 					}
 
 					// SIEMPRE actualizamos la lista lateral para poner el "Último mensaje"
 					fetchChats();
+				}
+				else if (data.type === 'TYPING') {
+					const { dmId } = data.payload;
+					setTypingChats(prev => ({ ...prev, [dmId]: true }));
+
+					// Limpiar el "Escribiendo..." después de 3 segundos si deja de teclear
+					if (typingTimeouts.current[dmId]) clearTimeout(typingTimeouts.current[dmId]);
+					typingTimeouts.current[dmId] = setTimeout(() => {
+						setTypingChats(prev => ({ ...prev, [dmId]: false }));
+					}, 3000);
+				}
+				else if (data.type === 'MESSAGES_READ') {
+					// El otro leyó mis mensajes, pongo los checks azules en mi UI
+					if (currentChat && currentChat.id === data.payload.dmId) {
+						setMessages(prev => prev.map(m => m.sender_id === user?.id ? { ...m, is_read: true } : m));
+					}
+				}
+				else if (data.type === 'INVITE_UPDATED') {
+					const updatedMsg = data.payload;
+					if (currentChat && currentChat.id === updatedMsg.dm_id) {
+						setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
+					}
 				}
 			} catch (e) { }
 		};
 
 		socket.addEventListener('message', handleSocketMessage);
 		return () => socket.removeEventListener('message', handleSocketMessage);
-	}, [socket, activeChat, fetchChats]);
+	}, [socket, fetchChats, markAsRead, user]);
 
 	//limpieza
 	useEffect(() => {
@@ -166,7 +219,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const closeChat = () => setActiveChat(null);
 
 	return (
-		<ChatContext.Provider value={{ chats, activeChat, messages, isLoading, selectChat, sendMessage, closeChat, refreshChats: fetchChats }}>
+		<ChatContext.Provider value={{
+			chats, activeChat, messages, isLoading, selectChat,
+			sendMessage, closeChat, refreshChats: fetchChats,
+			typingChats, sendTyping, markAsRead
+		}}>
 			{children}
 		</ChatContext.Provider>
 	);
