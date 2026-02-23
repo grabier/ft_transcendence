@@ -10,6 +10,7 @@ interface Player {
 	id: number;
 	username: string;
 	socket: WebSocket;
+	avatarUrl: string;
 	side: 'left' | 'right' | 'spectator' | 'both'; // Añadimos 'both' para local
 }
 
@@ -25,7 +26,7 @@ interface Room {
 
 const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	const rooms = new Map<string, Room>();
-	const waitingQueue: { socket: WebSocket, score: number, userId: number, username: string }[] = [];
+	const waitingQueue: { socket: WebSocket, score: number, userId: number, username: string, avatarUrl: string }[] = [];
 
 	fastify.get('/', {
 		websocket: true,
@@ -42,10 +43,10 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 		if (!token) { socket.close(1008, "Token requerido"); return; }
 
-		let user: { id: number, username: string };
+		let user: { id: number, username: string, avatarUrl: string };
 		try {
 			const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
-			user = { id: decoded.id, username: decoded.username };
+			user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
 		} catch (e) { socket.close(1008, "Token inválido"); return; }
 
 		// Leemos el modo. Si viene 'local', usaremos esa lógica.
@@ -114,13 +115,15 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				const elapsed = Math.floor((Date.now() - existingRoom.pauseStartTime) / 1000);
 				pauseTimeLeft = Math.max(0, 30 - elapsed);
 			}
-			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus }));
+			const playersData = getRoomPlayersData(existingRoom);
+			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
 			const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
 
 			if (connectedOpponent) {
 				// Avisamos al rival mandándole también el status
-				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus }));
+				const playersData = getRoomPlayersData(existingRoom);
+				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
 
 				// Si había pausa táctica, NO reanudamos. Si no, cuenta atrás normal.
 				if (existingRoom.pauseTimeout) {
@@ -135,6 +138,34 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 				existingRoom.disconnectTimeout = setTimeout(() => {
 					console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
+					(async () => {
+					try {
+						const searchString = `%"id":"${roomId}"%`;
+						const [msgRows]: any = await pool.execute(
+							`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+							[searchString]
+						);
+
+						if (msgRows.length > 0) {
+							const inviteMsg = msgRows[0];
+							const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
+							console.log(`scoreeeeee: ${finalResult}`);
+							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+							await pool.execute(
+								`UPDATE messages SET content = ? WHERE id = ?`,
+								[newContent, inviteMsg.id]
+							);
+
+							const updatedMessage = { ...inviteMsg, content: newContent };
+							existingRoom.players.forEach(p => {
+								socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+							});
+						}
+					} catch (err) {
+						console.error("Error actualizando invitación de chat:", err);
+					}
+				})();
 					existingRoom.game.stopGame(playerSide as 'left' | 'right');
 					socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
 					destroyRoom(existingRoom.id);
@@ -189,15 +220,15 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					if (opponent && opponent.socket.readyState === 1) {
 						roomId = `room_${opponent.userId}_vs_${user.id}_${Date.now()}`;
 						createRoom(roomId, scoreToWin, 'pvp');
-						joinRoom(roomId, opponent.socket, 'left', { id: opponent.userId, username: opponent.username });
+						joinRoom(roomId, opponent.socket, 'left', { id: opponent.userId, username: opponent.username, avatarUrl: opponent.avatarUrl });
 						joinRoom(roomId, socket, 'right', user);
 						startGame(roomId);
 					} else {
-						waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username });
+						waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username, avatarUrl: user.avatarUrl });
 						socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando oponente...' }));
 					}
 				} else {
-					waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username });
+					waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username, avatarUrl: user.avatarUrl });
 					socket.send(JSON.stringify({ type: 'STATUS', message: 'Buscando partida...' }));
 				}
 			}
@@ -239,7 +270,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 										room.game.resumeGame();
 										room.pauseTimeout = null;
 										room.pauseStartTime = null;
-										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
+										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...'})));
 									}
 								}, 30000);
 							} else {
@@ -309,6 +340,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					} else {
 						room.game.stopGame();
 					}
+					room.game.state.status = 'ended';
 					destroyRoom(room.id);
 				}, 15000);
 			}
@@ -323,23 +355,50 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		rooms.set(id, { id, game, players: [], interval: null, disconnectTimeout: null, pauseTimeout: null, pauseStartTime: null });
 	}
 
-	function joinRoom(roomId: string, socket: WebSocket, side: any, userData: { id: number, username: string }) {
+	function joinRoom(roomId: string, socket: WebSocket, side: any, userData: { id: number, username: string, avatarUrl: string }) {
 		const room = rooms.get(roomId);
 		if (room) {
-			room.players.push({ id: userData.id, username: userData.username, socket, side });
+			room.players.push({ id: userData.id, username: userData.username, avatarUrl: userData.avatarUrl, socket, side });
 			// ❌ QUITAMOS el envío de SIDE_ASSIGNED de aquí para evitar que empiece la cuenta atrás prematura
 		}
+	}
+
+	// Construye los perfiles dependiendo del modo de juego
+	function getRoomPlayersData(room: Room) {
+		let leftName = 'Player 1', leftAvatar = '';
+		let rightName = 'Player 2', rightAvatar = '';
+
+		if (room.game.gameMode === 'local' as any) {
+			const p = room.players[0];
+			leftName = `${p.username} (P1)`; leftAvatar = p.avatarUrl;
+			rightName = `${p.username} (P2)`; rightAvatar = p.avatarUrl;
+		} else if (room.game.gameMode === 'ai') {
+			const p = room.players[0];
+			leftName = p.username; leftAvatar = p.avatarUrl;
+			rightName = 'Skynet 🤖'; rightAvatar = 'https://api.dicebear.com/7.x/bottts/svg?seed=skynet';
+		} else {
+			const pLeft = room.players.find(p => p.side === 'left');
+			const pRight = room.players.find(p => p.side === 'right');
+			if (pLeft) { leftName = pLeft.username; leftAvatar = pLeft.avatarUrl; }
+			if (pRight) { rightName = pRight.username; rightAvatar = pRight.avatarUrl; }
+		}
+
+		return {
+			left: { username: leftName, avatarUrl: leftAvatar },
+			right: { username: rightName, avatarUrl: rightAvatar }
+		};
 	}
 
 	function startGame(roomId: string) {
 		const room = rooms.get(roomId);
 		if (!room) return;
+		const playersData = getRoomPlayersData(room);
 
 		// 1. Mandamos SIDE_ASSIGNED a ambos a la vez 
 		room.players.forEach(p => {
 			if (p.socket.readyState === 1) {
 				// Aquí sí metemos el status: 'playing' para que el Front no se líe
-				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id, status: 'playing' }));
+				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id, status: 'playing', playersData }));
 			}
 		});
 
@@ -374,6 +433,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						if (msgRows.length > 0) {
 							const inviteMsg = msgRows[0];
 							const finalResult = `${state.paddleLeft.score} - ${state.paddleRight.score}`;
+							console.log(`scoreeeeee: ${finalResult}`);
 							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
 
 							await pool.execute(

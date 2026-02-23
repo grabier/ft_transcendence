@@ -13,7 +13,7 @@ MODULES: WEB
 - añadir tres en raya o cambiar el gamepanel
 - poner avatares en el juego
 - añadir a mecki
-- recconect y pausa en el juego
+- recconect y pausa en el juego (done)
 - cambiar invites en el chat cuando se acaba la partida (done)
 - terms of service
 - about us con el github de cada uno

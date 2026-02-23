@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import {SearchingGameLoading} from '../ui/SearchingGameLoading';
+import { Box } from '@mui/material';
 
 // Tipos para las props del componente
 interface PongGameProps {
@@ -40,6 +42,11 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	const [winnerText, setWinnerText] = useState('');
 	const [statusMessage, setStatusMessage] = useState('Connecting...');
 	const [pauseTimer, setPauseTimer] = useState<number | null>(null);
+
+	const [playersInfo, setPlayersInfo] = useState<{
+		left: { username: string, avatarUrl: string },
+		right: { username: string, avatarUrl: string }
+	} | null>(null);
 
 	// --- FUNCIONES AUXILIARES ---
 	const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
@@ -152,6 +159,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 			socket.onmessage = (event) => {
 				try {
 					const msg = JSON.parse(event.data);
+					if (msg.playersData) setPlayersInfo(msg.playersData);
 
 					// 1. GESTIÓN DE COLA (Mensajes de estado)
 					if (msg.type === 'STATUS') {
@@ -223,6 +231,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						setStatusMessage(msg.message);
 					}
 					if (msg.type === 'OPPONENT_RECONNECTED') {
+						if (msg.playersData) setPlayersInfo(msg.playersData);
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -328,11 +337,40 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 	return (
 		<div style={{ /* ... estilos container ... */ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, margin: '0 auto', border: '2px solid white', boxSizing: 'content-box' }}>
+			{/* HUD CON NOMBRES Y AVATARES */}
+			{playersInfo && (
+				<div style={{
+					position: 'absolute', top: 20, left: 0, width: '100%',
+					display: 'flex', justifyContent: 'space-between', padding: '0 40px',
+					boxSizing: 'border-box', color: 'white', fontFamily: 'Arial, sans-serif',
+					pointerEvents: 'none', zIndex: 5 /* Por encima del canvas */
+				}}>
+					{/* Jugador Izquierda */}
+					<div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+						<img src={playersInfo.left.avatarUrl} alt="P1"
+							style={{ width: 50, height: 50, borderRadius: '50%', border: '2px solid white', backgroundColor: '#333' }} />
+						<span style={{ fontSize: '1.5em', fontWeight: 'bold', textShadow: '2px 2px 4px #000' }}>
+							{playersInfo.left.username}
+						</span>
+					</div>
+
+					{/* Jugador Derecha (invertimos dirección para que el avatar quede hacia el borde) */}
+					<div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexDirection: 'row-reverse' }}>
+						<img src={playersInfo.right.avatarUrl} alt="P2"
+							style={{ width: 50, height: 50, borderRadius: '50%', border: '2px solid white', backgroundColor: '#333' }} />
+						<span style={{ fontSize: '1.5em', fontWeight: 'bold', textShadow: '2px 2px 4px #000' }}>
+							{playersInfo.right.username}
+						</span>
+					</div>
+				</div>
+			)}
 			<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', backgroundColor: 'black' }} />
 
-			{(uiState === 'loading' || uiState === 'reconnecting') && (
+			{uiState === 'loading' && (
 				<div style={overlayStyle}>
-					<h1>{statusMessage}</h1> {/* Mostramos "Buscando oponente..." */}
+					<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+							<SearchingGameLoading />
+						</Box>
 				</div>
 			)}
 
