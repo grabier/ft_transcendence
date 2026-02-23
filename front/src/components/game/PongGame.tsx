@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {SearchingGameLoading} from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 
 // Tipos para las props del componente
 interface PongGameProps {
@@ -19,6 +20,15 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
 	const isGameEndedRef = useRef(false); // Ref para controlar el fin de juego sin stale closures
+	const location = useLocation(); 
+	const initialLocationKey = useRef(location.key);
+	useEffect(() => {
+		// Si la 'key' de la URL cambia (React Router detecta que hemos ido atrás o a otra página)
+		if (location.key !== initialLocationKey.current) {
+			console.log("Navegación detectada por React Router. Saliendo del juego limpiamente...");
+			onExit();
+		}
+	}, [location.key, onExit]);
 
 	// Posiciones actuales (Lo que se dibuja)
 	const currentPos = useRef({
@@ -134,6 +144,21 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	}, []);
 
 	// --- EFECTO PRINCIPAL (Montaje y Conexión) ---
+	useEffect(() => {
+		const handlePopState = (event: PopStateEvent) => {
+			console.log("Navegación hacia atrás detectada. Saliendo del juego...");
+			onExit();
+		};
+
+		// Escuchamos cuando el usuario pulsa las flechas del navegador
+		window.addEventListener('popstate', handlePopState);
+
+		// Limpiamos el listener al desmontar
+		return () => {
+			window.removeEventListener('popstate', handlePopState);
+		};
+	}, [onExit]);
+
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
 		let isComponentUnmounted = false;

@@ -137,7 +137,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
 
 				existingRoom.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
+					console.log(`💀 1Fin del tiempo de gracia en sala ${existingRoom.id}.`);
 					(async () => {
 					try {
 						const searchString = `%"id":"${roomId}"%`;
@@ -332,7 +332,35 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			if (!room.disconnectTimeout) {
 				room.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 Fin del tiempo de gracia en sala ${room.id}.`);
+					console.log(`💀 2Fin del tiempo de gracia en sala ${room.id}.`);
+					(async () => {
+					try {
+						const searchString = `%"id":"${roomId}"%`;
+						const [msgRows]: any = await pool.execute(
+							`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+							[searchString]
+						);
+
+						if (msgRows.length > 0) {
+							const inviteMsg = msgRows[0];
+							const finalResult = `${room.game.state.paddleLeft.score} - ${room.game.state.paddleRight.score}`;
+							console.log(`scoreeeeee: ${finalResult}`);
+							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+							await pool.execute(
+								`UPDATE messages SET content = ? WHERE id = ?`,
+								[newContent, inviteMsg.id]
+							);
+
+							const updatedMessage = { ...inviteMsg, content: newContent };
+							room.players.forEach(p => {
+								socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+							});
+						}
+					} catch (err) {
+						console.error("Error actualizando invitación de chat:", err);
+					}
+				})();
 					const connectedPlayer = room.players.find(p => p.socket.readyState === 1);
 					if (connectedPlayer) {
 						room.game.stopGame(connectedPlayer.side as 'left' | 'right');
@@ -340,7 +368,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					} else {
 						room.game.stopGame();
 					}
-					room.game.state.status = 'ended';
 					destroyRoom(room.id);
 				}, 15000);
 			}
