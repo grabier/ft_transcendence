@@ -336,14 +336,16 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	};
 
 	return (
-		<div style={{ /* ... estilos container ... */ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, margin: '0 auto', border: '2px solid white', boxSizing: 'content-box' }}>
-			{/* HUD CON NOMBRES Y AVATARES */}
+		// 1. NUEVO CONTENEDOR PRINCIPAL (Flexbox en columna)
+		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: CANVAS_WIDTH, margin: '0 auto' }}>
+			
+			{/* 2. HUD CON NOMBRES Y AVATARES (Ahora fluye de forma natural arriba) */}
 			{playersInfo && (
 				<div style={{
-					position: 'absolute', top: 20, left: 0, width: '100%',
-					display: 'flex', justifyContent: 'space-between', padding: '0 40px',
+					width: '100%',
+					display: 'flex', justifyContent: 'space-between', padding: '10px 20px',
 					boxSizing: 'border-box', color: 'white', fontFamily: 'Arial, sans-serif',
-					pointerEvents: 'none', zIndex: 5 /* Por encima del canvas */
+					marginBottom: '15px' // Separación entre el HUD y la pista de Pong
 				}}>
 					{/* Jugador Izquierda */}
 					<div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -354,7 +356,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						</span>
 					</div>
 
-					{/* Jugador Derecha (invertimos dirección para que el avatar quede hacia el borde) */}
+					{/* Jugador Derecha */}
 					<div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexDirection: 'row-reverse' }}>
 						<img src={playersInfo.right.avatarUrl} alt="P2"
 							style={{ width: 50, height: 50, borderRadius: '50%', border: '2px solid white', backgroundColor: '#333' }} />
@@ -364,69 +366,76 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 					</div>
 				</div>
 			)}
-			<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', backgroundColor: 'black' }} />
 
-			{uiState === 'loading' && (
-				<div style={overlayStyle}>
-					<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-							<SearchingGameLoading />
+			{/* 3. CONTENEDOR DEL JUEGO (Canvas + Overlays) */}
+			<div style={{ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, border: '2px solid white', boxSizing: 'content-box' }}>
+				
+				<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', backgroundColor: 'black' }} />
+
+				{uiState === 'loading' && (
+					<div style={overlayStyle}>
+						<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+								<SearchingGameLoading />
 						</Box>
-				</div>
-			)}
+					</div>
+				)}
 
-			{/* PANTALLA: El rival se cayó */}
-			{uiState === 'waiting_opponent' && (
-				<div style={overlayStyle}>
-					<h1>⏸️ Pausa</h1>
-					<p style={{ fontSize: '1.2em' }}>{statusMessage}</p>
-				</div>
-			)}
-			{uiState === 'countdown' && (
-				<div style={{ ...overlayStyle, backgroundColor: 'transparent' }}>
-					<h1 style={{ fontSize: '6em', color: countdown === 0 ? '#FFFF00' : 'white', textShadow: '2px 2px 4px #000' }}>
-						{countdown === 0 ? 'GO!' : countdown}
-					</h1>
-				</div>
-			)}
-			{/* PANTALLA DE PAUSA */}
-			{uiState === 'paused' && (
-				<div style={overlayStyle}>
-					<h1 style={{ fontSize: '5em', letterSpacing: '10px', margin: 0 }}>PAUSE</h1>
+				{/* PANTALLA: El rival se cayó */}
+				{uiState === 'waiting_opponent' && (
+					<div style={overlayStyle}>
+						<h1>⏸️ Pausa</h1>
+						<p style={{ fontSize: '1.2em' }}>{statusMessage}</p>
+					</div>
+				)}
+				
+				{uiState === 'countdown' && (
+					<div style={{ ...overlayStyle, backgroundColor: 'transparent' }}>
+						<h1 style={{ fontSize: '6em', color: countdown === 0 ? '#FFFF00' : 'white', textShadow: '2px 2px 4px #000' }}>
+							{countdown === 0 ? 'GO!' : countdown}
+						</h1>
+					</div>
+				)}
+				
+				{/* PANTALLA DE PAUSA */}
+				{uiState === 'paused' && (
+					<div style={overlayStyle}>
+						<h1 style={{ fontSize: '5em', letterSpacing: '10px', margin: 0 }}>PAUSE</h1>
 
-					{mode === 'pvp' ? (
-						<>
-							<p style={{ fontSize: '1.2em', opacity: 0.8, marginTop: '20px' }}>
-								{statusMessage}
-							</p>
-							{/* El cronómetro gigante */}
-							{pauseTimer !== null && (
-								<h2 style={{
-									fontSize: '4em',
-									marginTop: '10px',
-									color: pauseTimer <= 5 ? '#ff4444' : '#f1c40f', // Se pone rojo al final
-									textShadow: '2px 2px 4px #000'
-								}}>
-									{pauseTimer}s
-								</h2>
-							)}
-						</>
-					) : (
-						<p style={{ fontSize: '1.2em', opacity: 0.8 }}>Pulsa P o ESC para continuar</p>
-					)}
-				</div>
-			)}
+						{mode === 'pvp' ? (
+							<>
+								<p style={{ fontSize: '1.2em', opacity: 0.8, marginTop: '20px' }}>
+									{statusMessage}
+								</p>
+								{/* El cronómetro gigante */}
+								{pauseTimer !== null && (
+									<h2 style={{
+										fontSize: '4em',
+										marginTop: '10px',
+										color: pauseTimer <= 5 ? '#ff4444' : '#f1c40f',
+										textShadow: '2px 2px 4px #000'
+									}}>
+										{pauseTimer}s
+									</h2>
+								)}
+							</>
+						) : (
+							<p style={{ fontSize: '1.2em', opacity: 0.8 }}>Pulsa P o ESC para continuar</p>
+						)}
+					</div>
+				)}
 
-			{uiState === 'ended' && (
-				<div style={overlayStyle}>
-					<h1 style={{ fontSize: '3em', marginBottom: '20px' }}>{winnerText}</h1>
-					<button style={{ ...buttonStyle, backgroundColor: '#fff', color: '#000' }} onClick={handleRestart}>
-						JUGAR OTRA VEZ
-					</button>
-					<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
-						SALIR AL MENÚ
-					</button>
-				</div>
-			)}
+				{uiState === 'ended' && (
+					<div style={overlayStyle}>
+						<h1 style={{ fontSize: '3em', marginBottom: '20px' }}>{winnerText}</h1>
+						<button style={{ ...buttonStyle, backgroundColor: '#fff', color: '#000' }} onClick={handleRestart}>
+							JUGAR OTRA VEZ
+						</button>
+						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
+							SALIR AL MENÚ
+						</button>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };
