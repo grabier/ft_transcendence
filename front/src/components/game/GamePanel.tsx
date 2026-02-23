@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 
 import ButtonGame from '@/components/ui/GameButton';
 import { PongPanel } from '@/components/game/PongPanel';
-import { BreakerPanel } from '@/components/game/BreakPanel';
+import { SnakePanel } from '@/components/game/SnakePanel';
 
 interface GamePanelProps {
   title: string;
@@ -69,7 +69,7 @@ const GamePanel: React.FC<GamePanelProps> = ({
         {isLeft ? (
             <PongPanel isActive={isActive} /> 
         ) : (
-            <BreakerPanel isActive={isActive} />
+            <SnakePanel isActive={isActive} />
         )}
       </Box>
 

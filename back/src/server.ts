@@ -10,6 +10,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import authRoutes from './apis/auth.api.js';
 import userRoutes from './apis/user.api.js';
 import gameRoutes from './apis/game.api.js';
+import snakeRoutes from './apis/snake.api.js'; // <- 1. 🐍 AÑADIMOS LA IMPORTACIÓN
 import friendRoutes from './apis/friend.api.js';
 import wsRoutes from './apis/ws.api.js';
 import chatRoutes from './apis/chat.api.js';
@@ -114,6 +115,7 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 	await app.register(authRoutes, { prefix: API_ROUTES.auth });
 	await app.register(userRoutes, { prefix: API_ROUTES.user });
 	await app.register(gameRoutes, { prefix: API_ROUTES.game });
+	await app.register(snakeRoutes, { prefix: API_ROUTES.snake }); // <- 2. 🐍 REGISTRAMOS LA RUTA
 	await app.register(friendRoutes, { prefix: API_ROUTES.friend });
 	await app.register(wsRoutes, { prefix: API_ROUTES.ws });
 	await app.register(chatRoutes, { prefix: API_ROUTES.chat });
