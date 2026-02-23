@@ -35,10 +35,11 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 	});
 
 	// --- ESTADO REACT (UI) ---
-	const [uiState, setUiState] = useState<'loading' | 'countdown' | 'playing' | 'ended' | 'reconnecting' | 'waiting_opponent'>('loading');
+	const [uiState, setUiState] = useState<'loading' | 'countdown' | 'playing' | 'ended' | 'reconnecting' | 'waiting_opponent' | 'paused'>('loading');
 	const [countdown, setCountdown] = useState(3);
 	const [winnerText, setWinnerText] = useState('');
 	const [statusMessage, setStatusMessage] = useState('Connecting...');
+	const [pauseTimer, setPauseTimer] = useState<number | null>(null);
 
 	// --- FUNCIONES AUXILIARES ---
 	const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
@@ -170,7 +171,12 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 							);
 						}
 
-						startCountdownSequence();
+						if (msg.status === 'paused') {
+							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
+							setUiState('paused');
+						} else {
+							startCountdownSequence();
+						}
 					}
 
 					if (msg.type === 'UPDATE') {
@@ -192,6 +198,18 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						serverTarget.current.paddleLeft.score = s.paddleLeft.score;
 						serverTarget.current.paddleRight.score = s.paddleRight.score;
 
+						//pausa
+						setUiState((prev) => {
+							if (s.status === 'paused' && prev === 'playing') return 'paused';
+							if (s.status === 'playing' && prev === 'paused') return 'playing';
+							return prev;
+						});
+
+						if (s.status === 'paused') {
+							setPauseTimer(msg.pauseTimeLeft !== undefined ? msg.pauseTimeLeft : null);
+						} else {
+							setPauseTimer(null);
+						}
 						if (s.status === 'ended' && !isGameEndedRef.current) {
 							isGameEndedRef.current = true;
 							let text = s.winner === 'left' ? "P1 WINS" : "P2 WINS";
@@ -205,7 +223,12 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						setStatusMessage(msg.message);
 					}
 					if (msg.type === 'OPPONENT_RECONNECTED') {
-						startCountdownSequence();
+						if (msg.status === 'paused') {
+							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
+							setUiState('paused');
+						} else {
+							startCountdownSequence();
+						}
 					}
 				} catch (e) { console.error(e); }
 			};
@@ -251,6 +274,13 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (["ArrowUp", "ArrowDown", " "].includes(e.key)) e.preventDefault();
+			//pausa al pulsar p o esc
+			if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+				if (socketRef.current?.readyState === WebSocket.OPEN) {
+					socketRef.current.send(JSON.stringify({ type: 'PAUSE' }));
+				}
+				return;
+			}
 			if (keysPressed[e.key]) return;
 			keysPressed[e.key] = true;
 			sendInput('PRESS', e.key);
@@ -318,6 +348,33 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 					<h1 style={{ fontSize: '6em', color: countdown === 0 ? '#FFFF00' : 'white', textShadow: '2px 2px 4px #000' }}>
 						{countdown === 0 ? 'GO!' : countdown}
 					</h1>
+				</div>
+			)}
+			{/* PANTALLA DE PAUSA */}
+			{uiState === 'paused' && (
+				<div style={overlayStyle}>
+					<h1 style={{ fontSize: '5em', letterSpacing: '10px', margin: 0 }}>PAUSE</h1>
+
+					{mode === 'pvp' ? (
+						<>
+							<p style={{ fontSize: '1.2em', opacity: 0.8, marginTop: '20px' }}>
+								{statusMessage}
+							</p>
+							{/* El cronómetro gigante */}
+							{pauseTimer !== null && (
+								<h2 style={{
+									fontSize: '4em',
+									marginTop: '10px',
+									color: pauseTimer <= 5 ? '#ff4444' : '#f1c40f', // Se pone rojo al final
+									textShadow: '2px 2px 4px #000'
+								}}>
+									{pauseTimer}s
+								</h2>
+							)}
+						</>
+					) : (
+						<p style={{ fontSize: '1.2em', opacity: 0.8 }}>Pulsa P o ESC para continuar</p>
+					)}
 				</div>
 			)}
 

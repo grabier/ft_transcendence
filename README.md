@@ -14,7 +14,7 @@ MODULES: WEB
 - poner avatares en el juego
 - añadir a mecki
 - recconect y pausa en el juego
-- cambiar invites en el chat cuando se acaba la partida
+- cambiar invites en el chat cuando se acaba la partida (done)
 - terms of service
 - about us con el github de cada uno
 - readme 

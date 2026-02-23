@@ -19,6 +19,8 @@ interface Room {
 	players: Player[];
 	interval: NodeJS.Timeout | null;
 	disconnectTimeout: NodeJS.Timeout | null;
+	pauseTimeout: NodeJS.Timeout | null;
+	pauseStartTime: number | null;
 }
 
 const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
@@ -106,13 +108,27 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (playerSide === 'left') existingRoom.game.inputs.left = { up: false, down: false };
 			if (playerSide === 'right') existingRoom.game.inputs.right = { up: false, down: false };
 
-			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id }));
+			const currentStatus = existingRoom.pauseTimeout ? 'paused' : 'playing';
+			let pauseTimeLeft = 30;
+			if (existingRoom.pauseTimeout && existingRoom.pauseStartTime) {
+				const elapsed = Math.floor((Date.now() - existingRoom.pauseStartTime) / 1000);
+				pauseTimeLeft = Math.max(0, 30 - elapsed);
+			}
+			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus }));
+
 			const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
 
 			if (connectedOpponent) {
-				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!' }));
-				socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
-				setTimeout(() => { existingRoom.game.resumeGame(); }, 3000);
+				// Avisamos al rival mandándole también el status
+				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus }));
+
+				// Si había pausa táctica, NO reanudamos. Si no, cuenta atrás normal.
+				if (existingRoom.pauseTimeout) {
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida sigue en pausa táctica.' }));
+				} else {
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
+					setTimeout(() => { existingRoom.game.resumeGame(); }, 3000);
+				}
 			} else {
 				socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
 				socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
@@ -193,6 +209,58 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (!room) return;
 			try {
 				const message = JSON.parse(rawData.toString());
+				if (message.type === 'PAUSE') {
+					if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
+						if (room.game.state.status === 'playing') room.game.pauseGame();
+						else if (room.game.state.status === 'paused') room.game.resumeGame();
+					} else {
+						// --- MODO PVP ---
+						const player = room.players.find(p => p.socket === socket);
+						if (!player) return;
+
+						if (room.game.state.status === 'playing') {
+							// 1. Intentar pausar
+							if (room.game.state.pauses[player.side as 'left' | 'right'] > 0) {
+								room.game.state.pauses[player.side as 'left' | 'right']--;
+								room.game.state.pausedBy = player.side as 'left' | 'right';
+								room.game.pauseGame();
+								room.pauseStartTime = Date.now();
+
+								// Avisamos a todos
+								room.players.forEach(p => p.socket.send(JSON.stringify({
+									type: 'STATUS',
+									message: `⏸️ Pausa táctica de ${player.username} (Máx 30s)`
+								})));
+
+								// Arrancamos el cronómetro de 30 segundos
+								room.pauseTimeout = setTimeout(() => {
+									if (room.game.state.status === 'paused') {
+										room.game.state.pausedBy = null;
+										room.game.resumeGame();
+										room.pauseTimeout = null;
+										room.pauseStartTime = null;
+										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
+									}
+								}, 30000);
+							} else {
+								// Si ya gastó su pausa, le avisamos solo a él
+								socket.send(JSON.stringify({ type: 'STATUS', message: '❌ Ya has gastado tu pausa.' }));
+							}
+						} else if (room.game.state.status === 'paused' && room.game.state.pausedBy === player.side) {
+							// 2. Quitar tu propia pausa antes de tiempo
+							if (room.pauseTimeout) {
+								clearTimeout(room.pauseTimeout);
+								room.pauseTimeout = null;
+								room.pauseStartTime = null;
+							}
+							room.game.state.pausedBy = null;
+							room.game.resumeGame();
+							room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
+						}
+					}
+					return;
+				}
+
 				if (message.type === 'INPUT') {
 					if (room.game.gameMode === 'local' as any) {
 						room.game.handleInput(message.key, message.action);
@@ -252,7 +320,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const game = new PongGame();
 		game.winningScore = score;
 		game.gameMode = mode as any;
-		rooms.set(id, { id, game, players: [], interval: null, disconnectTimeout: null });
+		rooms.set(id, { id, game, players: [], interval: null, disconnectTimeout: null, pauseTimeout: null, pauseStartTime: null });
 	}
 
 	function joinRoom(roomId: string, socket: WebSocket, side: any, userData: { id: number, username: string }) {
@@ -267,22 +335,30 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const room = rooms.get(roomId);
 		if (!room) return;
 
-		// ✅ NUEVO: Mandamos SIDE_ASSIGNED a ambos a la vez, justo cuando la sala está llena.
-		// Esto sincroniza la cuenta atrás en los dos ordenadores al milisegundo.
+		// 1. Mandamos SIDE_ASSIGNED a ambos a la vez 
 		room.players.forEach(p => {
 			if (p.socket.readyState === 1) {
-				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id }));
+				// Aquí sí metemos el status: 'playing' para que el Front no se líe
+				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id, status: 'playing' }));
 			}
 		});
 
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
+		// 2. Bucle de físicas (60 FPS)
 		room.interval = setInterval(() => {
 			const state = room.game.state;
-			const updateMsg = JSON.stringify({ type: 'UPDATE', state });
+			let currentPauseTimeLeft: number | undefined = undefined;
+			if (state.status === 'paused' && room.pauseStartTime) {
+				const elapsed = Math.floor((Date.now() - room.pauseStartTime) / 1000);
+				currentPauseTimeLeft = Math.max(0, 30 - elapsed);
+			}
+			const updateMsg = JSON.stringify({ type: 'UPDATE', state, pauseTimeLeft: currentPauseTimeLeft });
 
 			room.players.forEach(p => {
-				if (p.socket.readyState === 1) p.socket.send(updateMsg);
+				if (p.socket.readyState === 1) {
+					p.socket.send(updateMsg);
+				}
 			});
 
 			if (state.status === 'ended') {
