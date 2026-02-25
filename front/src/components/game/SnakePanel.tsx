@@ -1,92 +1,112 @@
-import React, { useMemo } from 'react';
-import { Box, keyframes } from '@mui/material';
-
-// Animación principal para el movimiento de la cabeza y el cuerpo
-const movePerimeter = keyframes`
-  0% { top: 10%; left: 10%; }
-  25% { top: 10%; left: 85%; }
-  50% { top: 85%; left: 85%; }
-  75% { top: 85%; left: 10%; }
-  100% { top: 10%; left: 10%; }
-`;
-
-// Animación para un efecto de "comida" parpadeante
-const pulseFood = keyframes`
-  0%, 100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 10px rgba(0,255,100,0.2); }
-  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 20px rgba(0,255,100,0.8); }
-`;
+import React, { useEffect, useRef } from 'react';
+import { Box } from '@mui/material';
 
 interface SceneProps {
-    isActive: boolean;
+	isActive: boolean;
 }
 
 export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
-    // Generamos los segmentos de la serpiente. 
-    // Cada segmento tendrá un pequeño retraso en la animación para crear el efecto de cola.
-    const snakeSegments = useMemo(() => Array.from({ length: 8 }).map((_, i) => ({
-        id: i,
-        delay: `-${i * 0.15}s`, // Retraso negativo para que sigan a la cabeza
-        opacity: 1 - (i * 0.1),  // Se difumina hacia el final de la cola
-        size: Math.max(10, 20 - i), // La cola se hace un poco más estrecha
-    })), []);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    return (
-        <Box sx={{ 
-            position: 'absolute', 
-            inset: 0, 
-            width: '100%', 
-            height: '100%', 
-            overflow: 'hidden', 
-            pointerEvents: 'none',
-            bgcolor: 'transparent'
-        }}>
-            {/* Grid de fondo estilo Tron/Arcade */}
-            <Box sx={{
-                position: 'absolute', inset: 0,
-                backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-                zIndex: 0,
-                opacity: isActive ? 1 : 0.2,
-                transition: 'opacity 700ms',
-            }} />
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
 
-            {/* La Serpiente */}
-            {snakeSegments.map((segment) => (
-                <Box
-                    key={segment.id}
-                    sx={{
-                        position: 'absolute',
-                        width: segment.size,
-                        height: segment.size,
-                        bgcolor: 'white',
-                        boxShadow: segment.id === 0 ? '0 0 20px white' : 'none', // Solo la cabeza brilla fuerte
-                        borderRadius: '2px',
-                        animation: isActive ? `${movePerimeter} 8s linear infinite` : 'none',
-                        animationDelay: segment.delay,
-                        opacity: isActive ? segment.opacity : 0.3,
-                        transition: 'opacity 500ms',
-                        zIndex: 10,
-                        marginLeft: '-10px',
-                        marginTop: '-10px',
-                    }}
-                />
-            ))}
+		let animationFrameId: number;
+		let lastTime = 0;
 
-            {/* Comida de la serpiente (Manzana virtual) */}
-            <Box sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: 16,
-                height: 16,
-                bgcolor: '#00ff66',
-                borderRadius: '50%',
-                animation: isActive ? `${pulseFood} 1.5s ease-in-out infinite` : 'none',
-                opacity: isActive ? 1 : 0.1,
-                transition: 'opacity 500ms',
-                zIndex: 5,
-                transform: 'translate(-50%, -50%)'
-            }} />
-        </Box>
-    );
+		const FPS = 12;
+		const interval = 1000 / FPS;
+		const gridSize = 20;
+
+		let snake = [{ x: 10, y: 15 }, { x: 9, y: 15 }, { x: 8, y: 15 }];
+		let food = { x: 25, y: 15 };
+		let dx = 1; let dy = 0;
+
+		const spawnFood = (cols: number, rows: number) => {
+			food = {
+				x: Math.floor(Math.random() * cols),
+				y: Math.floor(Math.random() * rows)
+			};
+		};
+
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (let entry of entries) {
+				canvas.width = entry.contentRect.width;
+				canvas.height = entry.contentRect.height;
+
+				// Si la pantalla se achica y la comida queda fuera, la recolocamos
+				const cols = Math.floor(canvas.width / gridSize);
+				const rows = Math.floor(canvas.height / gridSize);
+				if (food.x >= cols || food.y >= rows) spawnFood(cols, rows);
+			}
+		});
+		if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
+
+		const gameLoop = (time: number) => {
+			animationFrameId = requestAnimationFrame(gameLoop);
+			if (!isActive || canvas.width === 0) return;
+
+			const deltaTime = time - lastTime;
+			if (deltaTime < interval) return;
+			lastTime = time - (deltaTime % interval);
+
+			const cols = Math.floor(canvas.width / gridSize);
+			const rows = Math.floor(canvas.height / gridSize);
+
+			// IA CEBADA
+			const head = snake[0];
+			if (head.x < food.x && dx === 0) { dx = 1; dy = 0; }
+			else if (head.x > food.x && dx === 0) { dx = -1; dy = 0; }
+			else if (head.y < food.y && dy === 0) { dx = 0; dy = 1; }
+			else if (head.y > food.y && dy === 0) { dx = 0; dy = -1; }
+
+			let newHead = { x: head.x + dx, y: head.y + dy };
+
+			if (newHead.x >= cols) newHead.x = 0;
+			if (newHead.x < 0) newHead.x = cols - 1;
+			if (newHead.y >= rows) newHead.y = 0;
+			if (newHead.y < 0) newHead.y = rows - 1;
+
+			snake.unshift(newHead);
+
+			if (newHead.x === food.x && newHead.y === food.y) {
+				spawnFood(cols, rows);
+			} else {
+				snake.pop();
+			}
+
+			// RENDERIZADO
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			ctx.fillStyle = '#00ff66';
+			ctx.shadowBlur = 15;
+			ctx.shadowColor = '#00ff66';
+			ctx.fillRect(food.x * gridSize + 2, food.y * gridSize + 2, gridSize - 4, gridSize - 4);
+
+			snake.forEach((segment, index) => {
+				const isHead = index === 0;
+				ctx.fillStyle = isHead ? '#ffffff' : '#00ff66';
+				ctx.shadowBlur = isHead ? 15 : 5;
+				ctx.shadowColor = isHead ? '#ffffff' : '#00ff66';
+				ctx.fillRect(segment.x * gridSize + 1, segment.y * gridSize + 1, gridSize - 2, gridSize - 2);
+			});
+			ctx.shadowBlur = 0;
+		};
+
+		animationFrameId = requestAnimationFrame(gameLoop);
+
+		return () => {
+			cancelAnimationFrame(animationFrameId);
+			resizeObserver.disconnect();
+		};
+	}, [isActive]);
+
+	return (
+		<Box sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
+			<canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+		</Box>
+	);
 });
