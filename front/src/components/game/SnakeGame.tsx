@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { SearchingGameLoading } from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 interface SnakeGameProps {
 	mode: 'pvp' | 'ai' | 'local';
@@ -13,67 +13,33 @@ interface SnakeGameProps {
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const GRID_SIZE = 20; // Tamaño de cada bloque de la cuadrícula (40 columnas x 30 filas)
+const GRID_SIZE = 20;
 
-// Estructura esperada del servidor
 interface Point { x: number; y: number }
 interface SnakeState {
-	body: Point[]; // Array de coordenadas, el índice 0 es la cabeza
+	body: Point[];
 	score: number;
 	color: string;
 }
 
 const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
-	// --- REFS (Memoria rápida) ---
+	const [searchParams, setSearchParams] = useSearchParams();
+
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
 	const isGameEndedRef = useRef(false);
 
-	const location = useLocation();
-	const initialLocationKey = useRef(location.key);
-
-	useEffect(() => {
-		// 1. Inyectamos un estado falso al entrar para engañar al navegador
-		if (!window.history.state?.isGame) {
-			const currentState = window.history.state || {};
-			window.history.pushState({ ...currentState, isGame: true }, '', window.location.href);
-		}
-
-		const handlePopState = () => {
-			// 2. Si el usuario pulsa la flecha de Atrás, mandamos el mensaje
-			if (socketRef.current?.readyState === WebSocket.OPEN && !isGameEndedRef.current) {
-				socketRef.current.send(JSON.stringify({ type: 'SURRENDER' }));
-				// Le damos 100ms al servidor para recibir la rendición antes de "cortar el cable"
-				setTimeout(() => onExit(), 100); 
-			} else {
-				onExit();
-			}
-		};
-
-		window.addEventListener('popstate', handlePopState);
-		return () => window.removeEventListener('popstate', handlePopState);
-	}, [onExit]);
-
-	// 3. El botón físico de salir ahora simplemente engaña al navegador y simula una flecha de Atrás
-	const handleManualExit = () => {
-		window.history.back(); 
-	};
-
-	// Estado del juego (Lo que nos manda el servidor)
 	const gameState = useRef({
 		snakeLeft: { body: [{ x: 10, y: 15 }], score: 0, color: '#00ff66' } as SnakeState,
-		snakeRight: { body: [{ x: 30, y: 15 }], score: 0, color: '#ff0066' } as SnakeState, // Para PVP
+		snakeRight: { body: [{ x: 30, y: 15 }], score: 0, color: '#ff0066' } as SnakeState,
 		food: { x: 20, y: 15 } as Point
 	});
 
-	// --- ESTADO REACT (UI) ---
 	const [uiState, setUiState] = useState<'loading' | 'countdown' | 'playing' | 'ended' | 'reconnecting' | 'waiting_opponent' | 'paused'>('loading');
 	const [countdown, setCountdown] = useState(3);
 	const [winnerText, setWinnerText] = useState('');
 	const [statusMessage, setStatusMessage] = useState('Connecting...');
-	const [activeRoomId, setActiveRoomId] = useState<string | undefined>(roomId);
-	const [restartKey, setRestartKey] = useState(0);
 	const [pauseTimer, setPauseTimer] = useState<number | null>(null);
 
 	const [playersInfo, setPlayersInfo] = useState<{
@@ -92,7 +58,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 			if (count <= 0) {
 				clearInterval(interval);
 				setTimeout(() => {
-					// Solo pasamos a 'playing' si el juego NO ha terminado mientras contábamos
 					if (!isGameEndedRef.current) setUiState('playing');
 				}, 500);
 			}
@@ -103,7 +68,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 		if (socketRef.current) socketRef.current.close(1000, "Restarting");
 		onRestart();
 	};
-	// --- BUCLE DE JUEGO (Game Loop) ---
+
 	const gameLoop = useCallback(() => {
 		if (!canvasRef.current) return;
 		const ctx = canvasRef.current.getContext('2d');
@@ -111,11 +76,9 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 		const state = gameState.current;
 
-		// 1. DIBUJADO (Render)
 		ctx.fillStyle = '#0a0a0a';
 		ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		// Cuadrícula sutil
 		ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
 		ctx.lineWidth = 1;
 		for (let i = 0; i <= CANVAS_WIDTH; i += GRID_SIZE) {
@@ -125,7 +88,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 			ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(CANVAS_WIDTH, i); ctx.stroke();
 		}
 
-		// Marcadores
 		ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
 		ctx.font = 'bold 80px "Montserrat", sans-serif';
 		ctx.textAlign = 'center';
@@ -142,26 +104,21 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 			ctx.shadowBlur = 0;
 		};
 
-		// Comida (Manzana)
 		drawBlock(state.food.x, state.food.y, '#ffffff', true);
 
-		// Serpiente Izquierda (P1)
 		state.snakeLeft.body.forEach((segment, index) => {
 			drawBlock(segment.x, segment.y, state.snakeLeft.color, index === 0);
 		});
 
-		// Serpiente Derecha (P2 / IA)
 		if (mode !== 'local' || state.snakeRight.body.length > 1) {
 			state.snakeRight.body.forEach((segment, index) => {
 				drawBlock(segment.x, segment.y, state.snakeRight.color, index === 0);
 			});
 		}
 
-		// 2. Solicitar siguiente frame
 		reqIdRef.current = requestAnimationFrame(gameLoop);
 	}, [mode]);
 
-	// --- EFECTO PRINCIPAL (Montaje y Conexión) ---
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
 		let isComponentUnmounted = false;
@@ -170,7 +127,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 		const connectWebSocket = () => {
 			if (isComponentUnmounted) return;
-			const socket = new WebSocket(`wss://${host}:3000/api/snake/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${activeRoomId || ''}`);
+			const socket = new WebSocket(`wss://${host}:3000/api/snake/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
 			socketRef.current = socket;
 
 			socket.onopen = () => {
@@ -191,16 +148,20 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					}
 
 					if (msg.type === 'SIDE_ASSIGNED') {
-						console.log("Partida encontrada o reanudada. Soy:", msg.side);
-
 						if (msg.roomId) {
-							const currentState = window.history.state || {}; 
-							window.history.replaceState(
-								currentState, 
-								'',
-								`/?mode=${mode}&roomId=${msg.roomId}&score=${scoreToWin}`
-							);
+							setSearchParams(prev => {
+								if (prev.get('roomId') !== msg.roomId) {
+									const newParams = new URLSearchParams(prev);
+									newParams.set('game', 'snake');
+									newParams.set('mode', mode);
+									newParams.set('roomId', msg.roomId);
+									newParams.set('score', scoreToWin.toString());
+									return newParams;
+								}
+								return prev;
+							}, { replace: true });
 						}
+
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -269,7 +230,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 		}
 		connectWebSocket();
 
-		// 2. Listeners de Teclado
 		const keysPressed: Record<string, boolean> = {};
 		const sendInput = (action: string, key: string) => {
 			if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -298,7 +258,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
 
-			// Pausa
 			if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
 				if (socketRef.current?.readyState === WebSocket.OPEN) {
 					socketRef.current.send(JSON.stringify({ type: 'PAUSE' }));
@@ -321,18 +280,23 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 		reqIdRef.current = requestAnimationFrame(gameLoop);
 
+		// --- LIMPIEZA TOTAL: SE EJECUTA AL DARLE A LA FLECHA ATRÁS ---
 		return () => {
-			// Limpieza total incondicional
 			isComponentUnmounted = true;
 			clearTimeout(reconnectTimeout);
+			
+			if (socketRef.current?.readyState === WebSocket.OPEN && !isGameEndedRef.current) {
+				socketRef.current.send(JSON.stringify({ type: 'SURRENDER' }));
+			}
+
 			if (socketRef.current) socketRef.current.close();
 			cancelAnimationFrame(reqIdRef.current);
 			window.removeEventListener('keydown', handleKeyDown);
 			window.removeEventListener('keyup', handleKeyUp);
 		};
-	}, [mode, scoreToWin, gameLoop, activeRoomId, restartKey]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [mode, scoreToWin, gameLoop]);
 
-	// --- RENDERIZADO UI (Superposiciones HTML) ---
 	const overlayStyle: React.CSSProperties = {
 		position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
 		backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column',
@@ -347,7 +311,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: CANVAS_WIDTH, margin: '0 auto' }}>
 
-			{/* HUD CON NOMBRES Y AVATARES (Separado del juego) */}
 			{playersInfo && (
 				<div style={{
 					width: '100%',
@@ -355,7 +318,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					boxSizing: 'border-box', color: 'white', fontFamily: 'Arial, sans-serif',
 					marginBottom: '15px'
 				}}>
-					{/* Jugador Izquierda */}
 					<div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
 						<img src={playersInfo.left.avatarUrl} alt="P1"
 							style={{ width: 50, height: 50, borderRadius: '50%', border: '2px solid white', backgroundColor: '#333' }} />
@@ -364,7 +326,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 						</span>
 					</div>
 
-					{/* Jugador Derecha */}
 					<div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexDirection: 'row-reverse' }}>
 						<img src={playersInfo.right.avatarUrl} alt="P2"
 							style={{ width: 50, height: 50, borderRadius: '50%', border: '2px solid white', backgroundColor: '#333' }} />
@@ -375,7 +336,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 				</div>
 			)}
 
-			{/* CONTENEDOR DEL JUEGO (Canvas + Overlays) */}
 			<div style={{ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, border: '2px solid rgba(0, 255, 102, 0.5)', boxSizing: 'content-box', boxShadow: '0 0 20px rgba(0, 255, 102, 0.2)' }}>
 
 				<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block' }} />
@@ -402,7 +362,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					</div>
 				)}
 
-				{/* PANTALLA DE PAUSA */}
 				{uiState === 'paused' && (
 					<div style={overlayStyle}>
 						<h1 style={{ fontSize: '5em', letterSpacing: '10px', margin: 0 }}>PAUSE</h1>
@@ -435,8 +394,8 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 						<button style={{ ...buttonStyle, backgroundColor: '#00ff66', color: '#000' }} onClick={handleRestart}>
 							PLAY AGAIN
 						</button>
-						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={handleManualExit}>
-							EXIT TO MENU
+						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
+							SALIR AL MENÚ
 						</button>
 					</div>
 				)}
