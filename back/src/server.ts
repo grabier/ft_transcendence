@@ -78,8 +78,8 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 				description: 'API del mejor Pong de 42 Málaga',
 				version: '1.0.0'
 			},
-			host: 'localhost:3000', // O tu IP si quieres ser estricto
-			schemes: ['http', 'https'],
+			host: '10.11.4.1:3000', // O tu IP si quieres ser estricto
+			schemes: ['https', 'http'],
 			consumes: ['application/json'],
 			produces: ['application/json'],
 			securityDefinitions: {

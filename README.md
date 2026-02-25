@@ -23,6 +23,8 @@ MODULES: WEB
 - añadir a mecki (done)
 - recconect y pausa en el juego (done)
 - cambiar invites en el chat cuando se acaba la partida (done)
+- Cuando seleccionas cualquier modalidad de juego (AI, Local o 1V1), en el modal que aparece a continuación siempre aparece Modo: 1 vs 1
+- Las partidas no arranca, no hay cuenta atrás
 
 
 
