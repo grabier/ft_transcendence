@@ -98,7 +98,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const playerIndex = existingRoom.players.findIndex(p => p.id === user.id);
 			const playerSide = existingRoom.players[playerIndex].side;
 
-			// Pisamos el socket fantasma si existía
 			const oldSocket = existingRoom.players[playerIndex].socket;
 			if (oldSocket && oldSocket !== socket && oldSocket.readyState === 1) {
 				oldSocket.close(1000, 'Replaced by new connection');
@@ -118,58 +117,69 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const playersData = getRoomPlayersData(existingRoom);
 			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
-			const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
-
-			if (connectedOpponent) {
-				// Avisamos al rival mandándole también el status
-				const playersData = getRoomPlayersData(existingRoom);
-				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
-
-				// Si había pausa táctica, NO reanudamos. Si no, cuenta atrás normal.
-				if (existingRoom.pauseTimeout) {
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida sigue en pausa táctica.' }));
-				} else {
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
-					setTimeout(() => { existingRoom.game.resumeGame(); }, 3000);
-				}
+			if (existingRoom.game.gameMode === 'local' as any || existingRoom.game.gameMode === 'ai') {
+				// Mantenemos el backend congelado 3.5s para que tu pantalla haga el "3, 2, 1, GO!" tranquilo
+				existingRoom.game.state.status = 'countdown' as any;
+				setTimeout(() => {
+					existingRoom.game.state.status = 'playing';
+					(existingRoom.game as any).lastTime = Date.now(); 
+				}, 3500);
 			} else {
-				socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
-				socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
+				// LÓGICA PVP REAL
+				const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
 
-				existingRoom.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 1Fin del tiempo de gracia en sala ${existingRoom.id}.`);
-					(async () => {
-					try {
-						const searchString = `%"id":"${roomId}"%`;
-						const [msgRows]: any = await pool.execute(
-							`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-							[searchString]
-						);
+				if (connectedOpponent) {
+					connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
 
-						if (msgRows.length > 0) {
-							const inviteMsg = msgRows[0];
-							const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
-							console.log(`scoreeeeee: ${finalResult}`);
-							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+					if (existingRoom.pauseTimeout) {
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida sigue en pausa táctica.' }));
+					} else {
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
+						// Sincronizamos el PVP también con los 3.5s
+						existingRoom.game.state.status = 'countdown' as any;
+						setTimeout(() => {
+							existingRoom.game.state.status = 'playing';
+							(existingRoom.game as any).lastTime = Date.now();
+						}, 3500);
+					}
+				} else {
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
+					socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
 
-							await pool.execute(
-								`UPDATE messages SET content = ? WHERE id = ?`,
-								[newContent, inviteMsg.id]
+					existingRoom.disconnectTimeout = setTimeout(() => {
+						console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
+						(async () => {
+						try {
+							const searchString = `%"id":"${roomId}"%`;
+							const [msgRows]: any = await pool.execute(
+								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+								[searchString]
 							);
 
-							const updatedMessage = { ...inviteMsg, content: newContent };
-							existingRoom.players.forEach(p => {
-								socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-							});
+							if (msgRows.length > 0) {
+								const inviteMsg = msgRows[0];
+								const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
+								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+								await pool.execute(
+									`UPDATE messages SET content = ? WHERE id = ?`,
+									[newContent, inviteMsg.id]
+								);
+
+								const updatedMessage = { ...inviteMsg, content: newContent };
+								existingRoom.players.forEach(p => {
+									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+								});
+							}
+						} catch (err) {
+							console.error("Error actualizando invitación de chat:", err);
 						}
-					} catch (err) {
-						console.error("Error actualizando invitación de chat:", err);
-					}
-				})();
-					existingRoom.game.stopGame(playerSide as 'left' | 'right');
-					socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
-					destroyRoom(existingRoom.id);
-				}, 15000);
+					})();
+						existingRoom.game.stopGame(playerSide as 'left' | 'right');
+						socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
+						destroyRoom(existingRoom.id);
+					}, 15000);
+				}
 			}
 		}
 		// --- FIN INTENTO RECONEXIÓN ---
@@ -341,8 +351,15 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			console.log(`⚠️ Jugador desconectado de la sala ${room.id}`);
 
+			// Pausamos el juego y damos 15s de gracia también a Local e IA
 			if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
-				destroyRoom(room.id);
+				room.game.pauseGame();
+				if (!room.disconnectTimeout) {
+					room.disconnectTimeout = setTimeout(() => {
+						console.log(`💀 Fin del tiempo de gracia en sala ${room.id} (Local/IA).`);
+						destroyRoom(room.id);
+					}, 15000);
+				}
 				return;
 			}
 
@@ -409,7 +426,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const room = rooms.get(roomId);
 		if (room) {
 			room.players.push({ id: userData.id, username: userData.username, avatarUrl: userData.avatarUrl, socket, side });
-			// ❌ QUITAMOS el envío de SIDE_ASSIGNED de aquí para evitar que empiece la cuenta atrás prematura
 		}
 	}
 

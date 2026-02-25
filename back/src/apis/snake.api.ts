@@ -96,6 +96,10 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 			existingRoom.players[playerIndex].socket = socket;
 
+			// Limpiar direcciones atascadas al reconectar
+			if (playerSide === 'left') existingRoom.game.inputs.left = { direction: { x: 1, y: 0 }, nextDirection: { x: 1, y: 0 } };
+			if (playerSide === 'right') existingRoom.game.inputs.right = { direction: { x: -1, y: 0 }, nextDirection: { x: -1, y: 0 } };
+
 			const currentStatus = existingRoom.pauseTimeout ? 'paused' : 'playing';
 			let pauseTimeLeft = 30;
 			if (existingRoom.pauseTimeout && existingRoom.pauseStartTime) {
@@ -105,53 +109,31 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const playersData = getRoomPlayersData(existingRoom);
 			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
-			const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
-			if (connectedOpponent) {
-				const playersData = getRoomPlayersData(existingRoom);
-				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
-				if (existingRoom.pauseTimeout) {
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'En pausa táctica.' }));
+			if (existingRoom.game.gameMode === 'local' as any || existingRoom.game.gameMode === 'ai') {
+				existingRoom.game.state.status = 'countdown' as any;
+				setTimeout(() => {
+					existingRoom.game.state.status = 'playing';
+				}, 3500);
+			} 
+			else {
+				// LÓGICA PVP REAL
+				const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
+				if (connectedOpponent) {
+					connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
+					if (existingRoom.pauseTimeout) {
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'En pausa táctica.' }));
+					} else {
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando...' }));
+						existingRoom.game.state.status = 'countdown' as any;
+						setTimeout(() => {
+							existingRoom.game.state.status = 'playing';
+						}, 3500);
+					}
 				} else {
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando...' }));
-					setTimeout(() => { existingRoom.game.resumeGame(); }, 3000);
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
+					socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
+					// El timeout ya está corriendo
 				}
-			} else {
-				socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
-				socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
-				/* existingRoom.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 1Fin del tiempo de gracia en sala ${existingRoom.id}.`);
-					(async () => {
-						try {
-							const searchString = `%"id":"${roomId}"%`;
-							const [msgRows]: any = await pool.execute(
-								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-								[searchString]
-							);
-
-							if (msgRows.length > 0) {
-								const inviteMsg = msgRows[0];
-								const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
-								console.log(`scoreeeeee: ${finalResult}`);
-								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-								await pool.execute(
-									`UPDATE messages SET content = ? WHERE id = ?`,
-									[newContent, inviteMsg.id]
-								);
-
-								const updatedMessage = { ...inviteMsg, content: newContent };
-								existingRoom.players.forEach(p => {
-									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-								});
-							}
-						} catch (err) {
-							console.error("Error actualizando invitación de chat:", err);
-						}
-					})();
-					existingRoom.game.stopGame(playerSide as 'left' | 'right');
-					socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
-					destroyRoom(existingRoom.id);
-				}, 15000); */
 			}
 		}
 		// --- FIN INTENTO RECONEXIÓN ---
@@ -218,18 +200,24 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			try {
 				const message = JSON.parse(rawData.toString());
 				if (message.type === 'SURRENDER') {
+					if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
+						room.game.stopGame();
+						destroyRoom(room.id);
+						return;
+					}
+
 					if (room.game.gameMode === 'pvp') {
 						const player = room.players.find(p => p.socket === socket);
 						if (player && room.game.state.status !== 'ended') {
 							const winnerSide = player.side === 'left' ? 'right' : 'left';
-							
+
+							// Usamos snakeLeft y snakeRight, no paddle
 							if (winnerSide === 'left') {
-								room.game.state.snakeLeft.score = room.game.winningScore;
+								room.game.state.snakeLeft.score = room.game.winningScore; 
 							} else {
-								room.game.state.snakeRight.score = room.game.winningScore;
+								room.game.state.snakeRight.score = room.game.winningScore; 
 							}
 
-							// Forzamos la actualización visual del rival al instante
 							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
 							room.players.forEach(p => {
 								if (p.socket.readyState === 1) p.socket.send(updateMsg);
@@ -256,17 +244,56 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		});
 
 		socket.on('close', () => {
-			// (Igual que en Pong, omitido por brevedad para centrarse en el bucle)
+			const idx = waitingQueue.findIndex(item => item.socket === socket);
+			if (idx !== -1) {
+				waitingQueue.splice(idx, 1);
+				return;
+			}
+
 			const room = getRoomBySocket(socket);
-			if (room) destroyRoom(room.id);
+			if (!room || room.game.state.status === 'ended') return;
+
+			console.log(`⚠️ Jugador desconectado de la sala Snake ${room.id}`);
+
+			// Pausamos el juego y damos 15s de gracia también a Local e IA
+			if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
+				room.game.pauseGame();
+				if (!room.disconnectTimeout) {
+					room.disconnectTimeout = setTimeout(() => {
+						console.log(`💀 Fin del tiempo de gracia en sala Snake ${room.id} (Local/IA).`);
+						destroyRoom(room.id);
+					}, 15000);
+				}
+				return;
+			}
+
+			// --- MODO PVP ---
+			room.game.pauseGame();
+
+			const survivor = room.players.find(p => p.socket !== socket && p.socket.readyState === 1);
+			if (survivor) {
+				survivor.socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival se ha desconectado. Esperando reconexión (15s)...' }));
+			}
+
+			if (!room.disconnectTimeout) {
+				room.disconnectTimeout = setTimeout(() => {
+					console.log(`💀 Fin del tiempo de gracia en sala Snake PVP ${room.id}.`);
+					const connectedPlayer = room.players.find(p => p.socket.readyState === 1);
+					if (connectedPlayer) {
+						room.game.stopGame(connectedPlayer.side as 'left' | 'right');
+						connectedPlayer.socket.send(JSON.stringify({ type: 'UPDATE', state: room.game.state }));
+					} else {
+						room.game.stopGame();
+					}
+					destroyRoom(room.id);
+				}, 15000);
+			}
 		});
 	});
 
 	// --- HELPER FUNCTIONS ---
 	function createRoom(id: string, score: number, mode: 'pvp' | 'ai' | 'local') {
 		const game = new SnakeGame();
-
-		// 👇 AÑADIMOS ESTAS DOS LÍNEAS 👇
 		game.gameMode = mode;
 		game.winningScore = score;
 
@@ -320,10 +347,8 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		});
 
-		// 👇 CAMBIAMOS EL 10 POR room.game.winningScore 👇
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
-		// 🔥 LA MAGIA DEL SNAKE: El bucle de físicas va más lento (aprox 12 FPS)
 		const TICK_RATE_MS = 80;
 
 		room.interval = setInterval(() => {
