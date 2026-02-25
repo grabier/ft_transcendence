@@ -240,6 +240,29 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (!room) return;
 			try {
 				const message = JSON.parse(rawData.toString());
+				if (message.type === 'SURRENDER') {
+					if (room.game.gameMode === 'pvp') {
+						const player = room.players.find(p => p.socket === socket);
+						if (player && room.game.state.status !== 'ended') {
+							const winnerSide = player.side === 'left' ? 'right' : 'left';
+							
+							if (winnerSide === 'left') {
+								room.game.state.paddleLeft.score = room.game.winningScore;
+							} else {
+								room.game.state.paddleRight.score = room.game.winningScore;
+							}
+
+							// Forzamos la actualización visual del rival al instante
+							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
+							room.players.forEach(p => {
+								if (p.socket.readyState === 1) p.socket.send(updateMsg);
+							});
+
+							room.game.stopGame(winnerSide);
+						}
+					}
+					return;
+				}
 				if (message.type === 'PAUSE') {
 					if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
 						if (room.game.state.status === 'playing') room.game.pauseGame();

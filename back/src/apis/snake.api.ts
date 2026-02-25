@@ -64,8 +64,10 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 		let shouldReconnect = false;
 		if (existingRoom) {
-			if (query.roomId && query.roomId === existingRoom.id) shouldReconnect = true;
-			else if (!query.roomId && existingRoom.id.startsWith('s_room_') && !existingRoom.id.includes('LOCAL') && !existingRoom.id.includes('AI')) shouldReconnect = true;
+			if (query.roomId && query.roomId === existingRoom.id)
+				shouldReconnect = true;
+			else if (!query.roomId && existingRoom.id.startsWith('s_room_') && !existingRoom.id.includes('LOCAL') && !existingRoom.id.includes('AI'))
+				shouldReconnect = true;
 		}
 
 		if (existingRoom && !shouldReconnect) {
@@ -95,11 +97,17 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			existingRoom.players[playerIndex].socket = socket;
 
 			const currentStatus = existingRoom.pauseTimeout ? 'paused' : 'playing';
+			let pauseTimeLeft = 30;
+			if (existingRoom.pauseTimeout && existingRoom.pauseStartTime) {
+				const elapsed = Math.floor((Date.now() - existingRoom.pauseStartTime) / 1000);
+				pauseTimeLeft = Math.max(0, 30 - elapsed);
+			}
 			const playersData = getRoomPlayersData(existingRoom);
 			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
 			const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
 			if (connectedOpponent) {
+				const playersData = getRoomPlayersData(existingRoom);
 				connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
 				if (existingRoom.pauseTimeout) {
 					socket.send(JSON.stringify({ type: 'STATUS', message: 'En pausa táctica.' }));
@@ -110,7 +118,40 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			} else {
 				socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
 				socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
-				// Omitido lógica de bbdd de empate por brevedad, igual que tu api original
+				/* existingRoom.disconnectTimeout = setTimeout(() => {
+					console.log(`💀 1Fin del tiempo de gracia en sala ${existingRoom.id}.`);
+					(async () => {
+						try {
+							const searchString = `%"id":"${roomId}"%`;
+							const [msgRows]: any = await pool.execute(
+								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+								[searchString]
+							);
+
+							if (msgRows.length > 0) {
+								const inviteMsg = msgRows[0];
+								const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
+								console.log(`scoreeeeee: ${finalResult}`);
+								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+								await pool.execute(
+									`UPDATE messages SET content = ? WHERE id = ?`,
+									[newContent, inviteMsg.id]
+								);
+
+								const updatedMessage = { ...inviteMsg, content: newContent };
+								existingRoom.players.forEach(p => {
+									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+								});
+							}
+						} catch (err) {
+							console.error("Error actualizando invitación de chat:", err);
+						}
+					})();
+					existingRoom.game.stopGame(playerSide as 'left' | 'right');
+					socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
+					destroyRoom(existingRoom.id);
+				}, 15000); */
 			}
 		}
 		// --- FIN INTENTO RECONEXIÓN ---
@@ -176,6 +217,29 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			if (!room) return;
 			try {
 				const message = JSON.parse(rawData.toString());
+				if (message.type === 'SURRENDER') {
+					if (room.game.gameMode === 'pvp') {
+						const player = room.players.find(p => p.socket === socket);
+						if (player && room.game.state.status !== 'ended') {
+							const winnerSide = player.side === 'left' ? 'right' : 'left';
+							
+							if (winnerSide === 'left') {
+								room.game.state.snakeLeft.score = room.game.winningScore;
+							} else {
+								room.game.state.snakeRight.score = room.game.winningScore;
+							}
+
+							// Forzamos la actualización visual del rival al instante
+							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
+							room.players.forEach(p => {
+								if (p.socket.readyState === 1) p.socket.send(updateMsg);
+							});
+
+							room.game.stopGame(winnerSide);
+						}
+					}
+					return;
+				}
 				if (message.type === 'INPUT') {
 					if (room.game.gameMode === 'local' as any) {
 						room.game.handleInput(message.key, message.action);
@@ -219,8 +283,30 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	function getRoomPlayersData(room: Room) {
 		let leftName = 'Player 1', leftAvatar = '';
 		let rightName = 'Player 2', rightAvatar = '';
-		// (Igual que en Pong)
-		return { left: { username: leftName, avatarUrl: leftAvatar }, right: { username: rightName, avatarUrl: rightAvatar } };
+
+		if (room.game.gameMode === 'local' as any) {
+			const p = room.players[0];
+			if (p) {
+				leftName = `${p.username} (P1)`; leftAvatar = p.avatarUrl;
+				rightName = `${p.username} (P2)`; rightAvatar = p.avatarUrl;
+			}
+		} else if (room.game.gameMode === 'ai') {
+			const p = room.players[0];
+			if (p) {
+				leftName = p.username; leftAvatar = p.avatarUrl;
+			}
+			rightName = 'Skynet 🤖'; rightAvatar = 'https://api.dicebear.com/7.x/bottts/svg?seed=skynet';
+		} else {
+			const pLeft = room.players.find(p => p.side === 'left');
+			const pRight = room.players.find(p => p.side === 'right');
+			if (pLeft) { leftName = pLeft.username; leftAvatar = pLeft.avatarUrl; }
+			if (pRight) { rightName = pRight.username; rightAvatar = pRight.avatarUrl; }
+		}
+
+		return {
+			left: { username: leftName, avatarUrl: leftAvatar },
+			right: { username: rightName, avatarUrl: rightAvatar }
+		};
 	}
 
 	function startGame(roomId: string) {

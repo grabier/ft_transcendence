@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {SearchingGameLoading} from '../ui/SearchingGameLoading';
+import { SearchingGameLoading } from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 
@@ -9,27 +9,49 @@ interface PongGameProps {
 	scoreToWin: number;
 	roomId?: string;
 	onExit: () => void;
+	onRestart: () => void;
 }
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
-const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit }) => {
+const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
 	// --- REFS (Memoria rápida) ---
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
 	const isGameEndedRef = useRef(false); // Ref para controlar el fin de juego sin stale closures
-	const location = useLocation(); 
+	const location = useLocation();
 	const initialLocationKey = useRef(location.key);
-	useEffect(() => {
-		// Si la 'key' de la URL cambia (React Router detecta que hemos ido atrás o a otra página)
-		if (location.key !== initialLocationKey.current) {
-			console.log("Navegación detectada por React Router. Saliendo del juego limpiamente...");
-			onExit();
-		}
-	}, [location.key, onExit]);
 
+	// --- EFECTO: TRAMPA DEL BOTÓN ATRÁS (VERSIÓN REACT ROUTER) ---
+	
+	useEffect(() => {
+		// 1. Inyectamos un estado falso al entrar para engañar al navegador
+		if (!window.history.state?.isGame) {
+			const currentState = window.history.state || {};
+			window.history.pushState({ ...currentState, isGame: true }, '', window.location.href);
+		}
+
+		const handlePopState = () => {
+			// 2. Si el usuario pulsa la flecha de Atrás, mandamos el mensaje
+			if (socketRef.current?.readyState === WebSocket.OPEN && !isGameEndedRef.current) {
+				socketRef.current.send(JSON.stringify({ type: 'SURRENDER' }));
+				// Le damos 100ms al servidor para recibir la rendición antes de "cortar el cable"
+				setTimeout(() => onExit(), 100); 
+			} else {
+				onExit();
+			}
+		};
+
+		window.addEventListener('popstate', handlePopState);
+		return () => window.removeEventListener('popstate', handlePopState);
+	}, [onExit]);
+
+	// 3. El botón físico de salir ahora simplemente engaña al navegador y simula una flecha de Atrás
+	const handleManualExit = () => {
+		window.history.back(); 
+	};
 	// Posiciones actuales (Lo que se dibuja)
 	const currentPos = useRef({
 		ball: { x: 400, y: 300 },
@@ -71,19 +93,20 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 			setCountdown(count);
 			if (count <= 0) {
 				clearInterval(interval);
-				// Pequeño timeout para que se vea el "GO!" o el 0 un instante
-				setTimeout(() => setUiState('playing'), 500);
+				setTimeout(() => {
+					// Solo pasamos a 'playing' si el juego NO ha terminado mientras contábamos
+					if (!isGameEndedRef.current)
+						setUiState('playing');
+				}, 500);
 			}
 		}, 1000);
 	};
 
 	const handleRestart = () => {
-		if (socketRef.current?.readyState === WebSocket.OPEN) {
-			socketRef.current.send(JSON.stringify({ type: 'RESTART' }));
-			// No cambiamos el estado aquí manualmente, esperamos a que el servidor 
-			// nos diga "playing" y el socket.onmessage reactive el juego.
-		}
+		if (socketRef.current) socketRef.current.close(1000, "Restarting");
+		onRestart();
 	};
+
 
 	// --- BUCLE DE JUEGO (Game Loop) ---
 	// Usamos useCallback para que la función sea estable
@@ -145,21 +168,6 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 	// --- EFECTO PRINCIPAL (Montaje y Conexión) ---
 	useEffect(() => {
-		const handlePopState = (event: PopStateEvent) => {
-			console.log("Navegación hacia atrás detectada. Saliendo del juego...");
-			onExit();
-		};
-
-		// Escuchamos cuando el usuario pulsa las flechas del navegador
-		window.addEventListener('popstate', handlePopState);
-
-		// Limpiamos el listener al desmontar
-		return () => {
-			window.removeEventListener('popstate', handlePopState);
-		};
-	}, [onExit]);
-
-	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
 		let isComponentUnmounted = false;
 		let reconnectTimeout: NodeJS.Timeout;
@@ -197,8 +205,9 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 						//  Inyectamos el ID en la URL sin recargar la página
 						if (msg.roomId) {
+							const currentState = window.history.state || {};
 							window.history.replaceState(
-								null,
+								currentState,
 								'',
 								`/?mode=${mode}&roomId=${msg.roomId}&score=${scoreToWin}`
 							);
@@ -360,10 +369,12 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 		cursor: 'pointer', fontWeight: 'bold', border: 'none', borderRadius: '5px'
 	};
 
+	console.log(`right avatar->>>>>>>>: ${playersInfo?.right.avatarUrl}`);
+	console.log(`left avatar->>>>>>>>: ${playersInfo?.left.avatarUrl}`);
 	return (
 		// 1. NUEVO CONTENEDOR PRINCIPAL (Flexbox en columna)
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: CANVAS_WIDTH, margin: '0 auto' }}>
-			
+
 			{/* 2. HUD CON NOMBRES Y AVATARES (Ahora fluye de forma natural arriba) */}
 			{playersInfo && (
 				<div style={{
@@ -394,13 +405,13 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 
 			{/* 3. CONTENEDOR DEL JUEGO (Canvas + Overlays) */}
 			<div style={{ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT, border: '2px solid white', boxSizing: 'content-box' }}>
-				
+
 				<canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', backgroundColor: 'black' }} />
 
 				{uiState === 'loading' && (
 					<div style={overlayStyle}>
 						<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-								<SearchingGameLoading />
+							<SearchingGameLoading />
 						</Box>
 					</div>
 				)}
@@ -412,7 +423,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						<p style={{ fontSize: '1.2em' }}>{statusMessage}</p>
 					</div>
 				)}
-				
+
 				{uiState === 'countdown' && (
 					<div style={{ ...overlayStyle, backgroundColor: 'transparent' }}>
 						<h1 style={{ fontSize: '6em', color: countdown === 0 ? '#FFFF00' : 'white', textShadow: '2px 2px 4px #000' }}>
@@ -420,7 +431,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						</h1>
 					</div>
 				)}
-				
+
 				{/* PANTALLA DE PAUSA */}
 				{uiState === 'paused' && (
 					<div style={overlayStyle}>
@@ -455,7 +466,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit })
 						<button style={{ ...buttonStyle, backgroundColor: '#fff', color: '#000' }} onClick={handleRestart}>
 							JUGAR OTRA VEZ
 						</button>
-						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
+						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={handleManualExit}>
 							SALIR AL MENÚ
 						</button>
 					</div>

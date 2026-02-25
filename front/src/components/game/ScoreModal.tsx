@@ -13,7 +13,6 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 	const [score, setScore] = useState<number>(5);
 
     const { t } = useTranslation();
-
 	return (
 		<Dialog
 			open={open}

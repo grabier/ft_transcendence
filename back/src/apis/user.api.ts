@@ -216,9 +216,15 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				}
 				const userId = currentUser.id;
 				await userRepository.updateAvatarUrl(userId, newUrl);
+				const newToken = jwt.sign(
+					{ id: userId, email: currentUser.email, username: currentUser.username, avatarUrl: newUrl },
+					process.env.JWT_SECRET || 'super_secret',
+					{ expiresIn: '7d' }
+				);
 				return reply.code(200).send({
 					message: "Avatar updated successfully",
-					newUrl: newUrl
+					newUrl: newUrl,
+					token: newToken
 				});
 			} catch (error: any) {
 				request.log.error(error);
@@ -232,8 +238,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const data = await request.file();
 		if (!data) return reply.code(400).send({ error: "No file uploaded" });
 
-		const currentUser = request.user as { id: number };
-
+		const currentUser = request.user as { id: number; email: string; username: string; avatarUrl: string };
 		// 1. Crear nombre único: userId-timestamp.ext
 		const extension = path.extname(data.filename);
 		const fileName = `${currentUser.id}-${Date.now()}${extension}`;
@@ -258,10 +263,21 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		console.log("📸 Nueva URL generada:", newAvatarUrl);
 		// 6. Actualizar Base de Datos
 		await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);
+		const newToken = jwt.sign(
+			{
+				id: currentUser.id,
+				email: currentUser.email,
+				username: currentUser.username,
+				avatarUrl: newAvatarUrl // La magia ocurre aquí
+			},
+			process.env.JWT_SECRET || 'super_secret',
+			{ expiresIn: '7d' }
+		);
 
 		return {
 			message: "Avatar uploaded successfully",
-			avatarUrl: newAvatarUrl
+			avatarUrl: newAvatarUrl,
+			token: newToken
 		};
 	});
 };
