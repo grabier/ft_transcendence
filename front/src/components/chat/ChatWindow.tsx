@@ -32,7 +32,7 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 		inviteData.id = content;
 	}
 	const handleJoinGame = () => {
-		navigate(`/?mode=pvp&roomId=${inviteData.id}&score=${pointsToWin}`);
+		navigate(`/?game=pong&mode=pvp&roomId=${inviteData.id}&score=${pointsToWin}`);
 	};
 
 	return (
