@@ -13,14 +13,15 @@ interface GamePanelProps {
 	align: 'left' | 'right';
 	isActive: boolean;
 	isPeerActive: boolean;
-	onClick: () => void; // Adiós onHover y onLeave, usamos onClick
+	onClick: () => void;
 	onOptionSelect: (option: string) => void;
+	userLoggedIn: boolean;
 }
 
 const GamePanel: React.FC<GamePanelProps> = ({
 	title, highlightWord, subtitle, buttons, align,
 	isActive, isPeerActive,
-	onClick, onOptionSelect,
+	onClick, onOptionSelect, userLoggedIn
 }) => {
 	const isLeft = align === 'left';
 	const shadowColor = 'rgba(255, 255, 255, 0.6)';
@@ -136,8 +137,9 @@ const GamePanel: React.FC<GamePanelProps> = ({
 								<ButtonGame
 									label={label}
 									fillDirection={isLeft ? 'left-to-right' : 'right-to-left'}
+									disabled={!userLoggedIn && label.trim() === '1v1'}
 									onClick={(e: React.MouseEvent) => {
-										e.stopPropagation(); // Evitamos que el click en el botón expanda/cierre el panel
+										e.stopPropagation();
 										onOptionSelect(label);
 									}}
 								/>

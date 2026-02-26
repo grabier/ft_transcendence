@@ -7,9 +7,11 @@ import GamePanel from '@/components/game/GamePanel';
 import ScoreModal from '@/components/game/ScoreModal';
 import PongGame from '@/components/game/PongGame';
 import SnakeGame from '@/components/game/SnakeGame';
+import { useAuth } from '@/context/AuthContext'; // <-- Añade esta línea
 
 const GamesPage = () => {
 	const { t } = useTranslation();
+	const { user } = useAuth();
 	
 	// UI States
 	const [expandedPanel, setExpandedPanel] = useState<'pong' | 'snake' | null>(null);
@@ -168,6 +170,7 @@ const GamesPage = () => {
 				isPeerActive={expandedPanel === 'snake'}
 				onClick={() => setExpandedPanel('pong')} 
 				onOptionSelect={(opt) => handleGameSelection('pong', opt)}
+				userLoggedIn={!!user} 
 			/>
 
 			<GamePanel
@@ -180,6 +183,7 @@ const GamesPage = () => {
 				isPeerActive={expandedPanel === 'pong'}
 				onClick={() => setExpandedPanel('snake')} 
 				onOptionSelect={(opt) => handleGameSelection('snake', opt)}
+				userLoggedIn={!!user}
 			/>
 		</Box>
 	);
