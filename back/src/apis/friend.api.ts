@@ -1,9 +1,3 @@
-/**
- * friend.api.ts - API para la gestión de amigos
- * * Gestiona el ciclo de vida de las amistades: enviar peticiones,
- * aceptar, listar amigos y eliminar/bloquear.
- */
-
 import { FastifyPluginAsync } from 'fastify';
 import { authenticate } from "../middleware/auth.js";
 import { pool } from '../../db/database.js';
@@ -18,30 +12,17 @@ import {
 	blockUserSchema
 } from "../schemas/friend.schema.js";
 
-// ============================================================================
-// INTERFACES
-// ============================================================================
-
 interface FriendParams {
-	id: string; // Para rutas como /accept/:id o /delete/:id
+	id: string;
 }
 
 interface FriendRequestBody {
 	receiverId: number;
 }
 
-// ============================================================================
-// RUTAS DE AMISTAD
-// ============================================================================
-
 const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
-	// Aplicamos el guardia de seguridad a todas las rutas de este archivo
 	fastify.addHook('preHandler', authenticate);
-
-	/**
-	 * POST /request - Enviar una nueva petición de amistad
-	 */
 	fastify.post<{ Body: FriendRequestBody }>(
 		'/request',
 		{ schema: sendRequestSchema },
@@ -50,11 +31,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const senderId = (request.user as any).id;
 			const { receiverId } = request.body;
 
-			// Variable para rastrear si la inserción fue exitosa
 			let shouldNotify = false;
 
 			if (senderId === receiverId) {
-				return reply.code(400).send({ error: "No puedes enviarte una petición a ti mismo" });
+				return reply.code(400).send({ error: "Cannot send a request to yourself" });
 			}
 
 			const [rows] = await pool.execute(
@@ -63,51 +43,41 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			);
 
 			const users = rows as any[];
-
-			// Verificar si la friendship existe en la databaase
 			if (users.length > 0) {
 				return reply.code(409).send({
-					error: 'Peticion ya solicitada o ya sois amigos(o estas bloqueao) (o lo has bloqueao)'
+					error: 'Petition send already'
 				});
 			}
 
 			try {
-				// Intentamos insertar
 				await pool.execute(
 					'INSERT INTO friendships (sender_id, receiver_id, status) VALUES (?, ?, "pending")',
 					[senderId, receiverId]
 				);
 
-				// Si llegamos aquí, la DB aceptó el registro
 				shouldNotify = true;
-				return { message: "Petición de amistad enviada con éxito" };
+				return { message: "Friend request sent succesfully" };
 
 			} catch (error: any) {
 				if (error.code === 'ER_DUP_ENTRY') {
-					return reply.code(409).send({ error: "Ya existe una petición o relación entre vosotros" });
+					return reply.code(409).send({ error: "There's already a request" });
 				}
-				return reply.code(500).send({ error: "Error interno al enviar la petición" });
+				return reply.code(500).send({ error: "Internal error sending request" });
 
 			} finally {
-				// Esto se ejecuta SIEMPRE, pero solo notificamos si shouldNotify es true
 				if (shouldNotify) {
 					socketManager.notifyUser(receiverId, 'FRIEND_REQUEST', {
 						senderId: senderId,
 						username: sender.username,
-						message: `${sender.username} te ha enviado una solicitud.`
+						message: `${sender.username} sent you a request.`
 					});
 				}
 			}
 		});
 
-	/**
-	 * GET /list - Obtener la lista de amigos aceptados (Para la barra lateral)
-	 */
 	fastify.get('/list', { schema: listFriendsSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
-
-			// Query que busca amigos en ambas direcciones de la relación
 			const [friends] = await pool.execute(`
                 SELECT u.id, u.username, u.avatar_url, u.is_online
                 FROM users u
@@ -119,14 +89,13 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return friends;
 		} catch (error: any) {
-			return reply.send({ error: "Error al obtener la lista de amigos" });
+			return reply.send({ error: "Error fetching friend list" });
 		}
 	});
 	fastify.get('/blocked', { schema: listBlockedSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
 
-			// Query que busca amigos en ambas direcciones de la relación
 			const [blockade] = await pool.execute(`
                 SELECT u.id, u.username, u.avatar_url, u.is_online
                 FROM users u
@@ -139,13 +108,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return blockade;
 		} catch (error: any) {
-			return reply.send({ error: "Error al obtener la lista de amigos" });
+			return reply.send({ error: "Error fetching friend list" });
 		}
 	});
 
-	/**
-	 * GET /pending - Ver peticiones recibidas que están pendientes
-	 */
 	fastify.get('/pending', { schema: listPendingSchema }, async (request, reply) => {
 		try {
 			const userId = (request.user as any).id;
@@ -159,17 +125,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			return requests;
 		} catch (error: any) {
-			return reply.send({ error: "Error al obtener peticiones pendientes" });
+			return reply.send({ error: "Error fetching pending friend list" });
 		}
 	});
 
-	/**
-	 * PUT /accept/:id - Aceptar una petición de amistad
-	 * El :id es el ID del usuario que envió la petición (sender_id)
-	 */
-
-	//gabri del futuro.. si tienes tiempo prueba esto
-	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
 	fastify.put<{ Params: FriendParams }>(
 		'/accept/:id',
 		{ schema: acceptFriendSchema },
@@ -184,24 +143,20 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				);
 
 				if (result.affectedRows === 0) {
-					return reply.code(404).send({ error: "Petición no encontrada o ya aceptada" });
+					return reply.code(404).send({ error: "Petition already found or accepted" });
 				}
 				const aidi = parseInt(senderId);
 				socketManager.notifyUser(aidi, 'FRIEND_REQUEST', {
 					senderId: aidi,
-					username: userId.username, // Para que el front muestre el nombre
+					username: userId.username,
 					message: `${(request.params as any).username} has accepted your request.`
 				});
-				return { message: "Ahora sois amigos" };
+				return { message: "You are now friends" };
 			} catch (error: any) {
-				return reply.code(500).send({ error: "Error al aceptar la amistad" });
+				return reply.code(500).send({ error: "Error accepting friend request" });
 			}
 		});
 
-	/**
-	 * DELETE /:id - Eliminar un amigo o rechazar una petición
-	 * El :id es el ID del otro usuario
-	 */
 	fastify.delete<{ Params: FriendParams }>(
 		'/delete/:id',
 		{ schema: deleteFriendSchema },
@@ -210,7 +165,6 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				const userId = (request.user as any).id;
 				const otherId = (request.params as any).id;
 
-				// Borra la relación sin importar quién la empezó
 				await pool.execute(`
                 DELETE FROM friendships
                 WHERE (sender_id = ? AND receiver_id = ?) 
@@ -220,34 +174,24 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				const aidi = parseInt(otherId);
 				socketManager.notifyUser(aidi, 'DELETE', {
 					senderId: aidi,
-					message: `${(request.params as any).username} has removed you as a frien.`
+					message: `${(request.params as any).username} has removed you as a friend.`
 				});
 
-				return { message: "Relación eliminada correctamente" };
+				return { message: "Relationship deleted succesfully" };
 			} catch (error: any) {
-				return reply.code(500).send({ error: "Error al eliminar la relación" });
+				return reply.code(500).send({ error: "Error when deleting relationship" });
 			}
 		});
 
-
-	/**
-	 * PUT /accept/:id - Aceptar una petición de amistad
-	 * El :id es el ID del usuario que envió la petición (sender_id)
-	 */
-
-	//gabri del futuro.. si tienes tiempo prueba esto
-	//fastify.put<{ Params: {id: number}, }>('/accept/:id', async (request, reply) => {
 	fastify.put<{ Params: FriendParams }>(
 		'/block/:id',
 		{ schema: blockUserSchema },
 		async (request, reply) => {
 			try {
-				// Asumo que request.user tiene id y username
 				const user = request.user as any;
 				const userId = user.id;
 				const blockedId = (request.params as any).id;
 
-				// QUERY CORREGIDA
 				const [result]: any = await pool.execute(
 					`UPDATE friendships 
                  SET status = 'blocked', blocked_by = ? 
@@ -257,12 +201,10 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				);
 
 				if (result.affectedRows === 0) {
-					return reply.code(404).send({ error: "Amistad no encontrada o ya bloqueada" });
+					return reply.code(404).send({ error: "Friendship not found" });
 				}
 
 				const blockedIdInt = parseInt(blockedId);
-
-				// Notificar (Opcional: normalmente no se avisa al bloqueado, pero si es tu lógica, está bien)
 				socketManager.notifyUser(blockedIdInt, 'BLOCKED', {
 					blockedId: blockedIdInt,
 					username: user.username,
@@ -272,8 +214,8 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				return { message: "User blocked successfully" };
 
 			} catch (error: any) {
-				console.error(error); // Es bueno loguear el error real
-				return reply.code(500).send({ error: "Error al bloquear usuario" });
+				console.error(error);
+				return reply.code(500).send({ error: "Error blocking user" });
 			}
 		});
 

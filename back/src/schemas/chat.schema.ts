@@ -1,7 +1,3 @@
-/**
- * chat.schema.ts - Definiciones para Swagger y Validación del Chat
- */
-
 export const getDMSchema = {
 	description: 'Obtiene un chat privado existente o crea uno nuevo entre el usuario actual y el objetivo',
 	tags: ['Chat'],

@@ -11,7 +11,7 @@ interface Player {
 	username: string;
 	socket: WebSocket;
 	avatarUrl: string;
-	side: 'left' | 'right' | 'spectator' | 'both'; // Añadimos 'both' para local
+	side: 'left' | 'right' | 'spectator' | 'both';
 }
 
 interface Room {
@@ -30,17 +30,15 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.get('/', {
 		websocket: true,
-		schema: gameSocketSchema, // Documentamos el handshake del socket
+		schema: gameSocketSchema,
 		config: {
-			rateLimit: false //Excluimos el juego del límite de peticiones
+			rateLimit: false
 		}
 	}, (connection: any, req: any) => {
 		const socket = connection.socket || connection;
 
-		// 1. AUTH
-		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string }; // Añadimos roomId para desafíos futuros
+		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string };
 		const token = query.token;
-		// Leemos el modo. Si viene 'local', usaremos esa lógica.
 		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
 		const scoreToWin = parseInt(query.score || '5', 10) || 5;
 
@@ -49,29 +47,21 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		let user: { id: number, username: string, avatarUrl: string };
 		if (token === 'GUEST' && (mode === 'local' || mode === 'ai')) {
 			user = {
-				id: -(Math.floor(Math.random() * 1000000) + 1), // ID negativo para evitar choques en BD
+				id: -(Math.floor(Math.random() * 1000000) + 1),
 				username: `Guest_${Math.floor(Math.random() * 1000)}`,
 				avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest'
 			};
 		} else {
-			// Lógica normal para usuarios registrados (Obligatorio en PvP)
 			try {
 				const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
 				user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
 			} catch (e) {
-				socket.close(1008, "Token inválido o login requerido para PvP");
+				socket.close(1008, "Invalid token or login required to play online");
 				return;
 			}
 		}
 
-
-
-		console.log(`🔌 Conectado: ${user.username} -> Modo: ${mode}`);
-
-		// 2. LOGICA DE SALAS
 		let roomId = '';
-
-		// --- GESTIÓN DE DOBLE-CONEXIÓN, ABANDONOS Y RECONEXIÓN ---
 		const existingRoom = Array.from(rooms.values()).find(r =>
 			r.game.state.status !== 'ended' &&
 			r.players.some(p => p.id === user.id)
@@ -80,17 +70,13 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		let shouldReconnect = false;
 		if (existingRoom) {
 			if (query.roomId && query.roomId === existingRoom.id) {
-				// 1. Entra explícitamente a la MISMA partida (Click en la misma invitación o F5)
 				shouldReconnect = true;
 			} else if (!query.roomId && existingRoom.id.startsWith('room_') && !existingRoom.id.includes('LOCAL') && !existingRoom.id.includes('AI')) {
-				// 2. Entra al 1v1 público y ya tenía un 1v1 público a medias
 				shouldReconnect = true;
 			}
 		}
 
-		// Si tenía sala pero NO cumple los requisitos de reconexión, significa que quiere jugar a otra cosa
 		if (existingRoom && !shouldReconnect) {
-			console.log(`🏃 ${user.username} abandona la sala ${existingRoom.id} para iniciar una nueva.`);
 			const survivor = existingRoom.players.find(p => p.id !== user.id);
 			if (survivor && survivor.socket.readyState === 1) {
 				existingRoom.game.stopGame(survivor.side as 'left' | 'right');
@@ -100,7 +86,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 
 		if (existingRoom && shouldReconnect) {
-			console.log(`🔄 Reconexión/Toma de control: ${user.username} vuelve a ${existingRoom.id}`);
 			roomId = existingRoom.id;
 
 			if (existingRoom.disconnectTimeout) {
@@ -117,7 +102,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 			existingRoom.players[playerIndex].socket = socket;
 
-			// Limpiar teclas atascadas
 			if (playerSide === 'left') existingRoom.game.inputs.left = { up: false, down: false };
 			if (playerSide === 'right') existingRoom.game.inputs.right = { up: false, down: false };
 
@@ -131,24 +115,21 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
 			if (existingRoom.game.gameMode === 'local' as any || existingRoom.game.gameMode === 'ai') {
-				// Mantenemos el backend congelado 3.5s para que tu pantalla haga el "3, 2, 1, GO!" tranquilo
 				existingRoom.game.state.status = 'countdown' as any;
 				setTimeout(() => {
 					existingRoom.game.state.status = 'playing';
 					(existingRoom.game as any).lastTime = Date.now();
 				}, 3500);
 			} else {
-				// LÓGICA PVP REAL
 				const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
 
 				if (connectedOpponent) {
-					connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
+					connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: 'Rival is back', status: currentStatus, playersData }));
 
 					if (existingRoom.pauseTimeout) {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida sigue en pausa táctica.' }));
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Match in tactical pause' }));
 					} else {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
-						// Sincronizamos el PVP también con los 3.5s
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Loading match...' }));
 						existingRoom.game.state.status = 'countdown' as any;
 						setTimeout(() => {
 							existingRoom.game.state.status = 'playing';
@@ -156,11 +137,10 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						}, 3500);
 					}
 				} else {
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
-					socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Waiting for your oponent to reconnect...' }));
+					socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'Rival disconnected' }));
 
 					existingRoom.disconnectTimeout = setTimeout(() => {
-						console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
 						(async () => {
 							try {
 								const searchString = `%"id":"${roomId}"%`;
@@ -185,7 +165,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 									});
 								}
 							} catch (err) {
-								console.error("Error actualizando invitación de chat:", err);
+								console.error("Error loading invitation:", err);
 							}
 						})();
 						existingRoom.game.stopGame(playerSide as 'left' | 'right');
@@ -195,7 +175,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				}
 			}
 		}
-		// --- FIN INTENTO RECONEXIÓN ---
 
 		else if (mode === 'local') {
 			roomId = `room_${user.id}_LOCAL_${Date.now()}`;
@@ -210,28 +189,23 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			startGame(roomId);
 		}
 		else {
-			// --- MODO PVP (Remoto) ---
 			if (query.roomId && !query.roomId.startsWith('room_')) {
-				// 1. ES UN DESAFÍO DIRECTO (Amigo del Chat)
 				roomId = query.roomId;
 				const directRoom = rooms.get(roomId);
 
 				if (directRoom) {
 					if (directRoom.players.length === 1) {
-						// ¡Llega el invitado! Entra y arrancamos el juego
 						joinRoom(roomId, socket, 'right', user);
 						startGame(roomId);
 					} else {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida ya está llena o terminada.' }));
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Match already full or finished' }));
 					}
 				} else {
-					// Soy el anfitrión, creo la sala y espero
 					createRoom(roomId, scoreToWin, 'pvp');
 					joinRoom(roomId, socket, 'left', user);
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a tu rival...' }));
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Waiting for rival...' }));
 				}
 			} else {
-				// 2. ES MATCHMAKING ALEATORIO (Cola pública)
 				const existingQueueIndex = waitingQueue.findIndex(item => item.userId === user.id);
 				if (existingQueueIndex !== -1) {
 					waitingQueue[existingQueueIndex].socket.close(1000, 'Replaced');
@@ -248,16 +222,15 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						startGame(roomId);
 					} else {
 						waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username, avatarUrl: user.avatarUrl });
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando oponente...' }));
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Waiting oponnent...' }));
 					}
 				} else {
 					waitingQueue.push({ socket, score: scoreToWin, userId: user.id, username: user.username, avatarUrl: user.avatarUrl });
-					socket.send(JSON.stringify({ type: 'STATUS', message: 'Buscando partida...' }));
+					socket.send(JSON.stringify({ type: 'STATUS', message: 'Searching match...' }));
 				}
 			}
 		}
 
-		// 3. INPUTS
 		socket.on('message', (rawData: any) => {
 			const room = getRoomBySocket(socket);
 			if (!room) return;
@@ -274,8 +247,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 							} else {
 								room.game.state.paddleRight.score = room.game.winningScore;
 							}
-
-							// Forzamos la actualización visual del rival al instante
 							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
 							room.players.forEach(p => {
 								if (p.socket.readyState === 1) p.socket.send(updateMsg);
@@ -291,25 +262,21 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						if (room.game.state.status === 'playing') room.game.pauseGame();
 						else if (room.game.state.status === 'paused') room.game.resumeGame();
 					} else {
-						// --- MODO PVP ---
 						const player = room.players.find(p => p.socket === socket);
 						if (!player) return;
 
 						if (room.game.state.status === 'playing') {
-							// 1. Intentar pausar
 							if (room.game.state.pauses[player.side as 'left' | 'right'] > 0) {
 								room.game.state.pauses[player.side as 'left' | 'right']--;
 								room.game.state.pausedBy = player.side as 'left' | 'right';
 								room.game.pauseGame();
 								room.pauseStartTime = Date.now();
 
-								// Avisamos a todos
 								room.players.forEach(p => p.socket.send(JSON.stringify({
 									type: 'STATUS',
-									message: `⏸️ Pausa táctica de ${player.username} (Máx 30s)`
+									message: `⏸️ Tactical pause from ${player.username} (Max 30s)`
 								})));
 
-								// Arrancamos el cronómetro de 30 segundos
 								room.pauseTimeout = setTimeout(() => {
 									if (room.game.state.status === 'paused') {
 										room.game.state.pausedBy = null;
@@ -320,11 +287,9 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 									}
 								}, 30000);
 							} else {
-								// Si ya gastó su pausa, le avisamos solo a él
-								socket.send(JSON.stringify({ type: 'STATUS', message: '❌ Ya has gastado tu pausa.' }));
+								socket.send(JSON.stringify({ type: 'STATUS', message: '❌ Youre out of pauses.' }));
 							}
 						} else if (room.game.state.status === 'paused' && room.game.state.pausedBy === player.side) {
-							// 2. Quitar tu propia pausa antes de tiempo
 							if (room.pauseTimeout) {
 								clearTimeout(room.pauseTimeout);
 								room.pauseTimeout = null;
@@ -332,7 +297,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 							}
 							room.game.state.pausedBy = null;
 							room.game.resumeGame();
-							room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
+							room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Loading match...' })));
 						}
 					}
 					return;
@@ -362,14 +327,10 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const room = getRoomBySocket(socket);
 			if (!room || room.game.state.status === 'ended') return;
 
-			console.log(`⚠️ Jugador desconectado de la sala ${room.id}`);
-
-			// Pausamos el juego y damos 15s de gracia también a Local e IA
 			if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
 				room.game.pauseGame();
 				if (!room.disconnectTimeout) {
 					room.disconnectTimeout = setTimeout(() => {
-						console.log(`💀 Fin del tiempo de gracia en sala ${room.id} (Local/IA).`);
 						destroyRoom(room.id);
 					}, 15000);
 				}
@@ -380,12 +341,11 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			const survivor = room.players.find(p => p.socket !== socket && p.socket.readyState === 1);
 			if (survivor) {
-				survivor.socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival se ha desconectado. Esperando reconexión (15s)...' }));
+				survivor.socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'Rival disconnected, waiting for reconnection (15s)...' }));
 			}
 
 			if (!room.disconnectTimeout) {
 				room.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 2Fin del tiempo de gracia en sala ${room.id}.`);
 					(async () => {
 						try {
 							const searchString = `%"id":"${roomId}"%`;
@@ -411,7 +371,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 								});
 							}
 						} catch (err) {
-							console.error("Error actualizando invitación de chat:", err);
+							console.error("Error fetching chat invite", err);
 						}
 					})();
 					const connectedPlayer = room.players.find(p => p.socket.readyState === 1);
@@ -427,7 +387,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		});
 	});
 
-	// --- HELPER FUNCTIONS ---
 	function createRoom(id: string, score: number, mode: 'pvp' | 'ai' | 'local') {
 		const game = new PongGame();
 		game.winningScore = score;
@@ -442,7 +401,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 	}
 
-	// Construye los perfiles dependiendo del modo de juego
 	function getRoomPlayersData(room: Room) {
 		let leftName = 'Player 1', leftAvatar = '';
 		let rightName = 'Player 2', rightAvatar = '';
@@ -472,18 +430,14 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		const room = rooms.get(roomId);
 		if (!room) return;
 		const playersData = getRoomPlayersData(room);
-
-		// 1. Mandamos SIDE_ASSIGNED a ambos a la vez 
 		room.players.forEach(p => {
 			if (p.socket.readyState === 1) {
-				// Aquí sí metemos el status: 'playing' para que el Front no se líe
 				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id, status: 'playing', playersData }));
 			}
 		});
 
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
-		// 2. Bucle de físicas (60 FPS)
 		room.interval = setInterval(() => {
 			const state = room.game.state;
 			let currentPauseTimeLeft: number | undefined = undefined;
@@ -500,7 +454,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			});
 
 			if (state.status === 'ended') {
-				console.log(`Partida terminada sala ${roomId}`);
 				(async () => {
 					try {
 						const searchString = `%"id":"${roomId}"%`;
@@ -512,7 +465,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						if (msgRows.length > 0) {
 							const inviteMsg = msgRows[0];
 							const finalResult = `${state.paddleLeft.score} - ${state.paddleRight.score}`;
-							console.log(`scoreeeeee: ${finalResult}`);
 							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
 
 							await pool.execute(
@@ -526,7 +478,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 							});
 						}
 					} catch (err) {
-						console.error("Error actualizando invitación de chat:", err);
+						console.error("Error loading chat invite:", err);
 					}
 				})();
 

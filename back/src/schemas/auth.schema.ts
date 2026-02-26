@@ -1,7 +1,3 @@
-/**
- * auth.schema.ts - Definiciones para Swagger y Validación
- */
-
 export const registerSchema = {
 	description: 'Registra un nuevo usuario en la plataforma',
 	tags: ['Auth'],

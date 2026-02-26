@@ -1,7 +1,3 @@
-/**
- * friend.schema.ts - Definiciones para Swagger y Validación de Amistades
- */
-
 const userSummaryProperties = {
 	id: { type: 'number' },
 	username: { type: 'string' },
