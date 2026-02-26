@@ -62,8 +62,6 @@ export class PongGame {
 	}
 
 	public startGame(mode: 'pvp' | 'ai' = 'pvp', scoreToWin: number = 5) {
-		console.log(`🏁 START GAME -> Modo: ${mode}, WinScore: ${scoreToWin}`);
-
 		this.state.paddleLeft.score = 0;
 		this.state.paddleRight.score = 0;
 		this.state.winner = null;
@@ -117,7 +115,6 @@ export class PongGame {
 		if (this.state.status !== 'playing')
 			return;
 
-		// Movimiento Palas
 		if (this.inputs.left.up)
 			this.state.paddleLeft.y -= this.state.paddleLeft.speed * dt;
 		if (this.inputs.left.down)
@@ -127,16 +124,13 @@ export class PongGame {
 		if (this.inputs.right.down)
 			this.state.paddleRight.y += this.state.paddleRight.speed * dt;
 
-		// Clamp (Límites)
 		const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 		this.state.paddleLeft.y = clamp(this.state.paddleLeft.y, 0, CANVAS_HEIGHT - PADDLE_HEIGHT);
 		this.state.paddleRight.y = clamp(this.state.paddleRight.y, 0, CANVAS_HEIGHT - PADDLE_HEIGHT);
 
-		// Movimiento Bola
 		this.state.ball.x += this.state.ball.speedX * dt;
 		this.state.ball.y += this.state.ball.speedY * dt;
 
-		// Rebotes Verticales
 		if (this.state.ball.y < 0) {
 			this.state.ball.y = 0;
 			this.state.ball.speedY *= -1;
@@ -146,13 +140,11 @@ export class PongGame {
 			this.state.ball.speedY *= -1;
 		}
 
-		// Colisiones Palas
 		if (this.state.ball.speedX > 0 && this.checkCollision(this.state.paddleRight))
 			this.handlePaddleHit(this.state.paddleRight, -1);
 		else if (this.state.ball.speedX < 0 && this.checkCollision(this.state.paddleLeft))
 			this.handlePaddleHit(this.state.paddleLeft, 1);
 
-		// Goles
 		if (this.state.ball.x > CANVAS_WIDTH) {
 			this.state.paddleLeft.score++;
 			if (this.state.paddleLeft.score >= this.winningScore)
@@ -193,7 +185,6 @@ export class PongGame {
 		this.state.ball.speedX = direction * newSpeed * Math.cos(angle);
 		this.state.ball.speedY = newSpeed * Math.sin(angle);
 
-		// Evitar sticky paddle
 		if (direction === 1)
 			this.state.ball.x = paddle.x + paddle.width + 1;
 		else
@@ -209,9 +200,8 @@ export class PongGame {
 	public resumeGame() {
 		if (this.state.status === 'paused') {
 			this.state.status = 'playing';
-			this.lastTime = Date.now(); // Reseteamos el reloj interno para evitar teletransportes
+			this.lastTime = Date.now();
 
-			// Si la bola se quedó totalmente quieta por culpa de la pausa, forzamos un nuevo saque
 			if (this.state.ball.speedX === 0 && this.state.ball.speedY === 0) {
 				this.resetBall(500);
 			}

@@ -1,7 +1,3 @@
-/**
- * game.schema.ts - Definiciones para la conexión al motor del Juego
- */
-
 export const gameSocketSchema = {
 	description: 'Endpoint de WebSocket para el motor de juego. Maneja Matchmaking, IA y Local.',
 	tags: ['Game'],

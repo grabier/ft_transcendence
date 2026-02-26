@@ -1,7 +1,3 @@
-/**
- * user.schema.ts - Definiciones para Swagger y Validación de Usuarios
- */
-
 const userFullProperties = {
 	id: { type: 'number' },
 	username: { type: 'string' },

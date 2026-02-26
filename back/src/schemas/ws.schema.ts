@@ -1,7 +1,3 @@
-/**
- * ws.schema.ts - Documentación del Socket de Notificaciones y Chat
- */
-
 export const mainSocketSchema = {
 	description: 'Conexión WebSocket principal para notificaciones en tiempo real, chat y estado de amigos.',
 	tags: ['Websocket'],
