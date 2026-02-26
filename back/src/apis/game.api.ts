@@ -357,7 +357,6 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 							if (msgRows.length > 0) {
 								const inviteMsg = msgRows[0];
 								const finalResult = `${room.game.state.paddleLeft.score} - ${room.game.state.paddleRight.score}`;
-								console.log(`scoreeeeee: ${finalResult}`);
 								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
 
 								await pool.execute(
