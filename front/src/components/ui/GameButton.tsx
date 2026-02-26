@@ -21,15 +21,12 @@ const ButtonGame = ({ label, fillDirection = 'left-to-right', onClick, disabled 
                 py: 1.5,
                 bgcolor: 'transparent',
                 border: '1px solid',
-                // Borde más sutil si está disabled
                 borderColor: disabled ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.4)',
-                // Color de texto (e icono) apagado si está disabled
                 color: disabled ? 'rgba(255, 255, 255, 0.3)' : 'white',
                 fontWeight: 'bold',
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
                 transition: 'all 200ms',
-                // Mantenemos 'not-allowed' como fallback, pero el icono visual es lo principal
                 cursor: disabled ? 'default' : 'pointer',
                 outline: 'none',
                 ...(disabled ? {} : {
@@ -49,7 +46,6 @@ const ButtonGame = ({ label, fillDirection = 'left-to-right', onClick, disabled 
                 })
             }}
         >
-            {/* Usamos Stack para alinear icono y texto */}
             <Stack 
                 direction="row" 
                 alignItems="center" 
@@ -58,10 +54,9 @@ const ButtonGame = ({ label, fillDirection = 'left-to-right', onClick, disabled 
                 sx={{
                     position: 'relative',
                     zIndex: 10,
-                    justifyContent: 'center' // Centramos el contenido
+                    justifyContent: 'center' 
                 }}
             >
-                {/* Si está disabled, mostramos el candado */}
                 {disabled && <LockIcon sx={{ fontSize: '1rem' }} />}
                 
                 <Typography

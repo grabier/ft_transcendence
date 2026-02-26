@@ -7,8 +7,8 @@ import es from '@/locales/es.json';
 import fr from '@/locales/fr.json';
 
 i18n
-  .use(LanguageDetector) // Detects user language
-  .use(initReactI18next) // Passes i18n down to react-i18next
+  .use(LanguageDetector)
+  .use(initReactI18next)
   .init({
     resources: {
       en: { translation: en },
@@ -17,7 +17,7 @@ i18n
     },
     fallbackLng: 'en',
     interpolation: {
-      escapeValue: false // React already safes from xss
+      escapeValue: false
     }
   });
 

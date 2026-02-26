@@ -28,15 +28,13 @@ const GamesPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 
-	// --- 1. EL TRUCO LIMPIO PARA EL BOTÓN ATRÁS ---
+
 	useEffect(() => {
-		// Al arrancar la partida, metemos un evento invisible en el navegador. 
-		// ¡La URL NO cambia!
+
 		if (isPlaying) {
 			window.history.pushState({ internal: 'game_active' }, '');
 		}
 
-		// Si el usuario presiona la flecha de "Atrás" en su navegador, salta este evento
 		const handlePopState = () => {
 			if (isPlaying) {
 				setIsPlaying(false);
@@ -49,7 +47,6 @@ const GamesPage = () => {
 		return () => window.removeEventListener('popstate', handlePopState);
 	}, [isPlaying]);
 
-	// --- 2. EFECTO PARA LAS INVITACIONES DEL CHAT ---
 	useEffect(() => {
 		const state = location.state as any;
 		
@@ -62,14 +59,12 @@ const GamesPage = () => {
 			if (state.scoreParam) setScoreToWin(parseInt(state.scoreParam));
 
 			setModalOpen(false);
-			setIsPlaying(true); // Esto lanzará automáticamente el pushState del efecto de arriba
+			setIsPlaying(true);
 			
-			// Vaciamos el estado del router para no generar bucles si recargas la página
 			navigate(location.pathname, { replace: true, state: {} });
 		}
 	}, [location, navigate]);
 
-	// Cerrar paneles al hacer click fuera
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -83,7 +78,6 @@ const GamesPage = () => {
 		};
 	}, []);
 
-	// --- HANDLERS ---
 	const handleGameSelection = (game: 'pong' | 'snake', option: string) => {
 		setSelectedGame(game); 
 		const modeStr = option.trim().toUpperCase();
@@ -113,8 +107,6 @@ const GamesPage = () => {
 	};
 
 	const handleExitGame = () => {
-		// En lugar de tocar estados a mano, forzamos un paso atrás en el historial.
-		// Esto dispara el 'popstate' y se encarga de apagar todo limpiamente de golpe.
 		window.history.back();
 	};
 
@@ -125,7 +117,6 @@ const GamesPage = () => {
 		}
 	};
 
-	// --- RENDERIZADO DEL JUEGO ---
 	if (isPlaying && selectedMode && selectedGame) {
 		return (
 			<Box sx={{
@@ -155,7 +146,6 @@ const GamesPage = () => {
 		);
 	}
 
-	// --- RENDERIZADO DEL MENÚ ---
 	return (
 		<Box ref={containerRef}
 			onClick={() => setExpandedPanel(null)}

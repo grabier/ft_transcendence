@@ -11,7 +11,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 
 import LoginModal from "@/components/auth/LoginModal";
 import RegisterModal from "@/components/auth/RegisterModal";
-import ResetPasswordModal from "@/components/auth/ResetPasswordModal";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { SocialPanel } from "@/components/social/SocialPanel";
 import { Profile } from "@/components/social/Profile";
@@ -20,27 +19,20 @@ import { useSocket } from "@/context/SocketContext";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthModals } from "@/hooks/useAuthModals";
 
-// Ya no recibe children, se pinta él solo
 const MenuHeader = () => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const { user, login, register, logout } = useAuth();
 	const { unreadCount } = useSocket();
-	// Necesitamos esto para el Badge
 	const modals = useAuthModals();
 
-	// Estado local del menú (Solo vive aquí, no ensucia el Header)
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
 		setAnchorEl(event.currentTarget);
 	const handleMenuClose = () => setAnchorEl(null);
-	const handleNavigate = (path: string) => {
-		handleMenuClose();
-		navigate(path);
-	}; 
+	
 
-	// --- PUENTES LÓGICOS ---
 	const onLoginSubmit = async (email: string, pass: string) => {
 		if (await login(email, pass)) modals.closeAll();
 	};
@@ -66,7 +58,6 @@ const MenuHeader = () => {
 	return (
 		<>
 			<LanguageSwitcher />
-			{/* 1. EL BOTÓN DISPARADOR (Movido desde Header) */}
 			<IconButton
 				onClick={handleMenuOpen}
 				sx={{
@@ -87,9 +78,9 @@ const MenuHeader = () => {
 					{user ? (
 						<UserAvatar
 							name={user.username}
-							src={user.avatarUrl} // Asumiendo que user tiene avatarUrl
+							src={user.avatarUrl}
 							size={32}
-							sx={{ border: "2px solid #000" }} // Estilo específico que tenías
+							sx={{ border: "2px solid #000" }}
 						/>
 					) : (
 						<MenuIcon sx={{ color: "background.default" }} />
@@ -97,14 +88,13 @@ const MenuHeader = () => {
 				</Badge>
 			</IconButton>
 
-			{/* 2. EL MENÚ DESPLEGABLE */}
 			<Menu
 				anchorEl={anchorEl}
 				open={Boolean(anchorEl)}
 				onClose={handleMenuClose}
 				sx={{ mt: 5 }}
 				PaperProps={{
-					sx: { minWidth: 220 } // FORZAMOS EL ANCHO MÍNIMO AQUÍ PARA QUE NO ENCOJA
+					sx: { minWidth: 220 }
 				}}
 			>
 				{!user && (
@@ -140,7 +130,7 @@ const MenuHeader = () => {
 							color="error"
 							variant="dot"
 							invisible={unreadCount === 0}
-							sx={{ ml: 2 }} // Un poco de margen a la izquierda del punto
+							sx={{ ml: 2 }}
 						/>
 					</MenuItem>
 				) : (
@@ -150,7 +140,6 @@ const MenuHeader = () => {
 				{user && <MenuItem onClick={onLogoutClick}>{t('menuHeader.logout')}</MenuItem>}
 			</Menu>
 
-			{/* 3. LOS MODALES */}
 			<LoginModal
 				open={modals.loginOpen}
 				onClose={modals.closeAll}

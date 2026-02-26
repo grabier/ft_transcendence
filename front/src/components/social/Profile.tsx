@@ -26,39 +26,28 @@ export const Profile = ({ open, onClose }: Props) => {
 	const modals = useAuthModals();
 	const navigate = useNavigate();
 	const { updateAvatarUrl, updateUsername, uploadAvatarFile } = useAuth();
-
-	// Independent state for editing username ONLY
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
-
-	// avatar
 	const [, setCurrentAvatar] = useState(user?.avatarUrl);
-	console.log(`profile   : ${user?.avatarUrl}`);
-
 	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-
     const { t } = useTranslation();
 
 	const handleSelectAvatar = async (seed: string) => {
 		const newUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 
-		// Cambiamos la imagen en la UI antes de que responda el servidor (Optimismo)
 		setCurrentAvatar(newUrl);
 
 		const success = await updateAvatarUrl(newUrl);
 		if (success) {
 			setShowAvatarPicker(false);
 		} else {
-			// Si falla, volvemos a la original
 			setCurrentAvatar(user?.avatarUrl);
 			alert("Error al actualizar el avatar");
 		}
 	};
-
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (file) {
-			// Validación básica (2MB)
 			if (file.size > 2 * 1024 * 1024) {
 				alert("File too large (max 2MB)");
 				return;
@@ -66,21 +55,18 @@ export const Profile = ({ open, onClose }: Props) => {
 			await uploadAvatarFile(file);
 		}
 	};
-
 	const handleUpdate = useCallback(async (type: 'user') => {
 		if (type === 'user') {
-			// Llamas a la función del contexto
 			const success = await updateUsername(editName.value);
 			if (success) {
 				setEditName(prev => ({ ...prev, open: false }));
 			}
 		}
 	}, [editName.value, updateUsername]);
-
 	const onLogoutClick = () => {
 		logout();
 		modals.closeAll();
-		onClose(); // This triggers the drawer to close in the parent state
+		onClose();
 		navigate("/");
 	};
 
@@ -93,7 +79,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				sx: { width: { xs: '100%', sm: 400 }, bgcolor: '#fcfcfc' }
 			}}
 		>
-			{/* Header */}
+
 			<Box sx={{
 				p: 2,
 				display: 'flex',
@@ -108,7 +94,6 @@ export const Profile = ({ open, onClose }: Props) => {
 				</IconButton>
 			</Box>
 
-			{/* Hero Section */}
 			<Box sx={{
 				py: 4,
 				display: 'flex',
@@ -118,16 +103,11 @@ export const Profile = ({ open, onClose }: Props) => {
 				borderBottom: '1px solid',
 				borderColor: 'divider'
 			}}>
-				{/* TRUCO: Fijamos width y height en el Box padre.
-                    Así 'absolute' sabe exactamente dónde están los bordes.
-                */}
 				<Box sx={{ position: 'relative', width: 100, height: 100, mb: 2 }}>
 					<Avatar
 						src={user?.avatarUrl}
 						sx={{ width: '100%', height: '100%', boxShadow: 3, border: '4px solid white' }}
 					/>
-
-					{/* 📸 IZQUIERDA: Botón para SUBIR FOTO (Input File) */}
 					<input
 						type="file"
 						id="avatar-upload-input"
@@ -141,15 +121,15 @@ export const Profile = ({ open, onClose }: Props) => {
 							size="small"
 							sx={{
 								position: 'absolute',
-								bottom: -5,   // Un poco más abajo
-								left: -10,    // Saliendo por la izquierda
+								bottom: -5,
+								left: -10,
 								bgcolor: 'secondary.main',
 								color: 'white',
 								'&:hover': { bgcolor: 'secondary.dark' },
 								boxShadow: 3,
 								border: '2px solid white',
 								zIndex: 10,
-								width: 35,    // Forzamos tamaño para que se vea bien
+								width: 35,
 								height: 35
 							}}
 						>
@@ -157,14 +137,13 @@ export const Profile = ({ open, onClose }: Props) => {
 						</IconButton>
 					</label>
 
-					{/* 🎭 DERECHA: Botón para GALERÍA (Dicebear) */}
 					<IconButton
 						onClick={() => setShowAvatarPicker(!showAvatarPicker)}
 						size="small"
 						sx={{
 							position: 'absolute',
-							bottom: -5,   // Un poco más abajo
-							right: -10,   // Saliendo por la derecha
+							bottom: -5,
+							right: -10,
 							bgcolor: 'primary.main',
 							color: 'white',
 							'&:hover': { bgcolor: 'primary.dark' },
@@ -179,7 +158,6 @@ export const Profile = ({ open, onClose }: Props) => {
 					</IconButton>
 				</Box>
 
-				{/* Selector de Avatares (Collapse) */}
 				<Collapse in={showAvatarPicker} sx={{ width: '100%', px: 3 }}>
 					<Typography aria-label="Choose from the pictures bellow:" variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
 						{t('profile.selectAvatar')}
@@ -221,9 +199,7 @@ export const Profile = ({ open, onClose }: Props) => {
 				</Typography>
 			</Box>
 
-			{/* Account Details */}
 			<List sx={{ p: 2 }}>
-				{/* Username Field */}
 				<ListItem
 					secondaryAction={
 						<IconButton edge="end" aria-label="Edit profile username" onClick={() => setEditName(p => ({ ...p, open: !p.open }))}>
@@ -261,7 +237,6 @@ export const Profile = ({ open, onClose }: Props) => {
 
 				<Divider variant="inset" component="li" />
 
-				{/* Email Field (Solo Lectura) */}
 				<ListItem>
 					<ListItemAvatar>
 						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
@@ -274,7 +249,6 @@ export const Profile = ({ open, onClose }: Props) => {
 				</ListItem>
 			</List>
 
-			{/* Actions */}
 			<Box sx={{ mt: 'auto', p: 3 }}>
 				<Button
 					aria-label="Close profile modal"

@@ -1,21 +1,15 @@
-import { useState, useCallback } from 'react';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
-	Typography, Divider, IconButton, Box,
-	TextField, Collapse, Drawer, Button
+	Typography, Divider, IconButton, Box, Drawer,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useAuthModals } from '../../hooks/useAuthModals';
 import { useFriendActions } from '../../hooks/useFriendActions';
-import { FriendActionsMenu } from './FriendActionsMenu';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 
-import { BASE_URL } from '../../config';
 
 
 interface Props {
@@ -26,13 +20,7 @@ interface Props {
 }
 
 export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
-	const modals = useAuthModals();
 	const { deleteFriend, blockFriend } = useFriendActions(onActionSuccess);
-	const token = localStorage.getItem('auth_token');
-	// avatar
-	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
-	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
-	console.log(`PrfileFriends: ${friend.username}`);
 
 	return (
 		<Drawer
@@ -43,7 +31,6 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 				sx: { width: { xs: '100%', sm: 400 }, bgcolor: '#fcfcfc' }
 			}}
 		>
-			{/* Header */}
 			<Box sx={{
 				p: 2,
 				display: 'flex',
@@ -58,7 +45,6 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 				</IconButton>
 			</Box>
 
-			{/* Hero Section */}
 			<Box sx={{
 				py: 4,
 				display: 'flex',
@@ -82,7 +68,6 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 					{friend?.role || 'Standard Member'}
 				</Typography>
 
-				{/* BOTONES DE ACCIÓN: Ahora centrados y con espacio */}
 				<Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
 					<Tooltip title="Eliminar">
 						<IconButton
@@ -111,7 +96,6 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 				</Box>
 			</Box>
 
-			{/* Account Details */}
 			<List sx={{ p: 2 }}>
 				<ListItem>
 					<ListItemAvatar>

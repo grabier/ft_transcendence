@@ -18,7 +18,6 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { ProfileFriend } from '@/components/social/ProfileFriend';
 
 
-// --- COMPONENTE BURBUJA DE INVITACIÓN ---
 const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boolean, score?: number }) => {
 	const navigate = useNavigate();
 	const pointsToWin = score || 5;
@@ -62,7 +61,6 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 					</Typography>
 				</Stack>
 
-				{/* SI LA PARTIDA TERMINÓ, MOSTRAMOS RESULTADO */}
 				{inviteData.status === 'finished' ? (
 					<Box sx={{ mt: 1, p: 1, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2, textAlign: 'center', width: '100%' }}>
 						<Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.8 }}>
@@ -73,7 +71,6 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 						</Typography>
 					</Box>
 				) : (
-					/* SI ESTÁ PENDIENTE, MOSTRAMOS BOTÓN DE ENTRAR */
 					<>
 						<Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
 							{isMe
@@ -106,17 +103,13 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 	);
 };
 
-// --- CHAT WINDOW PRINCIPAL ---
 export const ChatWindow = () => {
 	const { t } = useTranslation();
 	const { activeChat, messages, sendMessage, closeChat, sendTyping, typingChats } = useChat();
 	const { user } = useAuth();
 	const [inputText, setInputText] = useState('');
 
-	// --- 2. ESTADO PARA EL PERFIL DEL AMIGO ---
 	const [profileOpen, setProfileOpen] = useState(false);
-
-	// Estado para el menú de puntos
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const openMenu = Boolean(anchorEl);
 
@@ -157,10 +150,9 @@ export const ChatWindow = () => {
 				flexDirection: 'column',
 				height: '100%',
 				bgcolor: 'background.paper',
-				position: 'relative' // Necesario por si el Drawer se renderiza dentro
+				position: 'relative'
 			}}
 		>
-			{/* --- CABECERA --- */}
 			<Box sx={{
 				p: 1.5,
 				bgcolor: 'primary.main',
@@ -174,17 +166,15 @@ export const ChatWindow = () => {
 					<IconButton size="small" onClick={closeChat} sx={{ color: 'white', mr: 1 }}>
 						<ArrowBackIcon />
 					</IconButton>
-
-					{/* --- 3. AVATAR CLICABLE --- */}
 					<Avatar
 						src={activeChat.otherUser.avatar_url}
 						sx={{
 							width: 32,
 							height: 32,
-							cursor: 'pointer', // Indicador visual de click
+							cursor: 'pointer',
 							'&:hover': { opacity: 0.8 }
 						}}
-						onClick={() => setProfileOpen(true)} // Abre el perfil
+						onClick={() => setProfileOpen(true)}
 					/>
 					<Typography variant="subtitle2" color="white" fontWeight="bold">
 						{activeChat.otherUser.username}
@@ -192,7 +182,6 @@ export const ChatWindow = () => {
 				</Stack>
 			</Box>
 
-			{/* --- LISTA DE MENSAJES --- */}
 			<Box sx={{
 				flexGrow: 1,
 				p: 2,
@@ -231,7 +220,6 @@ export const ChatWindow = () => {
 										<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
 											<DoneAllIcon sx={{
 												fontSize: 14,
-												// Si está leído, azul brillante, si no, gris clarito
 												color: msg.is_read ? '#4fc3f7' : 'rgba(255,255,255,0.6)'
 											}} />
 										</Box>
@@ -249,7 +237,6 @@ export const ChatWindow = () => {
 				<div ref={messagesEndRef} />
 			</Box>
 
-			{/* --- AREA DE INPUT --- */}
 			<Box sx={{ p: 1, borderTop: '1px solid #ddd', display: 'flex', gap: 1, bgcolor: 'white' }}>
 				<IconButton color="warning" onClick={handleOpenInviteMenu} title={t('chatWindow.challengeToPong')}>
 					<VideogameAssetIcon />
@@ -294,7 +281,6 @@ export const ChatWindow = () => {
 				</IconButton>
 			</Box>
 
-			{/* --- 4. RENDERIZADO DEL PERFIL --- */}
 			<ProfileFriend
 				open={profileOpen}
 				onClose={() => setProfileOpen(false)}

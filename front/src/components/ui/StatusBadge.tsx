@@ -7,24 +7,18 @@ interface StatusBadgeProps {
   status: UserStatus;
 }
 
-// Creamos un Badge personalizado
 const StyledBadge = styled(Badge, {
-  // Evitamos que la prop 'status' pase al DOM de HTML
   shouldForwardProp: (prop) => prop !== 'status',
 })<{ status: UserStatus }>(({ theme, status }) => {
-  
-  // Asignamos colores según el estado
-  let badgeColor = theme.palette.success.main; // Verde para online
-  if (status === 'offline') badgeColor = theme.palette.grey[500]; // Gris para offline
-  if (status === 'in-game') badgeColor = theme.palette.warning.main; // Naranja/Amarillo para in-game
-
+  let badgeColor = theme.palette.success.main;
+  if (status === 'offline') badgeColor = theme.palette.grey[500];
+  if (status === 'in-game') badgeColor = theme.palette.warning.main;
   return {
     '& .MuiBadge-badge': {
       backgroundColor: badgeColor,
       color: badgeColor,
-      boxShadow: `0 0 0 2px ${theme.palette.background.paper}`, // Borde del color del fondo para que "recorte" la imagen
+      boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
       
-      // Animación de pulso solo si está online
       '&::after': {
         position: 'absolute',
         top: 0,

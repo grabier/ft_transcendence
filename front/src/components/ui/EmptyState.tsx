@@ -25,10 +25,9 @@ export const EmptyState = ({
 				p: 6,
 				textAlign: 'center',
 				color: 'text.secondary',
-				height: '100%' // Ocupa todo el alto del contenedor padre
+				height: '100%'
 			}}
 		>
-			{/* Contenedor del Icono con opacidad para que no resalte demasiado */}
 			{icon && (
 				<Box sx={{ mb: 2, '& svg': { fontSize: 72, opacity: 0.4 } }}>
 					{icon}

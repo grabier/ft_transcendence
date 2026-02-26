@@ -146,7 +146,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					}
 
 					if (msg.type === 'SIDE_ASSIGNED') {
-						// SE HA ELIMINADO LA INYECCIÓN EN LA URL AQUÍ
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -154,7 +153,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 							startCountdownSequence();
 						}
 					}
-
 					if (msg.type === 'UPDATE') {
 						const s = msg.state;
 
@@ -167,13 +165,11 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 							if (s.status === 'playing' && prev === 'paused') return 'playing';
 							return prev;
 						});
-
 						if (s.status === 'paused') {
 							setPauseTimer(msg.pauseTimeLeft !== undefined ? msg.pauseTimeLeft : null);
 						} else {
 							setPauseTimer(null);
 						}
-
 						if (s.status === 'ended' && !isGameEndedRef.current) {
 							isGameEndedRef.current = true;
 							let text = s.winner === 'left' ? "P1 WINS" : "P2 WINS";
@@ -198,7 +194,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					}
 				} catch (e) { console.error(e); }
 			};
-
 			socket.onclose = () => {
 				if (isComponentUnmounted) return;
 				if (!isGameEndedRef.current) {
@@ -207,14 +202,12 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					reconnectTimeout = setTimeout(connectWebSocket, 2000);
 				}
 			};
-
 			socket.onerror = (err) => {
 				console.error("WS Error", err);
 				socket.close();
 			};
 		}
 		connectWebSocket();
-
 		const keysPressed: Record<string, boolean> = {};
 		const sendInput = (action: string, key: string) => {
 			if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -239,7 +232,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 				}
 			}
 		};
-
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
 
@@ -249,7 +241,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 				}
 				return;
 			}
-
 			if (keysPressed[e.key]) return;
 			keysPressed[e.key] = true;
 			sendInput('PRESS', e.key);
@@ -259,12 +250,9 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 			keysPressed[e.key] = false;
 			sendInput('RELEASE', e.key);
 		};
-
 		window.addEventListener('keydown', handleKeyDown);
 		window.addEventListener('keyup', handleKeyUp);
-
 		reqIdRef.current = requestAnimationFrame(gameLoop);
-
 		return () => {
 			isComponentUnmounted = true;
 			clearTimeout(reconnectTimeout);
@@ -278,7 +266,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 			window.removeEventListener('keydown', handleKeyDown);
 			window.removeEventListener('keyup', handleKeyUp);
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [mode, scoreToWin, gameLoop]);
 
 	const overlayStyle: React.CSSProperties = {

@@ -17,19 +17,15 @@ export const ChatWidget = () => {
 	const { activeChat, closeChat, refreshChats: fetchChats} = useChat();
 	const { unreadMessages, markAsReadMessage } = useSocket();
 	const { user } = useAuth();
-
-	// Al cerrar el widget completo, también cerramos la conversación activa para volver a la lista
 	const toggleOpen = () => {
 		fetchChats();
 		if (isOpen) {
 			setIsOpen(false);
 			markAsReadMessage();
-			closeChat(); // Reseteamos al cerrar
-		} else {
+			closeChat();
 			setIsOpen(true);
 		}
 	};
-
 	useEffect(() => {
 		if (activeChat) {
 			setIsOpen(true);
@@ -41,8 +37,6 @@ export const ChatWidget = () => {
 
 	return (
 		<Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-
-			{/* --- VENTANA DEL CHAT (SOLO SI ESTÁ ABIERTO) --- */}
 			{isOpen && (
 				<Paper
 					elevation={10}
@@ -56,7 +50,6 @@ export const ChatWidget = () => {
 						borderRadius: 2
 					}}
 				>
-					{/* Si hay un chat activo, mostramos la Ventana. Si no, la Lista */}
 					{activeChat ? (
 						
 						<Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -68,7 +61,6 @@ export const ChatWidget = () => {
 				</Paper>
 			)}
 
-			{/* --- BOTÓN FLOTANTE (FAB) --- */}
 			<Tooltip title="Chat">
 				<Fab
 					color="primary"

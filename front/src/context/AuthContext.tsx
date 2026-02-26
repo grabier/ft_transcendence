@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 
 import { BASE_URL } from "@/config";
 import { useNotification } from "@/context/NotificationContext"
-// Definimos la forma de nuestro usuario
+
 interface UserPayload {
 	id: number;
 	username: string;
@@ -38,9 +38,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const { notifySuccess, notifyError } = useNotification();
 	const [searchParams, setSearchParams] = useSearchParams();
-
-	// OAuth Error Handler
 	const errorType = searchParams.get("error");
+
 	useEffect(() => {
 		if (errorType) {
 			const message = errorType === "user_exists"
@@ -52,11 +51,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [errorType, setSearchParams, notifyError]);
 
 	const [user, setUser] = useState<UserPayload | null>(null);
-	//const [avatarUrl, setAvatarUrl] = useState<UserPayload | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const lastTokenRef = useRef<string | null>(null);
 
-	// --- 1. FUNCIÓN LOGIN ---
 	const login = async (email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
@@ -73,7 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 			lastTokenRef.current = data.token;
-			console.log(`use auth   : ${user?.avatarUrl}`);
 
 			notifySuccess(`Welcome back, ${decoded.username}`);
 			return true;
@@ -85,7 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	// --- 2. FUNCIÓN REGISTER ---
 	const register = async (username: string, email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
@@ -113,7 +108,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	// --- 3. FUNCIÓN LOGOUT ---
 	const logout = () => {
 		const token = localStorage.getItem('auth_token');
 		if (token) {
@@ -129,7 +123,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		notifySuccess("Logged out successfully");
 	};
 
-	// --- 4. POLLING Y PERSISTENCIA ---
 	useEffect(() => {
 		const checkToken = () => {
 			const currentToken = localStorage.getItem('auth_token');
@@ -161,7 +154,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		return () => clearInterval(interval);
 	}, []);
 
-	// --- OTROS MÉTODOS (Update, 2FA...) ---
 	const updateUsername = async (newUsername: string): Promise<boolean> => {
 		const token = localStorage.getItem('auth_token');
 		if (!token) return false;
@@ -231,8 +223,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const uploadAvatarFile = async (file: File): Promise<boolean> => {
 		const token = localStorage.getItem('auth_token');
 		if (!token) return false;
-
-		// FormData es clave para enviar archivos
 		const formData = new FormData();
 		formData.append('avatar', file);
 
@@ -241,8 +231,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				method: 'POST',
 				headers: {
 					'Authorization': `Bearer ${token}`
-					// NO poner 'Content-Type': 'multipart/form-data'.
-					// El navegador lo pone automático con el boundary correcto.
 				},
 				body: formData
 			});
@@ -253,8 +241,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				lastTokenRef.current = data.token;
 				localStorage.setItem('auth_token', data.token);
 			}
-
-			// Actualizamos estado local (User Payload)
 			setUser(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
 			notifySuccess("Avatar uploaded!");
 			return true;

@@ -12,7 +12,7 @@ export const useFriendActions = (onSuccess?: () => void) => {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			if (res.ok) {
-				if (onSuccess) onSuccess(); // Avisamos de que ha ido bien
+				if (onSuccess) onSuccess();
 				return true;
 			}
 			return false;
@@ -30,7 +30,7 @@ export const useFriendActions = (onSuccess?: () => void) => {
 				headers: { 'Authorization': `Bearer ${token}` }
 			});
 			if (res.ok) {
-				if (onSuccess) onSuccess(); // Avisamos de que ha ido bien
+				if (onSuccess) onSuccess();
 				return true;
 			}
 			return false;

@@ -5,21 +5,17 @@ import { BASE_URL } from "@/config";
 const Frontend = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
-		// A. Si venimos de GitHub/Google con token en URL
 		const params = new URLSearchParams(window.location.search);
 		const tokenFromUrl = params.get('token');
 
 		if (tokenFromUrl) {
 			console.log("🔑 Token detected. Saving to SESSION storage...");
-			// CORRECCIÓN 1: Usamos sessionStorage para ser consistentes con el logout
 			localStorage.setItem('auth_token', tokenFromUrl);
 			window.history.replaceState({}, document.title, window.location.pathname);
 		}
 	}, []);
 
 	useEffect(() => {
-		//el useEffect carga la funcion , no la llama. 
-		//al cerrar la window, se llama a handleTabClose
 		const handleTabClose = () => {
 			const token = localStorage.getItem('auth_token');
 
@@ -29,7 +25,7 @@ const Frontend = ({ children }: { children: React.ReactNode }) => {
 					headers: {
 						'Authorization': `Bearer ${token}`,
 					},
-					keepalive: true // <--- ¡LA CLAVE MAGICA! 🗝️
+					keepalive: true
 				});
 			}
 			window.addEventListener('beforeunload', handleTabClose);
@@ -38,8 +34,6 @@ const Frontend = ({ children }: { children: React.ReactNode }) => {
 			window.removeEventListener('beforeunload', handleTabClose);
 		};
 	}, []);
-
-	
 
 	return (
 		<>

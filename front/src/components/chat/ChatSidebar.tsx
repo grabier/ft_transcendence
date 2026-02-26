@@ -5,12 +5,8 @@ import CircleIcon from '@mui/icons-material/Circle';
 import { useChat } from '@/context/ChatContext';
 
 export const ChatSidebar = () => {
-	// SEGURIDAD: Inicializamos con un objeto vacío por si el contexto falla
 	const { chats = [], activeChat, selectChat, typingChats } = useChat() || {};
-
 	const { t } = useTranslation();
-
-	// Si no hay chats (o es null/undefined), mostramos mensaje vacío
 	if (!chats || chats.length === 0) {
 		return (
 			<Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -37,9 +33,7 @@ export const ChatSidebar = () => {
 				{chats.map((chat) => {
 					const isActive = activeChat?.id === chat.id;
 					return (
-						// 1. ListItem es el contenedor (lleva la key y el padding desactivado)
 						<ListItem key={chat.id} disablePadding>
-							{/* 2. ListItemButton es lo que hace click */}
 							<ListItemButton
 								selected={isActive}
 								onClick={() => selectChat(chat.otherUser.id, chat.otherUser)}
@@ -64,7 +58,6 @@ export const ChatSidebar = () => {
 									primary={chat.otherUser.username}
 									secondary={
 										<Typography variant="caption" noWrap display="block" color="text.secondary">
-											{/* SI ESTÁ ESCRIBIENDO, SUSTITUYE EL ÚLTIMO MENSAJE */}
 											{typingChats[chat.id] ? (
 												<i>Escribiendo...</i>
 											) : (

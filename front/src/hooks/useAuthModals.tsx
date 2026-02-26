@@ -1,18 +1,15 @@
 import { useState } from "react";
 
 export const useAuthModals = () => {
-	// --- ESTADOS ---
 	const [loginOpen, setLoginOpen] = useState(false);
 	const [registerOpen, setRegisterOpen] = useState(false);
 	const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
 
-	// Estados de paneles extra
 	const [socialOpen, setSocialOpen] = useState(false);
 	const [seeAllUsers, setSeeAllUsers] = useState(false);
 	const [profileOpen, setProfileOpen] = useState(false);
 	const [profileFriendsOpen, setProfileFriendsOpen] = useState(false);
 
-	// --- ACCIONES DE CIERRE ---
 	const closeAll = () => {
 		setLoginOpen(false);
 		setRegisterOpen(false);
@@ -23,7 +20,6 @@ export const useAuthModals = () => {
 		setProfileFriendsOpen(false);
 	};
 
-	// --- ACCIONES DE APERTURA / CAMBIO ---
 	const openLogin = () => { closeAll(); setLoginOpen(true); };
 	const openRegister = () => { closeAll(); setRegisterOpen(true); };
 
@@ -34,7 +30,7 @@ export const useAuthModals = () => {
 
 	const switchToLogin = () => {
 		setRegisterOpen(false);
-		setResetPasswordOpen(false); // Por si veníamos del reset
+		setResetPasswordOpen(false);
 		setLoginOpen(true);
 	};
 
@@ -44,8 +40,6 @@ export const useAuthModals = () => {
 	};
 
 	const toggleSocial = () => {
-		// Si estaba cerrado lo abrimos, si abierto lo cerramos.
-		// Pero cerramos otros modales por si acaso.
 		const wasOpen = socialOpen;
 		closeAll();
 		if (!wasOpen) setSocialOpen(true);
@@ -69,9 +63,7 @@ export const useAuthModals = () => {
 		setSeeAllUsers(true);
 	};
 
-	// Devolvemos todo empaquetado en un objeto bonito
 	return {
-		// Estados (Flags)
 		loginOpen,
 		registerOpen,
 		resetPasswordOpen,
@@ -80,7 +72,6 @@ export const useAuthModals = () => {
 		profileFriendsOpen,
 		seeAllUsers,
 
-		// Acciones
 		closeAll,
 		openLogin,
 		openRegister,
@@ -89,12 +80,10 @@ export const useAuthModals = () => {
 		toggleProfile,
 		toggleProfileFriends,
 
-		// Transiciones
 		switchToRegister,
 		switchToLogin,
 		switchToReset,
 
-		// Setters manuales (por si acaso los necesitas sueltos)
 		setLoginOpen,
 		setRegisterOpen
 	};
