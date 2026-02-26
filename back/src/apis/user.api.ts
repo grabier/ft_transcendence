@@ -16,7 +16,8 @@ import {
 	searchUsersSchema,
 	updateUsernameSchema,
 	updateAvatarSchema,
-	persistenceSchema
+	persistenceSchema,
+	uploadAvatarSchema
 } from "../schemas/user.schema.js";
 
 import { pipeline } from 'stream/promises';
@@ -234,7 +235,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	);
 
 	// POST /api/user/upload-avatar
-	fastify.post('/upload-avatar', { preHandler: [authenticate] }, async (request, reply) => {
+	fastify.post('/upload-avatar', { preHandler: [authenticate], schema: uploadAvatarSchema }, async (request, reply) => {
 		const data = await request.file();
 		if (!data) return reply.code(400).send({ error: "No file uploaded" });
 

@@ -4,9 +4,8 @@ import { FastifyPluginAsync } from 'fastify';
 import { SnakeGame } from '../game/SnakeGame.js'; // <- Ajusta la ruta si es necesario
 import { WebSocket } from '@fastify/websocket';
 import jwt from 'jsonwebtoken';
-// import { gameSocketSchema } from '../schemas/game.schema.js'; // Puedes usar el mismo esquema o crear snake.schema.js
-import { pool } from '../../db/database.js';
-import { socketManager } from '../websocket/connection-manager.js';
+import { gameSocketSchema } from '../schemas/game.schema.js'; // Puedes usar el mismo esquema o crear snake.schema.js
+
 
 interface Player {
 	id: number;
@@ -32,7 +31,7 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.get('/', {
 		websocket: true,
-		// schema: gameSocketSchema, 
+		schema: gameSocketSchema, 
 		config: { rateLimit: false }
 	}, (connection: any, req: any) => {
 		const socket = connection.socket || connection;

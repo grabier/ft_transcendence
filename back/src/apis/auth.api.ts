@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import * as userRepository from "../data-access/user.repository.js";
 import jwt from 'jsonwebtoken';
 import { authenticate } from "../middleware/auth.js";
+import { registerSchema, loginSchema, logoutSchema } from "../schemas/auth.schema.js";
 // Asegúrate de importar fetch si no estás en Node 18+ (aunque Fastify suele ir con Node reciente)
 // import fetch from 'node-fetch'; 
 
@@ -43,7 +44,7 @@ interface GitHubUserResponse {
 const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	// --- POST /register ---
-	fastify.post<{ Body: RegisterBody }>("/register", async (request, reply) => {
+	fastify.post<{ Body: RegisterBody }>("/register", { schema: registerSchema }, async (request, reply) => {
 		const { username, email, password, avatarUrl } = request.body;
 
 		if (!username || !email || !password || !avatarUrl) {
@@ -74,7 +75,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 	// --- POST /login ---
-	fastify.post<{ Body: LoginBody }>("/login", async (request, reply) => {
+	fastify.post<{ Body: LoginBody }>("/login", { schema: loginSchema }, async (request, reply) => {
 		const { email, password } = request.body;
 		if (!email || !password) {
 			return reply.code(400).send({ error: "Faltan campos requeridos" });
@@ -241,7 +242,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 	// --- POST /logout ---
-	fastify.post("/logout", { preHandler: [authenticate] }, async (request, reply) => {
+	fastify.post("/logout", { preHandler: [authenticate], schema: logoutSchema }, async (request, reply) => {
 		try {
 			const user = request.user as any; // Definido por tu middleware authenticate
 			if (user && user.id) {

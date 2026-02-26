@@ -12,7 +12,7 @@ const userSummaryProperties = {
 export const sendRequestSchema = {
 	description: 'Envía una nueva petición de amistad a otro usuario',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	body: {
 		type: 'object',
 		required: ['receiverId'],
@@ -39,7 +39,7 @@ export const sendRequestSchema = {
 export const listFriendsSchema = {
 	description: 'Obtiene la lista de amigos aceptados del usuario actual',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			type: 'array',
@@ -54,7 +54,7 @@ export const listFriendsSchema = {
 export const listBlockedSchema = {
 	description: 'Obtiene la lista de usuarios bloqueados por el usuario actual',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			type: 'array',
@@ -69,7 +69,7 @@ export const listBlockedSchema = {
 export const listPendingSchema = {
 	description: 'Obtiene las peticiones de amistad recibidas que están pendientes',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			type: 'array',
@@ -90,7 +90,7 @@ export const listPendingSchema = {
 export const acceptFriendSchema = {
 	description: 'Acepta una petición de amistad recibida',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	params: {
 		type: 'object',
 		properties: {
@@ -112,7 +112,7 @@ export const acceptFriendSchema = {
 export const deleteFriendSchema = {
 	description: 'Elimina un amigo o rechaza una petición de amistad',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	params: {
 		type: 'object',
 		properties: {
@@ -130,7 +130,7 @@ export const deleteFriendSchema = {
 export const blockUserSchema = {
 	description: 'Bloquea a un usuario (debe existir una relación previa o petición)',
 	tags: ['Friends'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	params: {
 		type: 'object',
 		properties: {

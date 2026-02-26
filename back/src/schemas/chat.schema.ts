@@ -5,7 +5,7 @@
 export const getDMSchema = {
 	description: 'Obtiene un chat privado existente o crea uno nuevo entre el usuario actual y el objetivo',
 	tags: ['Chat'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	body: {
 		type: 'object',
 		required: ['targetUserId'],
@@ -35,7 +35,7 @@ export const getDMSchema = {
 export const getMessagesSchema = {
 	description: 'Obtiene el historial de mensajes de un chat específico',
 	tags: ['Chat'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	params: {
 		type: 'object',
 		properties: {
@@ -81,7 +81,7 @@ export const getMessagesSchema = {
 export const getMyChatsSchema = {
 	description: 'Lista todas las conversaciones activas del usuario actual',
 	tags: ['Chat'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			description: 'Lista de conversaciones con el último mensaje y datos del otro usuario',

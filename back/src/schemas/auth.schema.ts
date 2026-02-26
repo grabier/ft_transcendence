@@ -75,12 +75,19 @@ export const loginSchema = {
 export const logoutSchema = {
 	description: 'Cierra la sesión del usuario actual',
 	tags: ['Auth'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			type: 'object',
 			properties: {
 				message: { type: 'string' }
+			}
+		},
+		500: {
+			description: 'Error interno del servidor al intentar cerrar sesión',
+			type: 'object',
+			properties: {
+				error: { type: 'string' }
 			}
 		}
 	}
