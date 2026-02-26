@@ -125,7 +125,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	// --- BUSQUEDA ---
 	const handleSearch = useCallback(async () => {
-		if (searchQuery.length < 2)
+		if (searchQuery.length < 1)
 			return;
 		try {
 			const res = await fetch(`${BASE_URL}/api/user/search?q=${searchQuery}`, {
@@ -145,7 +145,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			return;
 		}
 		const timer = setTimeout(() => {
-			if (searchQuery.length > 1)
+			if (searchQuery.length > 0)
 				handleSearch();
 		}, 300);
 

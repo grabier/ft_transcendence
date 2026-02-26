@@ -47,13 +47,13 @@ export const getUserByIdSchema = {
 };
 
 export const searchUsersSchema = {
-	description: 'Busca usuarios por nombre de usuario (mínimo 2 caracteres)',
+	description: 'Busca usuarios por nombre de usuario (mínimo 1 caracteres)',
 	tags: ['User'],
 	querystring: {
 		type: 'object',
 		required: ['q'],
 		properties: {
-			q: { type: 'string', minLength: 2, description: 'Término de búsqueda' }
+			q: { type: 'string', minLength: 1, description: 'Término de búsqueda' }
 		}
 	},
 	response: {
