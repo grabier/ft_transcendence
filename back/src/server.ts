@@ -72,21 +72,19 @@ export const createAPIServer = async (): Promise<FastifyInstance> => {
 
 	// SWAGGER (Documentación - Estructura)
 	await app.register(swagger, {
-		swagger: {
+		openapi: {
 			info: {
 				title: 'Transcendence API',
 				description: 'API del mejor Pong de 42 Málaga',
 				version: '1.0.0'
 			},
-			host: '10.11.4.1:3000', // O tu IP si quieres ser estricto
-			schemes: ['https', 'http'],
-			consumes: ['application/json'],
-			produces: ['application/json'],
-			securityDefinitions: {
-				apiKey: {
-					type: 'apiKey',
-					name: 'Authorization',
-					in: 'header'
+			components: {
+				securitySchemes: {
+					bearerAuth: {
+						type: 'http',
+						scheme: 'bearer',
+						bearerFormat: 'JWT'
+					}
 				}
 			}
 		}
