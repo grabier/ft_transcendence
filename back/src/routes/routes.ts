@@ -26,6 +26,7 @@ export const API_ROUTES = {
 	friend: `${root}/friend`,
 	ws: `${root}/ws`,
 	chat: `${root}/chat`,
+	snake: `${root}/snake`, // <- 🐍 AÑADIMOS ESTA LÍNEA
 };
 
 // ============================================================================

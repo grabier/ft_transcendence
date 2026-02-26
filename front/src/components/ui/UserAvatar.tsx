@@ -26,19 +26,7 @@ const StyledBadge = styled(Badge)<{ statuscolor: string }>(({ theme, statuscolor
   },
 }));
 
-// Función para generar un color de fondo consistente basado en el nombre
-function stringToColor(string: string) {
-  let hash = 0;
-  for (let i = 0; i < string.length; i++) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = "#";
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  return color;
-}
+
 
 interface UserAvatarProps {
   src?: string;      // URL de la imagen (DiceBear o lo que sea)
@@ -66,7 +54,7 @@ const UserAvatar = ({
         width: size,
         height: size,
         fontSize: size * 0.5, // El texto escala con el avatar
-        bgcolor: src ? "transparent" : stringToColor(name), // Color hash si no hay img
+        bgcolor: "transparent",
         border: "1px solid rgba(0,0,0,0.1)",
         ...sx,
       }}

@@ -4,7 +4,6 @@ import {
 	Typography, Divider, IconButton, Box,
 	TextField, Collapse, Drawer, Stack
 } from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -40,7 +39,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	// Estados de visualización de secciones
 	const [showOnline, setShowOnline] = useState(true);
 	const [showOffline, setShowOffline] = useState(true);
-	const [showPending, setShowPending] = useState(true);
 	const [showBlocked, setShowBlocked] = useState(true);
 
 
@@ -281,33 +279,85 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				) : (
 					<List component="nav" sx={{ p: 0 }}>
 
-						{/* PENDING REQUESTS */}
 						{pending.length > 0 && (
-							<>
-								<Box onClick={() => setShowPending(!showPending)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', bgcolor: 'warning.main', color: 'black' }}>
-									{showPending ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
-									<Typography variant="subtitle2" sx={{ fontWeight: 'bold', ml: 1 }}>
-										REQUESTS ({pending.length})
-									</Typography>
-								</Box>
-								<Collapse in={showPending}>
-									<List disablePadding>
-										{pending.map(p => (
-											<ListItem key={p.sender_id} sx={{ pl: 4, bgcolor: 'background.default' }} divider>
-												<ListItemText primary={p.username} />
-												<Stack direction="row" spacing={0}>
-													<IconButton size="small" color="success" onClick={() => handleAccept(p.sender_id)}>
-														<CheckIcon fontSize="small" />
-													</IconButton>
-													<IconButton size="small" color="error" onClick={() => handleReject(p.sender_id)}>
-														<CloseIcon fontSize="small" />
-													</IconButton>
-												</Stack>
-											</ListItem>
-										))}
-									</List>
-								</Collapse>
-							</>
+							<Box sx={{ p: 2, bgcolor: 'background.default' }}>
+								<Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1.5, display: 'block', letterSpacing: 1 }}>
+									SOLICITUDES DE AMISTAD
+								</Typography>
+								<Stack spacing={2}>
+									{pending.map(p => (
+										<Box key={p.sender_id} sx={{
+											p: 2,
+											borderRadius: 2,
+											bgcolor: 'background.paper',
+											position: 'relative',
+											overflow: 'hidden',
+											// Borde sutil con sombra de color (Glow)
+											border: '1px solid',
+											borderColor: 'rgba(255, 255, 255, 0.1)',
+											boxShadow: '0 4px 15px rgba(0,0,0,0.3), 0 0 5px rgba(100, 149, 237, 0.1)',
+											transition: 'all 0.3s ease-in-out',
+											'&:hover': {
+												transform: 'translateY(-3px)',
+												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', // Glow azul al hacer hover
+											}
+										}}>
+											<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+												<Avatar
+													src={p.avatar_url}
+													sx={{
+														width: 45,
+														height: 45,
+														borderColor: 'primary.main',
+														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' // Iluminación en el avatar
+													}}
+												/>
+												<Box>
+													<Typography variant="body2" fontWeight="bold" sx={{ color: 'text.primary' }}>
+														{p.username}
+													</Typography>
+													<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+														Quiere ser tu amigo
+													</Typography>
+												</Box>
+											</Stack>
+
+											<Stack direction="row" spacing={1}>
+												<IconButton
+													onClick={() => handleAccept(p.sender_id)}
+													sx={{
+														flex: 1,
+														borderRadius: 1.5,
+														bgcolor: 'success.main',
+														color: 'white',
+														py: 1,
+														fontSize: '0.75rem',
+														fontWeight: 'bold',
+														'&:hover': { bgcolor: 'success.dark', boxShadow: '0 0 10px rgba(76, 175, 80, 0.5)' }
+													}}
+												>
+													Aceptar
+												</IconButton>
+												<IconButton
+													onClick={() => handleReject(p.sender_id)}
+													sx={{
+														flex: 1,
+														borderRadius: 1.5,
+														bgcolor: 'rgba(255,255,255,0.05)',
+														border: '1px solid rgba(255,255,255,0.1)',
+														py: 1,
+														fontSize: '0.75rem',
+														color: 'text.secondary',
+														'&:hover': { bgcolor: 'error.dark', color: 'white' }
+													}}
+												>
+													Ignorar
+												</IconButton>
+											</Stack>
+										</Box>
+									))}
+								</Stack>
+							</Box>
 						)}
 
 						{/* ONLINE FRIENDS */}

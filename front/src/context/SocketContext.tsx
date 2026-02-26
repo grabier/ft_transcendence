@@ -46,7 +46,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	// Función estable para conectar
 	const connect = useCallback(() => {
 		const token = localStorage.getItem('auth_token');
-		if (!token) return;
+		//if (!token) return;
 
 		// Evitar reconexiones si ya está abierto o conectando
 		if (socketRef.current && (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING)) {

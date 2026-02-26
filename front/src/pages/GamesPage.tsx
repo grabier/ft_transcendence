@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
@@ -6,53 +6,71 @@ import { Box } from '@mui/material';
 import GamePanel from '@/components/game/GamePanel';
 import ScoreModal from '@/components/game/ScoreModal';
 import PongGame from '@/components/game/PongGame';
+import SnakeGame from '@/components/game/SnakeGame';
+import { useAuth } from '@/context/AuthContext'; // <-- Añade esta línea
 
 const GamesPage = () => {
 	const { t } = useTranslation();
+	const { user } = useAuth();
+	
 	// UI States
-	const [leftActive, setLeftActive] = useState(false);
-	const [rightActive, setRightActive] = useState(false);
+	const [expandedPanel, setExpandedPanel] = useState<'pong' | 'snake' | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	// Game Config
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedMode, setSelectedMode] = useState<'pvp' | 'ai' | 'local' | null>(null);
+	const [selectedGame, setSelectedGame] = useState<'pong' | 'snake' | null>(null);
 	const [scoreToWin, setScoreToWin] = useState(5);
-	const [roomId, setRoomId] = useState<string | null>(null); // Para el desafío
+	const [roomId, setRoomId] = useState<string | null>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
-
-	// Hook para leer la URL
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [gameKey, setGameKey] = useState(0); 
 
-	// --- EFECTO: DETECTAR INVITACIÓN (Aceptamos ?mode=pvp&roomId=...) ---
 	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+				setExpandedPanel(null); 
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, []);
+
+	// --- EFECTO MAESTRO: LA URL ES LA ÚNICA QUE MANDA ---
+	useEffect(() => {
+		const gameParam = searchParams.get('game');
 		const modeParam = searchParams.get('mode');
 		const roomIdParam = searchParams.get('roomId');
 		const scoreParam = searchParams.get('score');
 
-		if (modeParam && roomIdParam) {
-			console.log("🔗 Invitación detectada:", modeParam, roomIdParam);
+		// 1. Si la URL tiene juego y NO estamos jugando -> ENCENDEMOS EL JUEGO
+		if (gameParam && modeParam && !isPlaying) {
+			if (gameParam === 'snake') setSelectedGame('snake');
+			else setSelectedGame('pong');
 
-			// Configuramos el modo
-			if (modeParam === 'pvp' || modeParam === '1v1') setSelectedMode('pvp');
-			else if (modeParam === 'ai') setSelectedMode('ai');
-			else if (modeParam === 'local') setSelectedMode('local');
-
-			setRoomId(roomIdParam);
+			setSelectedMode(modeParam as any);
+			if (roomIdParam) setRoomId(roomIdParam);
 			if (scoreParam) setScoreToWin(parseInt(scoreParam));
 
-			// ¡Arrancamos directo!
 			setModalOpen(false);
 			setIsPlaying(true);
 		}
-	}, [searchParams]);
+		// 2. Si la URL NO tiene juego (le dimos a Atrás o Salir) y SÍ estamos jugando -> APAGAMOS
+		else if (!gameParam && isPlaying) {
+			setIsPlaying(false);
+			setRoomId(null);
+			setSelectedGame(null);
+		}
+	}, [searchParams, isPlaying]);
 
 	// --- HANDLERS ---
-	const handlePongSelection = (option: string) => {
-		// Limpiamos URL para no arrastrar parámetros viejos
-		setSearchParams({});
-		setRoomId(null);
-
+	const handleGameSelection = (game: 'pong' | 'snake', option: string) => {
+		setSelectedGame(game); 
 		const modeStr = option.trim().toUpperCase();
 		let mode: 'pvp' | 'ai' | 'local' | null = null;
 
@@ -62,53 +80,78 @@ const GamesPage = () => {
 
 		if (mode) {
 			setSelectedMode(mode);
-			setModalOpen(true);
+			if (mode === 'pvp') {
+				setScoreToWin(5);
+				// Ponemos la URL. El useEffect detectará esto y arrancará la partida.
+				setSearchParams({ game, mode: 'pvp', score: '5' }); 
+			} else {
+				setSearchParams({});
+				setModalOpen(true);
+			}
 		}
 	};
 
 	const handleStartGame = (score: number) => {
-		if (selectedMode) {
+		if (selectedMode && selectedGame) {
 			setScoreToWin(score);
+			// Ponemos la URL. El useEffect detectará esto y arrancará la partida.
+			setSearchParams({ game: selectedGame, mode: selectedMode, score: score.toString() });
 			setModalOpen(false);
-			setIsPlaying(true);
 		}
 	};
 
 	const handleExitGame = () => {
-		setIsPlaying(false);
-		setRoomId(null);
-		setSearchParams({}); // Limpiar URL al salir
+		// Al limpiar la URL, el useEffect apagará el juego instantáneamente
+		setSearchParams({});
 	};
 
-	// --- RENDERIZADO DEL JUEGO (MODO PANTALLA COMPLETA) ---
-	if (isPlaying && selectedMode) {
+	const handleRestartGame = () => {
+		if (selectedGame && selectedMode) {
+			setSearchParams({
+				game: selectedGame,
+				mode: selectedMode,
+				score: scoreToWin.toString()
+			}, { replace: true });
+			setRoomId(null);
+			setGameKey(prev => prev + 1); 
+		}
+	};
+
+	// --- RENDERIZADO DEL JUEGO ---
+	if (isPlaying && selectedMode && selectedGame) {
 		return (
 			<Box sx={{
-				// 👇 ESTO ARREGLA EL LAYOUT ROTO Y TAPA EL FOOTER
-				position: 'fixed',
-				top: 0,
-				left: 0,
-				width: '100vw',
-				height: '100vh',
-				bgcolor: 'black',
-				zIndex: 9999, // Por encima de todo (Header, Footer, Chat)
-				display: 'flex',
-				justifyContent: 'center',
-				alignItems: 'center'
+				position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+				bgcolor: 'black', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center'
 			}}>
-				<PongGame
-					mode={selectedMode}
-					scoreToWin={scoreToWin}
-					roomId={roomId || undefined}
-					onExit={handleExitGame}
-				/>
+				{selectedGame === 'pong' ? (
+					<PongGame
+						key={`pong-${gameKey}`}
+						mode={selectedMode}
+						scoreToWin={scoreToWin}
+						roomId={roomId || undefined}
+						onExit={handleExitGame}
+						onRestart={handleRestartGame}
+					/>
+				) : (
+					<SnakeGame
+						key={`snake-${gameKey}`}
+						mode={selectedMode}
+						scoreToWin={scoreToWin}
+						roomId={roomId || undefined}
+						onExit={handleExitGame}
+						onRestart={handleRestartGame}
+					/>
+				)}
 			</Box>
 		);
 	}
 
-	// --- RENDERIZADO DEL MENÚ (NORMAL) ---
+	// --- RENDERIZADO DEL MENÚ ---
 	return (
-		<Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, bgcolor: 'common.black' }}>
+		<Box ref={containerRef}
+			onClick={() => setExpandedPanel(null)}
+			sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, bgcolor: 'common.black' }}>
 
 			<ScoreModal
 				open={modalOpen}
@@ -121,26 +164,26 @@ const GamesPage = () => {
 				title="PONG"
 				highlightWord="CLASSIC"
 				subtitle={t('gamesPage.pongSubtitle')}
-				buttons={['IA ', 'Local', '1v1',]}
+				buttons={['IA ', 'Local', '1v1']}
 				align="left"
-				isActive={leftActive}
-				isPeerActive={rightActive}
-				onHover={() => setLeftActive(true)}
-				onLeave={() => setLeftActive(false)}
-				onOptionSelect={handlePongSelection}
+				isActive={expandedPanel === 'pong'}
+				isPeerActive={expandedPanel === 'snake'}
+				onClick={() => setExpandedPanel('pong')} 
+				onOptionSelect={(opt) => handleGameSelection('pong', opt)}
+				userLoggedIn={!!user} 
 			/>
 
 			<GamePanel
-				title="BLOCK"
-				highlightWord="BREAKER"
-				subtitle={t('gamesPage.breakerSubtitle')}
-				buttons={['IA ', 'Local', '1v1',]}
+				title="SNAKE"
+				highlightWord="NEON"
+				subtitle={t('gamesPage.snakeSubtitle')}
+				buttons={['IA ', 'Local', '1v1']}
 				align="right"
-				isActive={rightActive}
-				isPeerActive={leftActive}
-				onHover={() => setRightActive(true)}
-				onLeave={() => setRightActive(false)}
-				onOptionSelect={handlePongSelection}
+				isActive={expandedPanel === 'snake'}
+				isPeerActive={expandedPanel === 'pong'}
+				onClick={() => setExpandedPanel('snake')} 
+				onOptionSelect={(opt) => handleGameSelection('snake', opt)}
+				userLoggedIn={!!user}
 			/>
 		</Box>
 	);

@@ -1,8 +1,10 @@
+// src/api/routes/snake.api.ts
+
 import { FastifyPluginAsync } from 'fastify';
-import { PongGame } from '../game/PongGame.js';
+import { SnakeGame } from '../game/SnakeGame.js'; // <- Ajusta la ruta si es necesario
 import { WebSocket } from '@fastify/websocket';
 import jwt from 'jsonwebtoken';
-import { gameSocketSchema } from '../schemas/game.schema.js';
+// import { gameSocketSchema } from '../schemas/game.schema.js'; // Puedes usar el mismo esquema o crear snake.schema.js
 import { pool } from '../../db/database.js';
 import { socketManager } from '../websocket/connection-manager.js';
 
@@ -11,12 +13,12 @@ interface Player {
 	username: string;
 	socket: WebSocket;
 	avatarUrl: string;
-	side: 'left' | 'right' | 'spectator' | 'both'; // Añadimos 'both' para local
+	side: 'left' | 'right' | 'spectator' | 'both';
 }
 
 interface Room {
 	id: string;
-	game: PongGame;
+	game: SnakeGame; // <- Cambiado a SnakeGame
 	players: Player[];
 	interval: NodeJS.Timeout | null;
 	disconnectTimeout: NodeJS.Timeout | null;
@@ -24,37 +26,32 @@ interface Room {
 	pauseStartTime: number | null;
 }
 
-const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
+const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	const rooms = new Map<string, Room>();
 	const waitingQueue: { socket: WebSocket, score: number, userId: number, username: string, avatarUrl: string }[] = [];
 
 	fastify.get('/', {
 		websocket: true,
-		schema: gameSocketSchema, // Documentamos el handshake del socket
-		config: {
-			rateLimit: false //Excluimos el juego del límite de peticiones
-		}
+		// schema: gameSocketSchema, 
+		config: { rateLimit: false }
 	}, (connection: any, req: any) => {
 		const socket = connection.socket || connection;
 
 		// 1. AUTH
-		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string }; // Añadimos roomId para desafíos futuros
+		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string };
 		const token = query.token;
-		// Leemos el modo. Si viene 'local', usaremos esa lógica.
 		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
-		const scoreToWin = parseInt(query.score || '5', 10) || 5;
-
+		const scoreToWin = parseInt(query.score || '10', 10) || 10; // Por defecto a 10 para Snake
 		if (!token) { socket.close(1008, "Token requerido"); return; }
 
 		let user: { id: number, username: string, avatarUrl: string };
 		if (token === 'GUEST' && (mode === 'local' || mode === 'ai')) {
 			user = {
-				id: -(Math.floor(Math.random() * 1000000) + 1), // ID negativo para evitar choques en BD
+				id: -(Math.floor(Math.random() * 1000000) + 1),
 				username: `Guest_${Math.floor(Math.random() * 1000)}`,
-				avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest'
+				avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=snake_guest'
 			};
 		} else {
-			// Lógica normal para usuarios registrados (Obligatorio en PvP)
 			try {
 				const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
 				user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
@@ -66,12 +63,11 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 
 
-		console.log(`🔌 Conectado: ${user.username} -> Modo: ${mode}`);
+		console.log(`🐍 Snake Conectado: ${user.username} -> Modo: ${mode}`);
 
-		// 2. LOGICA DE SALAS
 		let roomId = '';
 
-		// --- GESTIÓN DE DOBLE-CONEXIÓN, ABANDONOS Y RECONEXIÓN ---
+		// --- GESTIÓN DE DOBLE-CONEXIÓN (Igual que en Pong) ---
 		const existingRoom = Array.from(rooms.values()).find(r =>
 			r.game.state.status !== 'ended' &&
 			r.players.some(p => p.id === user.id)
@@ -79,18 +75,14 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 		let shouldReconnect = false;
 		if (existingRoom) {
-			if (query.roomId && query.roomId === existingRoom.id) {
-				// 1. Entra explícitamente a la MISMA partida (Click en la misma invitación o F5)
+			if (query.roomId && query.roomId === existingRoom.id)
 				shouldReconnect = true;
-			} else if (!query.roomId && existingRoom.id.startsWith('room_') && !existingRoom.id.includes('LOCAL') && !existingRoom.id.includes('AI')) {
-				// 2. Entra al 1v1 público y ya tenía un 1v1 público a medias
+			else if (!query.roomId && existingRoom.id.startsWith('s_room_') && !existingRoom.id.includes('LOCAL') && !existingRoom.id.includes('AI'))
 				shouldReconnect = true;
-			}
 		}
 
-		// Si tenía sala pero NO cumple los requisitos de reconexión, significa que quiere jugar a otra cosa
 		if (existingRoom && !shouldReconnect) {
-			console.log(`🏃 ${user.username} abandona la sala ${existingRoom.id} para iniciar una nueva.`);
+			console.log(`🏃 ${user.username} abandona la sala ${existingRoom.id}`);
 			const survivor = existingRoom.players.find(p => p.id !== user.id);
 			if (survivor && survivor.socket.readyState === 1) {
 				existingRoom.game.stopGame(survivor.side as 'left' | 'right');
@@ -100,9 +92,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 
 		if (existingRoom && shouldReconnect) {
-			console.log(`🔄 Reconexión/Toma de control: ${user.username} vuelve a ${existingRoom.id}`);
 			roomId = existingRoom.id;
-
 			if (existingRoom.disconnectTimeout) {
 				clearTimeout(existingRoom.disconnectTimeout);
 				existingRoom.disconnectTimeout = null;
@@ -113,13 +103,13 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			const oldSocket = existingRoom.players[playerIndex].socket;
 			if (oldSocket && oldSocket !== socket && oldSocket.readyState === 1) {
-				oldSocket.close(1000, 'Replaced by new connection');
+				oldSocket.close(1000, 'Replaced');
 			}
 			existingRoom.players[playerIndex].socket = socket;
 
-			// Limpiar teclas atascadas
-			if (playerSide === 'left') existingRoom.game.inputs.left = { up: false, down: false };
-			if (playerSide === 'right') existingRoom.game.inputs.right = { up: false, down: false };
+			// Limpiar direcciones atascadas al reconectar
+			if (playerSide === 'left') existingRoom.game.inputs.left = { direction: { x: 1, y: 0 }, nextDirection: { x: 1, y: 0 } };
+			if (playerSide === 'right') existingRoom.game.inputs.right = { direction: { x: -1, y: 0 }, nextDirection: { x: -1, y: 0 } };
 
 			const currentStatus = existingRoom.pauseTimeout ? 'paused' : 'playing';
 			let pauseTimeLeft = 30;
@@ -131,107 +121,64 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: playerSide, roomId: existingRoom.id, status: currentStatus, playersData }));
 
 			if (existingRoom.game.gameMode === 'local' as any || existingRoom.game.gameMode === 'ai') {
-				// Mantenemos el backend congelado 3.5s para que tu pantalla haga el "3, 2, 1, GO!" tranquilo
 				existingRoom.game.state.status = 'countdown' as any;
 				setTimeout(() => {
 					existingRoom.game.state.status = 'playing';
-					(existingRoom.game as any).lastTime = Date.now();
 				}, 3500);
-			} else {
+			}
+			else {
 				// LÓGICA PVP REAL
 				const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
-
 				if (connectedOpponent) {
 					connectedOpponent.socket.send(JSON.stringify({ type: 'OPPONENT_RECONNECTED', message: '¡El rival ha vuelto!', status: currentStatus, playersData }));
-
 					if (existingRoom.pauseTimeout) {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida sigue en pausa táctica.' }));
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'En pausa táctica.' }));
 					} else {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' }));
-						// Sincronizamos el PVP también con los 3.5s
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando...' }));
 						existingRoom.game.state.status = 'countdown' as any;
 						setTimeout(() => {
 							existingRoom.game.state.status = 'playing';
-							(existingRoom.game as any).lastTime = Date.now();
 						}, 3500);
 					}
 				} else {
 					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a que tu rival se reconecte...' }));
 					socket.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED', message: 'El rival está desconectado.' }));
-
-					existingRoom.disconnectTimeout = setTimeout(() => {
-						console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
-						(async () => {
-							try {
-								const searchString = `%"id":"${roomId}"%`;
-								const [msgRows]: any = await pool.execute(
-									`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-									[searchString]
-								);
-
-								if (msgRows.length > 0) {
-									const inviteMsg = msgRows[0];
-									const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
-									const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-									await pool.execute(
-										`UPDATE messages SET content = ? WHERE id = ?`,
-										[newContent, inviteMsg.id]
-									);
-
-									const updatedMessage = { ...inviteMsg, content: newContent };
-									existingRoom.players.forEach(p => {
-										socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-									});
-								}
-							} catch (err) {
-								console.error("Error actualizando invitación de chat:", err);
-							}
-						})();
-						existingRoom.game.stopGame(playerSide as 'left' | 'right');
-						socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
-						destroyRoom(existingRoom.id);
-					}, 15000);
+					// El timeout ya está corriendo
 				}
 			}
 		}
 		// --- FIN INTENTO RECONEXIÓN ---
 
 		else if (mode === 'local') {
-			roomId = `room_${user.id}_LOCAL_${Date.now()}`;
+			roomId = `s_room_${user.id}_LOCAL_${Date.now()}`;
 			createRoom(roomId, scoreToWin, 'local');
 			joinRoom(roomId, socket, 'both', user);
 			startGame(roomId);
 		}
 		else if (mode === 'ai') {
-			roomId = `room_${user.id}_AI_${Date.now()}`;
+			roomId = `s_room_${user.id}_AI_${Date.now()}`;
 			createRoom(roomId, scoreToWin, 'ai');
 			joinRoom(roomId, socket, 'left', user);
 			startGame(roomId);
 		}
 		else {
-			// --- MODO PVP (Remoto) ---
-			if (query.roomId && !query.roomId.startsWith('room_')) {
-				// 1. ES UN DESAFÍO DIRECTO (Amigo del Chat)
+			// MODO PVP
+			if (query.roomId && !query.roomId.startsWith('s_room_')) {
 				roomId = query.roomId;
 				const directRoom = rooms.get(roomId);
-
 				if (directRoom) {
 					if (directRoom.players.length === 1) {
-						// ¡Llega el invitado! Entra y arrancamos el juego
 						joinRoom(roomId, socket, 'right', user);
 						startGame(roomId);
 					} else {
-						socket.send(JSON.stringify({ type: 'STATUS', message: 'La partida ya está llena o terminada.' }));
+						socket.send(JSON.stringify({ type: 'STATUS', message: 'Partida llena.' }));
 					}
 				} else {
-					// Soy el anfitrión, creo la sala y espero
 					createRoom(roomId, scoreToWin, 'pvp');
 					joinRoom(roomId, socket, 'left', user);
 					socket.send(JSON.stringify({ type: 'STATUS', message: 'Esperando a tu rival...' }));
 				}
 			} else {
-				// 2. ES MATCHMAKING ALEATORIO (Cola pública)
 				const existingQueueIndex = waitingQueue.findIndex(item => item.userId === user.id);
 				if (existingQueueIndex !== -1) {
 					waitingQueue[existingQueueIndex].socket.close(1000, 'Replaced');
@@ -241,7 +188,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				if (waitingQueue.length > 0) {
 					const opponent = waitingQueue.shift();
 					if (opponent && opponent.socket.readyState === 1) {
-						roomId = `room_${opponent.userId}_vs_${user.id}_${Date.now()}`;
+						roomId = `s_room_${opponent.userId}_vs_${user.id}_${Date.now()}`;
 						createRoom(roomId, scoreToWin, 'pvp');
 						joinRoom(roomId, opponent.socket, 'left', { id: opponent.userId, username: opponent.username, avatarUrl: opponent.avatarUrl });
 						joinRoom(roomId, socket, 'right', user);
@@ -264,18 +211,24 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			try {
 				const message = JSON.parse(rawData.toString());
 				if (message.type === 'SURRENDER') {
+					if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
+						room.game.stopGame();
+						destroyRoom(room.id);
+						return;
+					}
+
 					if (room.game.gameMode === 'pvp') {
 						const player = room.players.find(p => p.socket === socket);
 						if (player && room.game.state.status !== 'ended') {
 							const winnerSide = player.side === 'left' ? 'right' : 'left';
 
+							// Usamos snakeLeft y snakeRight, no paddle
 							if (winnerSide === 'left') {
-								room.game.state.paddleLeft.score = room.game.winningScore;
+								room.game.state.snakeLeft.score = room.game.winningScore;
 							} else {
-								room.game.state.paddleRight.score = room.game.winningScore;
+								room.game.state.snakeRight.score = room.game.winningScore;
 							}
 
-							// Forzamos la actualización visual del rival al instante
 							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
 							room.players.forEach(p => {
 								if (p.socket.readyState === 1) p.socket.send(updateMsg);
@@ -286,64 +239,13 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					}
 					return;
 				}
-				if (message.type === 'PAUSE') {
-					if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
-						if (room.game.state.status === 'playing') room.game.pauseGame();
-						else if (room.game.state.status === 'paused') room.game.resumeGame();
-					} else {
-						// --- MODO PVP ---
-						const player = room.players.find(p => p.socket === socket);
-						if (!player) return;
-
-						if (room.game.state.status === 'playing') {
-							// 1. Intentar pausar
-							if (room.game.state.pauses[player.side as 'left' | 'right'] > 0) {
-								room.game.state.pauses[player.side as 'left' | 'right']--;
-								room.game.state.pausedBy = player.side as 'left' | 'right';
-								room.game.pauseGame();
-								room.pauseStartTime = Date.now();
-
-								// Avisamos a todos
-								room.players.forEach(p => p.socket.send(JSON.stringify({
-									type: 'STATUS',
-									message: `⏸️ Pausa táctica de ${player.username} (Máx 30s)`
-								})));
-
-								// Arrancamos el cronómetro de 30 segundos
-								room.pauseTimeout = setTimeout(() => {
-									if (room.game.state.status === 'paused') {
-										room.game.state.pausedBy = null;
-										room.game.resumeGame();
-										room.pauseTimeout = null;
-										room.pauseStartTime = null;
-										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
-									}
-								}, 30000);
-							} else {
-								// Si ya gastó su pausa, le avisamos solo a él
-								socket.send(JSON.stringify({ type: 'STATUS', message: '❌ Ya has gastado tu pausa.' }));
-							}
-						} else if (room.game.state.status === 'paused' && room.game.state.pausedBy === player.side) {
-							// 2. Quitar tu propia pausa antes de tiempo
-							if (room.pauseTimeout) {
-								clearTimeout(room.pauseTimeout);
-								room.pauseTimeout = null;
-								room.pauseStartTime = null;
-							}
-							room.game.state.pausedBy = null;
-							room.game.resumeGame();
-							room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
-						}
-					}
-					return;
-				}
-
 				if (message.type === 'INPUT') {
 					if (room.game.gameMode === 'local' as any) {
 						room.game.handleInput(message.key, message.action);
 					} else {
 						const player = room.players.find(p => p.socket === socket);
 						if (player) {
+							// Tu frontend manda "LEFT" o "L_LEFT" o similar, lo mapeamos:
 							const actionKey = `${player.side.toUpperCase()}_${message.key}`;
 							room.game.handleInput(actionKey, message.action);
 						}
@@ -362,20 +264,21 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			const room = getRoomBySocket(socket);
 			if (!room || room.game.state.status === 'ended') return;
 
-			console.log(`⚠️ Jugador desconectado de la sala ${room.id}`);
+			console.log(`⚠️ Jugador desconectado de la sala Snake ${room.id}`);
 
 			// Pausamos el juego y damos 15s de gracia también a Local e IA
 			if (room.game.gameMode === 'local' as any || room.game.gameMode === 'ai') {
 				room.game.pauseGame();
 				if (!room.disconnectTimeout) {
 					room.disconnectTimeout = setTimeout(() => {
-						console.log(`💀 Fin del tiempo de gracia en sala ${room.id} (Local/IA).`);
+						console.log(`💀 Fin del tiempo de gracia en sala Snake ${room.id} (Local/IA).`);
 						destroyRoom(room.id);
 					}, 15000);
 				}
 				return;
 			}
 
+			// --- MODO PVP ---
 			room.game.pauseGame();
 
 			const survivor = room.players.find(p => p.socket !== socket && p.socket.readyState === 1);
@@ -385,35 +288,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 			if (!room.disconnectTimeout) {
 				room.disconnectTimeout = setTimeout(() => {
-					console.log(`💀 2Fin del tiempo de gracia en sala ${room.id}.`);
-					(async () => {
-						try {
-							const searchString = `%"id":"${roomId}"%`;
-							const [msgRows]: any = await pool.execute(
-								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-								[searchString]
-							);
-
-							if (msgRows.length > 0) {
-								const inviteMsg = msgRows[0];
-								const finalResult = `${room.game.state.paddleLeft.score} - ${room.game.state.paddleRight.score}`;
-								console.log(`scoreeeeee: ${finalResult}`);
-								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-								await pool.execute(
-									`UPDATE messages SET content = ? WHERE id = ?`,
-									[newContent, inviteMsg.id]
-								);
-
-								const updatedMessage = { ...inviteMsg, content: newContent };
-								room.players.forEach(p => {
-									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-								});
-							}
-						} catch (err) {
-							console.error("Error actualizando invitación de chat:", err);
-						}
-					})();
+					console.log(`💀 Fin del tiempo de gracia en sala Snake PVP ${room.id}.`);
 					const connectedPlayer = room.players.find(p => p.socket.readyState === 1);
 					if (connectedPlayer) {
 						room.game.stopGame(connectedPlayer.side as 'left' | 'right');
@@ -429,9 +304,10 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 	// --- HELPER FUNCTIONS ---
 	function createRoom(id: string, score: number, mode: 'pvp' | 'ai' | 'local') {
-		const game = new PongGame();
+		const game = new SnakeGame();
+		game.gameMode = mode;
 		game.winningScore = score;
-		game.gameMode = mode as any;
+
 		rooms.set(id, { id, game, players: [], interval: null, disconnectTimeout: null, pauseTimeout: null, pauseStartTime: null });
 	}
 
@@ -442,18 +318,21 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		}
 	}
 
-	// Construye los perfiles dependiendo del modo de juego
 	function getRoomPlayersData(room: Room) {
 		let leftName = 'Player 1', leftAvatar = '';
 		let rightName = 'Player 2', rightAvatar = '';
 
 		if (room.game.gameMode === 'local' as any) {
 			const p = room.players[0];
-			leftName = `${p.username} (P1)`; leftAvatar = p.avatarUrl;
-			rightName = `${p.username} (P2)`; rightAvatar = p.avatarUrl;
+			if (p) {
+				leftName = `${p.username} (P1)`; leftAvatar = p.avatarUrl;
+				rightName = `${p.username} (P2)`; rightAvatar = p.avatarUrl;
+			}
 		} else if (room.game.gameMode === 'ai') {
 			const p = room.players[0];
-			leftName = p.username; leftAvatar = p.avatarUrl;
+			if (p) {
+				leftName = p.username; leftAvatar = p.avatarUrl;
+			}
 			rightName = 'Skynet 🤖'; rightAvatar = 'https://api.dicebear.com/7.x/bottts/svg?seed=skynet';
 		} else {
 			const pLeft = room.players.find(p => p.side === 'left');
@@ -473,71 +352,35 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		if (!room) return;
 		const playersData = getRoomPlayersData(room);
 
-		// 1. Mandamos SIDE_ASSIGNED a ambos a la vez 
 		room.players.forEach(p => {
 			if (p.socket.readyState === 1) {
-				// Aquí sí metemos el status: 'playing' para que el Front no se líe
 				p.socket.send(JSON.stringify({ type: 'SIDE_ASSIGNED', side: p.side, roomId: room.id, status: 'playing', playersData }));
 			}
 		});
 
 		room.game.startGame(room.game.gameMode, room.game.winningScore);
 
-		// 2. Bucle de físicas (60 FPS)
+		const TICK_RATE_MS = 80;
+
 		room.interval = setInterval(() => {
+			room.game.update(); // Mueve la serpiente y comprueba colisiones
+
 			const state = room.game.state;
-			let currentPauseTimeLeft: number | undefined = undefined;
-			if (state.status === 'paused' && room.pauseStartTime) {
-				const elapsed = Math.floor((Date.now() - room.pauseStartTime) / 1000);
-				currentPauseTimeLeft = Math.max(0, 30 - elapsed);
-			}
-			const updateMsg = JSON.stringify({ type: 'UPDATE', state, pauseTimeLeft: currentPauseTimeLeft });
+			const updateMsg = JSON.stringify({ type: 'UPDATE', state });
 
 			room.players.forEach(p => {
-				if (p.socket.readyState === 1) {
-					p.socket.send(updateMsg);
-				}
+				if (p.socket.readyState === 1) p.socket.send(updateMsg);
 			});
 
 			if (state.status === 'ended') {
-				console.log(`Partida terminada sala ${roomId}`);
-				(async () => {
-					try {
-						const searchString = `%"id":"${roomId}"%`;
-						const [msgRows]: any = await pool.execute(
-							`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-							[searchString]
-						);
-
-						if (msgRows.length > 0) {
-							const inviteMsg = msgRows[0];
-							const finalResult = `${state.paddleLeft.score} - ${state.paddleRight.score}`;
-							console.log(`scoreeeeee: ${finalResult}`);
-							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-							await pool.execute(
-								`UPDATE messages SET content = ? WHERE id = ?`,
-								[newContent, inviteMsg.id]
-							);
-
-							const updatedMessage = { ...inviteMsg, content: newContent };
-							room.players.forEach(p => {
-								socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-							});
-						}
-					} catch (err) {
-						console.error("Error actualizando invitación de chat:", err);
-					}
-				})();
-
+				console.log(`Partida de Snake terminada sala ${roomId}`);
 				if (room.interval) {
 					clearInterval(room.interval);
 					room.interval = null;
 				}
 				destroyRoom(roomId);
-				return;
 			}
-		}, 1000 / 60);
+		}, TICK_RATE_MS);
 	}
 
 	function destroyRoom(roomId: string) {
@@ -556,4 +399,4 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	}
 };
 
-export default gameRoutes;
+export default snakeRoutes;

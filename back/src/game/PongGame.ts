@@ -13,6 +13,8 @@ export interface GameState {
 	paddleRight: { x: number; y: number; width: number; height: number; score: number; speed: number; };
 	status: 'menu' | 'playing' | 'paused' | 'ended';
 	winner: 'left' | 'right' | null;
+	pauses: { left: number; right: number };
+	pausedBy: 'left' | 'right' | null;
 }
 
 export class PongGame {
@@ -233,7 +235,9 @@ export class PongGame {
 			paddleLeft: { x: 10, y: (CANVAS_HEIGHT / 2) - (PADDLE_HEIGHT / 2), width: PADDLE_WIDTH, height: PADDLE_HEIGHT, score: 0, speed: 600 },
 			paddleRight: { x: CANVAS_WIDTH - PADDLE_WIDTH - 10, y: (CANVAS_HEIGHT / 2) - (PADDLE_HEIGHT / 2), width: PADDLE_WIDTH, height: PADDLE_HEIGHT, score: 0, speed: 600 },
 			status: 'menu',
-			winner: null
+			winner: null,
+			pauses: { left: 1, right: 1 },
+			pausedBy: null
 		};
 	}
 }

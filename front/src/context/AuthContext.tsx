@@ -249,6 +249,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			const data = await response.json();
 			if (!response.ok) throw new Error(data.error);
+			if (data.token) {
+				lastTokenRef.current = data.token;
+				localStorage.setItem('auth_token', data.token);
+			}
 
 			// Actualizamos estado local (User Payload)
 			setUser(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);

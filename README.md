@@ -10,16 +10,22 @@ MODULES: WEB
 - 
 
 -----------TODOLIST-----------
-- añadir tres en raya o cambiar el gamepanel
-- poner avatares en el juego
-- añadir a mecki
-- recconect y pausa en el juego
-- cambiar invites en el chat cuando se acaba la partida
+
 - terms of service
+- Score predeterminado para 1v1
+- Dentro de las partidas 1v1, cualquier tipo de desconexion estas out (1 segunda de gracias (gmontoro))
 - about us con el github de cada uno
 - readme 
 - limpieza general
 - console warnings
+- añadir tres en raya o cambiar el gamepanel (done)
+- poner avatares en el juego (done)
+- añadir a mecki (done)
+- recconect y pausa en el juego (done)
+- cambiar invites en el chat cuando se acaba la partida (done)
+- Cuando seleccionas cualquier modalidad de juego (AI, Local o 1V1), en el modal que aparece a continuación siempre aparece Modo: 1 vs 1
+- Las partidas no arranca, no hay cuenta atrás
+
 
 
 
@@ -31,14 +37,15 @@ MODULES: WEB
 2 - Implement a complete web-based game where users can play against each other
 2 - Remote players — Enable two players on separate computers to play the same game in real-time
 2 - A public API to interact with the database
-2 - Standard user management and authentication.(falta lo del upload avatar)
+2 - Standard user management and authentication.
 1 - Implement remote authentication with OAuth 2.0
-1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)
-1 - Support for multiple languages
-
-----------EN PROGRESO----------5 points
 1 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
 1 - Custom-made design system with reusable components, including a proper color palette, typography, and icons(hay que hacer cuentas de cuantos tenemos)
+
+
+----------EN PROGRESO----------5 points
+1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)
+1 - Support for multiple languages
 
 -----------NO EMPEZADO----------------8 points
 2 - Multiplayer game (more than two players).
