@@ -12,17 +12,6 @@ const userFullProperties = {
 	last_login: { type: 'string', format: 'date-time' }
 };
 
-export const listAllUsersSchema = {
-	description: 'Obtiene una lista de todos los usuarios registrados',
-	tags: ['User'],
-	response: {
-		200: {
-			type: 'array',
-			items: { type: 'object', properties: userFullProperties }
-		}
-	}
-};
-
 export const getUserByIdSchema = {
 	description: 'Obtiene los detalles públicos de un usuario por su ID',
 	tags: ['User'],
@@ -74,7 +63,7 @@ export const searchUsersSchema = {
 export const persistenceSchema = {
 	description: 'Verifica la validez del token y actualiza el estado online/última conexión',
 	tags: ['User'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	response: {
 		200: {
 			description: 'Token válido y estado actualizado',
@@ -102,7 +91,7 @@ export const persistenceSchema = {
 export const updateUsernameSchema = {
 	description: 'Actualiza el nombre de usuario y genera un nuevo token JWT',
 	tags: ['User'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	body: {
 		type: 'object',
 		required: ['newUsername'],
@@ -131,7 +120,7 @@ export const updateUsernameSchema = {
 export const updateAvatarSchema = {
 	description: 'Actualiza la URL del avatar del usuario',
 	tags: ['User'],
-	security: [{ apiKey: [] }],
+	security: [{ bearerAuth: [] }],
 	body: {
 		type: 'object',
 		required: ['newUrl'],
@@ -146,6 +135,37 @@ export const updateAvatarSchema = {
 			properties: {
 				message: { type: 'string' },
 				newUrl: { type: 'string' }
+			}
+		}
+	}
+};
+
+export const uploadAvatarSchema = {
+	description: 'Sube un archivo de imagen para actualizar el avatar',
+	tags: ['User'],
+	security: [{ bearerAuth: [] }],
+	consumes: ['multipart/form-data'],
+	body: {
+		type: 'object',
+		properties: {
+			file: { type: 'string', format: 'binary', description: 'La imagen a subir' }
+		}
+	},
+	response: {
+		200: {
+			description: 'Avatar subido exitosamente',
+			type: 'object',
+			properties: {
+				message: { type: 'string' },
+				avatarUrl: { type: 'string' },
+				token: { type: 'string' }
+			}
+		},
+		400: {
+			description: 'Error: No se subió ningún archivo',
+			type: 'object',
+			properties: {
+				error: { type: 'string' }
 			}
 		}
 	}

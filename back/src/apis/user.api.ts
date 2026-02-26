@@ -11,12 +11,12 @@ import { pool } from '../../db/database.js';
 import * as userRepository from "../data-access/user.repository.js";
 import jwt from 'jsonwebtoken';
 import {
-	listAllUsersSchema,
 	getUserByIdSchema,
 	searchUsersSchema,
 	updateUsernameSchema,
 	updateAvatarSchema,
-	persistenceSchema
+	persistenceSchema,
+	uploadAvatarSchema
 } from "../schemas/user.schema.js";
 
 import { pipeline } from 'stream/promises';
@@ -63,26 +63,6 @@ interface UpdateAvatarUrlBody {
 // ============================================================================
 
 const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
-
-	// ========================================================================
-	// GET / - Listar todos los usuarios
-	// ========================================================================
-	fastify.get('/', { schema: listAllUsersSchema }, async (request, reply) => {
-		try {
-			// Obtenemos todos los usuarios (sin el password por seguridad)
-			const [rows] = await pool.execute(
-				'SELECT id, username, email, avatar_url, is_online, created_at, last_login FROM users'
-			);
-			return rows;
-		} catch (error: any) {
-			request.log.error(error);
-			return reply.send({
-				error: 'Error al obtener usuarios',
-				details: error.message
-			});
-		}
-	});
-
 	// ========================================================================
 	// GET /:id - Obtener un usuario por su ID
 	// ========================================================================
@@ -234,7 +214,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 	);
 
 	// POST /api/user/upload-avatar
-	fastify.post('/upload-avatar', { preHandler: [authenticate] }, async (request, reply) => {
+	fastify.post('/upload-avatar', { preHandler: [authenticate], schema: uploadAvatarSchema }, async (request, reply) => {
 		const data = await request.file();
 		if (!data) return reply.code(400).send({ error: "No file uploaded" });
 
