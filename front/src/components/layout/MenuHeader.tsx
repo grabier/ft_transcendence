@@ -162,18 +162,11 @@ const MenuHeader = () => {
 				onClose={modals.closeAll}
 				onLogin={onLoginSubmit}
 				onSwitchToRegister={modals.switchToRegister}
-				onSwitchToResetPassword={modals.switchToReset}
 			/>
 			<RegisterModal
 				open={modals.registerOpen}
 				onClose={modals.closeAll}
 				onRegister={onRegisterSubmit}
-				onSwitchToLogin={modals.switchToLogin}
-			/>
-			<ResetPasswordModal
-				open={modals.resetPasswordOpen}
-				onClose={modals.closeAll}
-				onResetPassword={async () => { }}
 				onSwitchToLogin={modals.switchToLogin}
 			/>
 

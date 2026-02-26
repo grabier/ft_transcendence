@@ -78,10 +78,6 @@ const RegisterModal = ({
 				</Box>
 
 				<Stack spacing={2} sx={{ mb: 3 }}>
-					<SocialLoginButton provider="google" href={`${BASE_URL}/api/auth/google`}>
-						{t('registerModal.signUpWithGoogle')}
-					</SocialLoginButton>
-
 					<SocialLoginButton provider="github" href={`${BASE_URL}/api/auth/github`}>
 						{t('registerModal.signUpWithGithub')}
 					</SocialLoginButton>

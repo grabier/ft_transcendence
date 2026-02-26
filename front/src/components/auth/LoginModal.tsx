@@ -1,14 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from 'react-i18next';
-import { Box, Stack, Typography, CircularProgress, Alert, Link } from "@mui/material";
+import { Box, Stack, Typography, CircularProgress, Alert } from "@mui/material";
 
-// Eliminamos StyledDialog de aquí
 import { StyledTextField, PrimaryAuthButton } from "@/style/AuthModalStyle";
 import { validateEmail } from "@/utils/validation";
 import { BASE_URL } from '@/config';
 import SocialLoginButton from "@/components/ui/SocialLoginButton";
 import AuthSwitchLink from "@/components/ui/AuthSwitchLink";
-import Modal from "@/components/ui/Modal"; // Importamos el nuevo componente
+import Modal from "@/components/ui/Modal";
 import { PasswordInput } from "@/components/ui/PasswordInput"
 
 interface Props {
@@ -16,7 +15,6 @@ interface Props {
 	onClose: () => void;
 	onLogin: (email: string, pass: string) => Promise<void>;
 	onSwitchToRegister: () => void;
-	onSwitchToResetPassword: () => void;
 	isLoading?: boolean;
 	error?: string;
 }
@@ -26,7 +24,6 @@ const LoginModal = ({
 	onClose,
 	onLogin,
 	onSwitchToRegister,
-	onSwitchToResetPassword,
 	isLoading = false,
 	error,
 }: Props) => {
@@ -64,10 +61,6 @@ const LoginModal = ({
 				</Box>
 
 				<Stack spacing={2} sx={{ mb: 3 }}>
-					<SocialLoginButton provider="google" href={`${BASE_URL}/api/auth/google`}>
-						{t('loginModal.continueWithGoogle')}
-					</SocialLoginButton>
-
 					<SocialLoginButton provider="github" href={`${BASE_URL}/api/auth/github`}>
 						{t('loginModal.continueWithGithub')}
 					</SocialLoginButton>
@@ -97,23 +90,11 @@ const LoginModal = ({
 							disabled={isLoading} required
 						/>
 
-						<PrimaryAuthButton type="submit" disabled={isLoading || !email || !password} sx={{ mt: 3 }}>
+						<PrimaryAuthButton type="submit" disabled={isLoading || !email || !password} sx={{ mt: 3, mb: 2 }}>
 							{isLoading ? <CircularProgress size={24} sx={{ color: "secondary.main" }} /> : t('loginModal.loginButton')}
 						</PrimaryAuthButton>
 					</Stack>
 				</form>
-
-				<Link
-					component="button" type="button" onClick={onSwitchToResetPassword}
-					sx={{
-						display: "block", textAlign: "center", mt: 2,
-						textDecoration: "underline", textDecorationThickness: "2px",
-						textUnderlineOffset: "4px", color: "text.secondary",
-						"&:hover": { color: "text.primary" },
-					}}
-				>
-					<Typography variant="subtitle1">{t('loginModal.resetPassword')}</Typography>
-				</Link>
 
 				<AuthSwitchLink
 					text={t('loginModal.noAccount')}
