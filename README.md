@@ -11,20 +11,16 @@ MODULES: WEB
 
 -----------TODOLIST-----------
 
+
 - terms of service
-- Score predeterminado para 1v1
-- Dentro de las partidas 1v1, cualquier tipo de desconexion estas out (1 segunda de gracias (gmontoro))
+- que se pueda buscar a aprtir de una letra, 
+- Ocultar la url cuando entramos en una partida
+- si seleccionas el chat de un amigo o buscar amigo, automaticamente pueda escribir
 - about us con el github de cada uno
 - readme 
 - limpieza general
 - console warnings
-- añadir tres en raya o cambiar el gamepanel (done)
-- poner avatares en el juego (done)
-- añadir a mecki (done)
-- recconect y pausa en el juego (done)
-- cambiar invites en el chat cuando se acaba la partida (done)
 - Cuando seleccionas cualquier modalidad de juego (AI, Local o 1V1), en el modal que aparece a continuación siempre aparece Modo: 1 vs 1
-- Las partidas no arranca, no hay cuenta atrás
 
 
 
