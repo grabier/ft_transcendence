@@ -40,18 +40,31 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		// 1. AUTH
 		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string }; // Añadimos roomId para desafíos futuros
 		const token = query.token;
+		// Leemos el modo. Si viene 'local', usaremos esa lógica.
+		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
+		const scoreToWin = parseInt(query.score || '5', 10) || 5;
 
 		if (!token) { socket.close(1008, "Token requerido"); return; }
 
 		let user: { id: number, username: string, avatarUrl: string };
-		try {
-			const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
-			user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
-		} catch (e) { socket.close(1008, "Token inválido"); return; }
+		if (token === 'GUEST' && (mode === 'local' || mode === 'ai')) {
+			user = {
+				id: -(Math.floor(Math.random() * 1000000) + 1), // ID negativo para evitar choques en BD
+				username: `Guest_${Math.floor(Math.random() * 1000)}`,
+				avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest'
+			};
+		} else {
+			// Lógica normal para usuarios registrados (Obligatorio en PvP)
+			try {
+				const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
+				user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
+			} catch (e) {
+				socket.close(1008, "Token inválido o login requerido para PvP");
+				return;
+			}
+		}
 
-		// Leemos el modo. Si viene 'local', usaremos esa lógica.
-		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
-		const scoreToWin = parseInt(query.score || '5', 10) || 5;
+
 
 		console.log(`🔌 Conectado: ${user.username} -> Modo: ${mode}`);
 
@@ -122,7 +135,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				existingRoom.game.state.status = 'countdown' as any;
 				setTimeout(() => {
 					existingRoom.game.state.status = 'playing';
-					(existingRoom.game as any).lastTime = Date.now(); 
+					(existingRoom.game as any).lastTime = Date.now();
 				}, 3500);
 			} else {
 				// LÓGICA PVP REAL
@@ -149,32 +162,32 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 					existingRoom.disconnectTimeout = setTimeout(() => {
 						console.log(`💀 Fin del tiempo de gracia en sala ${existingRoom.id}.`);
 						(async () => {
-						try {
-							const searchString = `%"id":"${roomId}"%`;
-							const [msgRows]: any = await pool.execute(
-								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-								[searchString]
-							);
-
-							if (msgRows.length > 0) {
-								const inviteMsg = msgRows[0];
-								const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
-								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-								await pool.execute(
-									`UPDATE messages SET content = ? WHERE id = ?`,
-									[newContent, inviteMsg.id]
+							try {
+								const searchString = `%"id":"${roomId}"%`;
+								const [msgRows]: any = await pool.execute(
+									`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+									[searchString]
 								);
 
-								const updatedMessage = { ...inviteMsg, content: newContent };
-								existingRoom.players.forEach(p => {
-									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-								});
+								if (msgRows.length > 0) {
+									const inviteMsg = msgRows[0];
+									const finalResult = `${existingRoom.game.state.paddleLeft.score} - ${existingRoom.game.state.paddleRight.score}`;
+									const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+									await pool.execute(
+										`UPDATE messages SET content = ? WHERE id = ?`,
+										[newContent, inviteMsg.id]
+									);
+
+									const updatedMessage = { ...inviteMsg, content: newContent };
+									existingRoom.players.forEach(p => {
+										socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+									});
+								}
+							} catch (err) {
+								console.error("Error actualizando invitación de chat:", err);
 							}
-						} catch (err) {
-							console.error("Error actualizando invitación de chat:", err);
-						}
-					})();
+						})();
 						existingRoom.game.stopGame(playerSide as 'left' | 'right');
 						socket.send(JSON.stringify({ type: 'UPDATE', state: existingRoom.game.state }));
 						destroyRoom(existingRoom.id);
@@ -255,7 +268,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 						const player = room.players.find(p => p.socket === socket);
 						if (player && room.game.state.status !== 'ended') {
 							const winnerSide = player.side === 'left' ? 'right' : 'left';
-							
+
 							if (winnerSide === 'left') {
 								room.game.state.paddleLeft.score = room.game.winningScore;
 							} else {
@@ -303,7 +316,7 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 										room.game.resumeGame();
 										room.pauseTimeout = null;
 										room.pauseStartTime = null;
-										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...'})));
+										room.players.forEach(p => p.socket.send(JSON.stringify({ type: 'STATUS', message: 'Reanudando partida...' })));
 									}
 								}, 30000);
 							} else {
@@ -374,33 +387,33 @@ const gameRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				room.disconnectTimeout = setTimeout(() => {
 					console.log(`💀 2Fin del tiempo de gracia en sala ${room.id}.`);
 					(async () => {
-					try {
-						const searchString = `%"id":"${roomId}"%`;
-						const [msgRows]: any = await pool.execute(
-							`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
-							[searchString]
-						);
-
-						if (msgRows.length > 0) {
-							const inviteMsg = msgRows[0];
-							const finalResult = `${room.game.state.paddleLeft.score} - ${room.game.state.paddleRight.score}`;
-							console.log(`scoreeeeee: ${finalResult}`);
-							const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
-
-							await pool.execute(
-								`UPDATE messages SET content = ? WHERE id = ?`,
-								[newContent, inviteMsg.id]
+						try {
+							const searchString = `%"id":"${roomId}"%`;
+							const [msgRows]: any = await pool.execute(
+								`SELECT * FROM messages WHERE type = 'game_invite' AND content LIKE ? LIMIT 1`,
+								[searchString]
 							);
 
-							const updatedMessage = { ...inviteMsg, content: newContent };
-							room.players.forEach(p => {
-								socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
-							});
+							if (msgRows.length > 0) {
+								const inviteMsg = msgRows[0];
+								const finalResult = `${room.game.state.paddleLeft.score} - ${room.game.state.paddleRight.score}`;
+								console.log(`scoreeeeee: ${finalResult}`);
+								const newContent = JSON.stringify({ id: roomId, status: 'finished', result: finalResult });
+
+								await pool.execute(
+									`UPDATE messages SET content = ? WHERE id = ?`,
+									[newContent, inviteMsg.id]
+								);
+
+								const updatedMessage = { ...inviteMsg, content: newContent };
+								room.players.forEach(p => {
+									socketManager.notifyUser(p.id, 'INVITE_UPDATED', updatedMessage);
+								});
+							}
+						} catch (err) {
+							console.error("Error actualizando invitación de chat:", err);
 						}
-					} catch (err) {
-						console.error("Error actualizando invitación de chat:", err);
-					}
-				})();
+					})();
 					const connectedPlayer = room.players.find(p => p.socket.readyState === 1);
 					if (connectedPlayer) {
 						room.game.stopGame(connectedPlayer.side as 'left' | 'right');

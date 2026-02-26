@@ -119,13 +119,14 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
+		const safeToken = token ? token : 'GUEST';
 		let isComponentUnmounted = false;
 		let reconnectTimeout: NodeJS.Timeout;
 		const host = window.location.hostname; 
 
 		const connectWebSocket = () => {
 			if (isComponentUnmounted) return;
-			const socket = new WebSocket(`wss://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
+			const socket = new WebSocket(`wss://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
 			socketRef.current = socket;
 
 			socket.onopen = () => {

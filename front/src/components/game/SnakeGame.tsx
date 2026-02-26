@@ -121,13 +121,14 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 	useEffect(() => {
 		const token = localStorage.getItem('auth_token');
+		const safeToken = token ? token : 'GUEST';
 		let isComponentUnmounted = false;
 		let reconnectTimeout: NodeJS.Timeout;
 		const host = window.location.hostname;
 
 		const connectWebSocket = () => {
 			if (isComponentUnmounted) return;
-			const socket = new WebSocket(`wss://${host}:3000/api/snake/?mode=${mode}&score=${scoreToWin}&token=${token}&roomId=${roomId || ''}`);
+			const socket = new WebSocket(`wss://${host}:3000/api/snake/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
 			socketRef.current = socket;
 
 			socket.onopen = () => {

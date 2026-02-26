@@ -40,17 +40,28 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		// 1. AUTH
 		const query = req.query as { mode?: string, score?: string, token?: string, roomId?: string };
 		const token = query.token;
-
+		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
+		const scoreToWin = parseInt(query.score || '10', 10) || 10; // Por defecto a 10 para Snake
 		if (!token) { socket.close(1008, "Token requerido"); return; }
 
 		let user: { id: number, username: string, avatarUrl: string };
-		try {
-			const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
-			user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
-		} catch (e) { socket.close(1008, "Token inválido"); return; }
+		if (token === 'GUEST' && (mode === 'local' || mode === 'ai')) {
+			user = {
+				id: -(Math.floor(Math.random() * 1000000) + 1),
+				username: `Guest_${Math.floor(Math.random() * 1000)}`,
+				avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=snake_guest'
+			};
+		} else {
+			try {
+				const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret') as any;
+				user = { id: decoded.id, username: decoded.username, avatarUrl: decoded.avatarUrl };
+			} catch (e) {
+				socket.close(1008, "Token inválido o login requerido para PvP");
+				return;
+			}
+		}
 
-		const mode = (query.mode === 'ai' || query.mode === 'local') ? query.mode : 'pvp';
-		const scoreToWin = parseInt(query.score || '10', 10) || 10; // Por defecto a 10 para Snake
+
 
 		console.log(`🐍 Snake Conectado: ${user.username} -> Modo: ${mode}`);
 
@@ -114,7 +125,7 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				setTimeout(() => {
 					existingRoom.game.state.status = 'playing';
 				}, 3500);
-			} 
+			}
 			else {
 				// LÓGICA PVP REAL
 				const connectedOpponent = existingRoom.players.find(p => p.id !== user.id && p.socket.readyState === 1);
@@ -213,9 +224,9 @@ const snakeRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 							// Usamos snakeLeft y snakeRight, no paddle
 							if (winnerSide === 'left') {
-								room.game.state.snakeLeft.score = room.game.winningScore; 
+								room.game.state.snakeLeft.score = room.game.winningScore;
 							} else {
-								room.game.state.snakeRight.score = room.game.winningScore; 
+								room.game.state.snakeRight.score = room.game.winningScore;
 							}
 
 							const updateMsg = JSON.stringify({ type: 'UPDATE', state: room.game.state });
