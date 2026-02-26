@@ -12,17 +12,6 @@ const userFullProperties = {
 	last_login: { type: 'string', format: 'date-time' }
 };
 
-export const listAllUsersSchema = {
-	description: 'Obtiene una lista de todos los usuarios registrados',
-	tags: ['User'],
-	response: {
-		200: {
-			type: 'array',
-			items: { type: 'object', properties: userFullProperties }
-		}
-	}
-};
-
 export const getUserByIdSchema = {
 	description: 'Obtiene los detalles públicos de un usuario por su ID',
 	tags: ['User'],

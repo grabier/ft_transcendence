@@ -11,7 +11,6 @@ import { pool } from '../../db/database.js';
 import * as userRepository from "../data-access/user.repository.js";
 import jwt from 'jsonwebtoken';
 import {
-	listAllUsersSchema,
 	getUserByIdSchema,
 	searchUsersSchema,
 	updateUsernameSchema,
@@ -64,26 +63,6 @@ interface UpdateAvatarUrlBody {
 // ============================================================================
 
 const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
-
-	// ========================================================================
-	// GET / - Listar todos los usuarios
-	// ========================================================================
-	fastify.get('/', { schema: listAllUsersSchema }, async (request, reply) => {
-		try {
-			// Obtenemos todos los usuarios (sin el password por seguridad)
-			const [rows] = await pool.execute(
-				'SELECT id, username, email, avatar_url, is_online, created_at, last_login FROM users'
-			);
-			return rows;
-		} catch (error: any) {
-			request.log.error(error);
-			return reply.send({
-				error: 'Error al obtener usuarios',
-				details: error.message
-			});
-		}
-	});
-
 	// ========================================================================
 	// GET /:id - Obtener un usuario por su ID
 	// ========================================================================
