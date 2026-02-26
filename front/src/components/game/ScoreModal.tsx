@@ -1,49 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Slider, Typography, Box } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Slider, Typography, Box, Fade } from '@mui/material';
 
 interface ScoreModalProps {
 	open: boolean;
-	mode: string | null;
+	mode: 'ai' | 'player' | string | null; // Tipado más claro
 	onClose: () => void;
 	onStart: (score: number) => void;
 }
 
 const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart }) => {
 	const [score, setScore] = useState<number>(5);
+	const { t } = useTranslation();
 
-    const { t } = useTranslation();
+	// Resetea el contador a 5 cada vez que se abre el modal
+	useEffect(() => {
+		if (open) {
+			setScore(5);
+		}
+	}, [open]);
+
+	// Lógica robusta: Comparamos con el string crudo, NO con la traducción
+	const isAI = mode?.toLowerCase() === 'ai';
+	const displayMode = isAI ? t('scoreModal.vsAI') : t('scoreModal.vsPlayer');
+
 	return (
 		<Dialog
 			open={open}
 			onClose={onClose}
-			slotProps={{
-				paper: {
-					sx: {
-						bgcolor: '#1a1a1a',
-						color: 'white',
-						border: '1px solid #333',
-						minWidth: '300px',
-						textAlign: 'center',
-						boxShadow: '0 0 50px rgba(0,0,0,0.9)'
-					}
+			TransitionComponent={Fade}
+			transitionDuration={300}
+			PaperProps={{
+				sx: {
+					bgcolor: '#121212', // Un oscuro más profundo y limpio
+					color: '#e0e0e0',
+					border: '1px solid rgba(255, 255, 255, 0.1)',
+					borderRadius: '16px',
+					minWidth: '350px',
+					textAlign: 'center',
+					boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
 				}
 			}}
 		>
-			<DialogTitle sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 'bold' }}>
+			<DialogTitle sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 900, fontSize: '1.5rem', mt: 1 }}>
 				{t('scoreModal.title')}
 			</DialogTitle>
 
-			<DialogContent>
-				<Typography gutterBottom sx={{ color: 'grey.400', mb: 4 }}>
-					{t('scoreModal.mode')}: <span style={{ color: '#fff', fontWeight: 'bold' }}>{mode === t('scoreModal.ai') ? t('scoreModal.vsAI') : t('scoreModal.vsPlayer')}</span>
+			<DialogContent sx={{ overflow: 'hidden' }}>
+				{/* Caja destacada para mostrar el modo de juego */}
+				<Box sx={{ mb: 4, mt: 1, p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+					<Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: '1px' }}>
+						{t('scoreModal.mode')}
+					</Typography>
+					<Typography variant="h6" sx={{ color: isAI ? '#4fc3f7' : '#81c784', fontWeight: 'bold' }}>
+						{displayMode}
+					</Typography>
+				</Box>
+
+				<Typography sx={{ fontSize: '1.1rem', mb: 2 }}>
+					{t('scoreModal.pointsToWin')}: <Typography component="span" sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{score}</Typography>
 				</Typography>
 
-				<Typography gutterBottom>
-					{t('scoreModal.pointsToWin')}: <strong>{score}</strong>
-				</Typography>
-
-				<Box sx={{ px: 2, mt: 2 }}>
+				<Box sx={{ px: 3, mt: 2 }}>
 					<Slider
 						value={score}
 						onChange={(_, val) => setScore(val as number)}
@@ -53,13 +71,17 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 						max={21}
 						valueLabelDisplay="auto"
 						sx={{
-							color: 'white',
-							'& .MuiSlider-mark': { backgroundColor: '#bfbfbf' },
+							color: '#fff',
+							height: 6,
+							'& .MuiSlider-mark': { backgroundColor: '#444', height: 4, width: 4, borderRadius: '50%' },
+							'& .MuiSlider-markActive': { backgroundColor: '#fff' },
 							'& .MuiSlider-track': { border: 'none' },
 							'& .MuiSlider-thumb': {
 								backgroundColor: '#fff',
+								width: 20,
+								height: 20,
 								'&:hover, &.Mui-focusVisible': {
-									boxShadow: '0 0 0 8px rgba(255, 255, 255, 0.16)',
+									boxShadow: '0 0 0 8px rgba(255, 255, 255, 0.1)',
 								},
 							},
 						}}
@@ -67,18 +89,28 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 				</Box>
 			</DialogContent>
 
-			<DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-				<Button onClick={onClose} sx={{ color: 'grey.500' }}>
+			<DialogActions sx={{ justifyContent: 'space-between', px: 4, pb: 4 }}>
+				<Button 
+					onClick={onClose} 
+					sx={{ color: 'grey.500', fontWeight: 'bold', '&:hover': { color: '#fff', bgcolor: 'transparent' } }}
+				>
 					{t('scoreModal.cancel')}
 				</Button>
 				<Button
 					onClick={() => onStart(score)}
 					variant="contained"
+					disableElevation
 					sx={{
-						bgcolor: 'white',
-						color: 'black',
+						bgcolor: '#fff',
+						color: '#000',
 						fontWeight: 'bold',
-						'&:hover': { bgcolor: 'grey.300' }
+						borderRadius: '8px',
+						px: 3,
+						'&:hover': { 
+							bgcolor: '#e0e0e0', 
+							transform: 'scale(1.05)', 
+							transition: 'transform 0.2s ease-in-out' 
+						}
 					}}
 				>
 					{t('scoreModal.startGame')}

@@ -124,7 +124,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		async (request, reply) => {
 			const { q } = request.query as { q: string };
 
-			if (!q || q.length < 2) return [];
+			if (!q || q.length < 1) return [];
 
 			try {
 				// Buscamos usuarios que coincidan con el nombre

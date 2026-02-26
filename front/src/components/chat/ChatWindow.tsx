@@ -114,6 +114,9 @@ export const ChatWindow = () => {
 	const openMenu = Boolean(anchorEl);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	// ---> REFERENCIA PARA EL INPUT <---
+	const inputFocusRef = useRef<HTMLInputElement>(null);
+
 	if (!activeChat) return null;
 	const isTyping = typingChats[activeChat.id] || false;
 
@@ -121,7 +124,15 @@ export const ChatWindow = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
 
-	if (!activeChat) return null;
+	// ---> EFECTO PARA ENFOCAR AL ABRIR EL CHAT <---
+	useEffect(() => {
+		if (activeChat) {
+			const timer = setTimeout(() => {
+				inputFocusRef.current?.focus();
+			}, 50);
+			return () => clearTimeout(timer);
+		}
+	}, [activeChat]);
 
 	const handleSend = () => {
 		if (!inputText.trim()) return;
@@ -274,6 +285,7 @@ export const ChatWindow = () => {
 				</Menu>
 
 				<TextField
+					inputRef={inputFocusRef} // ---> AÑADIDO AQUÍ <---
 					fullWidth size="small" placeholder={t('chatWindow.writeMessage')} value={inputText}
 					onChange={(e) => {
 						setInputText(e.target.value);

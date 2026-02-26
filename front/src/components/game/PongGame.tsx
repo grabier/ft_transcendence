@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { SearchingGameLoading } from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
 
 interface PongGameProps {
 	mode: 'pvp' | 'ai' | 'local';
@@ -15,8 +14,6 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
 const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
-	const [searchParams, setSearchParams] = useSearchParams();
-
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
@@ -147,21 +144,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 					}
 
 					if (msg.type === 'SIDE_ASSIGNED') {
-						if (msg.roomId) {
-							// Inyectamos el roomId en la URL sin recargar y sin generar basura en el historial
-							setSearchParams(prev => {
-								if (prev.get('roomId') !== msg.roomId) {
-									const newParams = new URLSearchParams(prev);
-									newParams.set('game', 'pong');
-									newParams.set('mode', mode);
-									newParams.set('roomId', msg.roomId);
-									newParams.set('score', scoreToWin.toString());
-									return newParams;
-								}
-								return prev;
-							}, { replace: true });
-						}
-
+						// SE HA ELIMINADO LA INYECCIÓN EN LA URL AQUÍ
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -280,12 +263,10 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 
 		reqIdRef.current = requestAnimationFrame(gameLoop);
 
-		// --- LIMPIEZA TOTAL: SE EJECUTA AL DARLE A LA FLECHA ATRÁS ---
 		return () => {
 			isComponentUnmounted = true;
 			clearTimeout(reconnectTimeout);
 
-			// MANDAMOS LA RENDICIÓN JUSTO ANTES DE MORIR
 			if (socketRef.current?.readyState === WebSocket.OPEN && !isGameEndedRef.current) {
 				socketRef.current.send(JSON.stringify({ type: 'SURRENDER' }));
 			}

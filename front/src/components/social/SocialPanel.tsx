@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
 	List, ListItem, ListItemAvatar, ListItemText, Avatar,
 	Typography, Divider, IconButton, Box,
@@ -41,11 +41,13 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const [showOffline, setShowOffline] = useState(true);
 	const [showBlocked, setShowBlocked] = useState(true);
 
-
 	// Estados de búsqueda
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<any[]>([]);
+
+	// ---> 1. REFERENCIA PARA EL INPUT DE BÚSQUEDA <---
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	// Hooks y Contexto
 	const { markAsRead, lastNotification } = useSocket();
@@ -55,6 +57,17 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 	const modals = useAuthModals();
 	const [selectedFriend, setSelectedFriend] = useState<any>();
+
+	// ---> 2. EFECTO PARA AUTO-FOCUS AL ABRIR EL BUSCADOR <---
+	useEffect(() => {
+		if (showSearch) {
+			// 150ms le da tiempo a la animación Collapse de MUI a abrirse
+			const timer = setTimeout(() => {
+				searchInputRef.current?.focus();
+			}, 150);
+			return () => clearTimeout(timer);
+		}
+	}, [showSearch]);
 
 	const handleViewProfile = (friend: any) => {
 		setSelectedFriend(friend);
@@ -106,8 +119,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const { deleteFriend, blockFriend } = useFriendActions(fetchData);
 
 	const handleCloseProfile = useCallback(() => {
-		modals.closeAll(); // Cierra el modal/drawer
-		fetchData();       // Refresca la lista de amigos, pendientes y bloqueados
+		modals.closeAll(); 
+		fetchData();       
 	}, [modals, fetchData]);
 
 	useEffect(() => {
@@ -118,14 +131,14 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	}, [open, fetchData, markAsRead]);
 
 	useEffect(() => {
-		if (lastNotification?.type === 'FRIEND_REQUEST' || 'DELETE') {
+		if (lastNotification?.type === 'FRIEND_REQUEST' || lastNotification?.type === 'DELETE') {
 			fetchData();
 		}
 	}, [lastNotification, fetchData]);
 
 	// --- BUSQUEDA ---
 	const handleSearch = useCallback(async () => {
-		if (searchQuery.length < 2)
+		if (searchQuery.length < 1)
 			return;
 		try {
 			const res = await fetch(`${BASE_URL}/api/user/search?q=${searchQuery}`, {
@@ -145,7 +158,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			return;
 		}
 		const timer = setTimeout(() => {
-			if (searchQuery.length > 1)
+			if (searchQuery.length > 0)
 				handleSearch();
 		}, 300);
 
@@ -187,9 +200,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error(err);
 		}
 	};
+	
 	const online = useMemo(() => Array.isArray(friends) ? friends.filter(f => f.is_online) : [], [friends]);
 	const offline = useMemo(() => Array.isArray(friends) ? friends.filter(f => !f.is_online) : [], [friends]);
 	const blockedUsers = useMemo(() => Array.isArray(blocked) ? blocked : [], [blocked]);
+	
 	// --- RENDERIZADO ---
 	return (
 		<Drawer
@@ -240,6 +255,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 					<Collapse in={showSearch}>
 						<TextField
+							inputRef={searchInputRef} // ---> 3. ASIGNAMOS LA REFERENCIA AQUÍ <---
 							fullWidth
 							size="small"
 							placeholder="Username..."
@@ -292,14 +308,13 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 											bgcolor: 'background.paper',
 											position: 'relative',
 											overflow: 'hidden',
-											// Borde sutil con sombra de color (Glow)
 											border: '1px solid',
 											borderColor: 'rgba(255, 255, 255, 0.1)',
 											boxShadow: '0 4px 15px rgba(0,0,0,0.3), 0 0 5px rgba(100, 149, 237, 0.1)',
 											transition: 'all 0.3s ease-in-out',
 											'&:hover': {
 												transform: 'translateY(-3px)',
-												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', // Glow azul al hacer hover
+												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', 
 											}
 										}}>
 											<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
@@ -309,7 +324,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 														width: 45,
 														height: 45,
 														borderColor: 'primary.main',
-														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' // Iluminación en el avatar
+														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' 
 													}}
 												/>
 												<Box>
@@ -375,7 +390,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										sx={{ pl: 3 }}
 										secondaryAction={
 											<Stack direction="row" spacing={0} alignItems="center">
-												{/* AQUÍ ESTA TU MENÚ INTEGRADO CORRECTAMENTE */}
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
@@ -385,8 +399,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<IconButton onClick={() => { onClose(); selectChat(f.id, f); }}>
 													<ChatIcon color="primary" fontSize="small" />
 												</IconButton>
-
-
 											</Stack>
 										}
 									>
@@ -430,7 +442,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										sx={{ pl: 3, opacity: 0.8 }}
 										secondaryAction={
 											<Stack direction="row" spacing={0} alignItems="center">
-												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
@@ -440,8 +451,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
 												</IconButton>
-
-
 											</Stack>
 										}
 									>
@@ -467,6 +476,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 								)}
 							</List>
 						</Collapse>
+
 						{/* BLOCKED */}
 						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
@@ -482,7 +492,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										sx={{ pl: 3, opacity: 0.8 }}
 										secondaryAction={
 											<Stack direction="row" spacing={0} alignItems="center">
-												{/* AQUÍ TAMBIÉN ESTÁ INTEGRADO */}
 												<FriendActionsMenu
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
@@ -492,8 +501,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
 												</IconButton>
-
-
 											</Stack>
 										}
 									>
