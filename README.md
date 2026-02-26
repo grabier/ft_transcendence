@@ -13,7 +13,6 @@ MODULES: WEB
 
 
 - terms of service
-- Ocultar la url cuando entramos en una partida
 - si seleccionas el chat de un amigo o buscar amigo, automaticamente pueda escribir
 - about us con el github de cada uno
 - readme 
