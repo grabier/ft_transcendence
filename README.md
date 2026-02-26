@@ -10,11 +10,6 @@ MODULES: WEB
 - 
 
 -----------TODOLIST-----------
-
-
-- terms of service
-- si seleccionas el chat de un amigo o buscar amigo, automaticamente pueda escribir
-- about us con el github de cada uno
 - readme 
 - limpieza general
 - console warnings
