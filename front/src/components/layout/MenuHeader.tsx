@@ -12,7 +12,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LoginModal from "@/components/auth/LoginModal";
 import RegisterModal from "@/components/auth/RegisterModal";
 import ResetPasswordModal from "@/components/auth/ResetPasswordModal";
-import UserList from "@/components/social/UserList";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { SocialPanel } from "@/components/social/SocialPanel";
 import { Profile } from "@/components/social/Profile";
@@ -39,7 +38,7 @@ const MenuHeader = () => {
 	const handleNavigate = (path: string) => {
 		handleMenuClose();
 		navigate(path);
-	}; // no tendremos otro path, quitar.
+	}; 
 
 	// --- PUENTES LÓGICOS ---
 	const onLoginSubmit = async (email: string, pass: string) => {
@@ -104,6 +103,9 @@ const MenuHeader = () => {
 				open={Boolean(anchorEl)}
 				onClose={handleMenuClose}
 				sx={{ mt: 5 }}
+				PaperProps={{
+					sx: { minWidth: 220 } // FORZAMOS EL ANCHO MÍNIMO AQUÍ PARA QUE NO ENCOJA
+				}}
 			>
 				{!user && (
 					<MenuItem
@@ -126,12 +128,6 @@ const MenuHeader = () => {
 					</MenuItem>
 				)}
 
-				{!user && (
-					<MenuItem onClick={() => handleNavigate("/stats")}>
-						{t('menuHeader.rankings')}
-					</MenuItem>
-				)}
-
 				{user && <MenuItem disabled sx={{ opacity: "1 !important", color: "primary.main", fontWeight: "bold" }}>{t('menuHeader.hello', { username: user.username })}</MenuItem>}
 				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.toggleProfile(); }}>{t('menuHeader.profile')}</MenuItem>) : <MenuItem disabled >{t('menuHeader.profile')}</MenuItem >}
 				{user ? (
@@ -150,8 +146,6 @@ const MenuHeader = () => {
 				) : (
 					<MenuItem disabled>{t('menuHeader.social')}</MenuItem>
 				)}
-				{user ? (<MenuItem onClick={() => { handleMenuClose(); modals.openUserList(); }}>{t('menuHeader.adminUserList')}</MenuItem>) : <MenuItem disabled>{t('menuHeader.adminUserList')}</MenuItem>}
-
 
 				{user && <MenuItem onClick={onLogoutClick}>{t('menuHeader.logout')}</MenuItem>}
 			</Menu>
@@ -170,7 +164,6 @@ const MenuHeader = () => {
 				onSwitchToLogin={modals.switchToLogin}
 			/>
 
-			<UserList open={modals.seeAllUsers} onClose={modals.closeAll} />
 			<SocialPanel open={modals.socialOpen} onClose={modals.closeAll} />
 			<Profile open={modals.profileOpen} onClose={modals.closeAll} />
 		</>
