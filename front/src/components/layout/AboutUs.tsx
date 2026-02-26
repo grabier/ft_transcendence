@@ -34,7 +34,6 @@ const AboutUs: React.FC = () => {
 
 	return (
 		<Container maxWidth="md" sx={{ py: 6, position: 'relative' }}>
-			{/* BOTÓN "VOLVER" ESTILO ARCADE */}
 			<Button
 				onClick={() => navigate(-1)}
 				sx={{
@@ -91,7 +90,6 @@ const AboutUs: React.FC = () => {
 					</Typography>
 				</Box>
 
-				{/* TARJETAS DE LOS JUGADORES */}
 				<Grid container spacing={4}>
 					{teamMembers.map((member, index) => (
 						<Grid size={{ xs: 12, sm: 6 }} key={index}>

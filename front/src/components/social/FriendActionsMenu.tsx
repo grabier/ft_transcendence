@@ -13,12 +13,11 @@ interface Props {
 }
 
 export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: Props) => {
-    // Usamos anchorEl para posicionar el menú donde se hizo click
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        event.stopPropagation(); // Evita que el click dispare eventos en la fila/tarjeta padre
+        event.stopPropagation(); 
         setAnchorEl(event.currentTarget);
     };
 
@@ -28,13 +27,12 @@ export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: 
     };
 
     const handleAction = (actionFn: () => void) => {
-        actionFn(); // Ejecuta la acción (borrar, bloquear, etc.)
-        setAnchorEl(null); // Cierra el menú
+        actionFn(); 
+        setAnchorEl(null);
     };
 
     return (
         <>
-            {/* Botón de tres puntos */}
             <IconButton
                 aria-label="more"
                 id="long-button"
@@ -46,7 +44,6 @@ export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: 
                 <MoreVertIcon />
             </IconButton>
 
-            {/* Menú desplegable estándar */}
             <Menu
                 id="long-menu"
                 MenuListProps={{
@@ -55,11 +52,11 @@ export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: 
                 anchorEl={anchorEl}
                 open={open}
                 onClose={(e: any) => handleClose(e)}
-                onClick={(e) => e.stopPropagation()} // Evita propagación al hacer click dentro del menú
+                onClick={(e) => e.stopPropagation()} 
                 slotProps={{
                     paper: {
                         sx: {
-                            minWidth: '160px', // Ancho mínimo cómodo
+                            minWidth: '160px', 
                             boxShadow: 3
                         },
                     },

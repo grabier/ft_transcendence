@@ -30,26 +30,21 @@ interface Props {
 }
 
 export const SocialPanel = ({ open, onClose }: Props) => {
-	// --- ESTADOS ---
 	const [friends, setFriends] = useState<any[]>([]);
 	const [pending, setPending] = useState<any[]>([]);
 	const [blocked, setBlocked] = useState<any[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	// Estados de visualización de secciones
 	const [showOnline, setShowOnline] = useState(true);
 	const [showOffline, setShowOffline] = useState(true);
 	const [showBlocked, setShowBlocked] = useState(true);
 
-	// Estados de búsqueda
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<any[]>([]);
 
-	// ---> 1. REFERENCIA PARA EL INPUT DE BÚSQUEDA <---
 	const searchInputRef = useRef<HTMLInputElement>(null);
 
-	// Hooks y Contexto
 	const { markAsRead, lastNotification } = useSocket();
 	const { selectChat } = useChat();
 
@@ -58,23 +53,18 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const modals = useAuthModals();
 	const [selectedFriend, setSelectedFriend] = useState<any>();
 
-	// ---> 2. EFECTO PARA AUTO-FOCUS AL ABRIR EL BUSCADOR <---
 	useEffect(() => {
 		if (showSearch) {
-			// 150ms le da tiempo a la animación Collapse de MUI a abrirse
 			const timer = setTimeout(() => {
 				searchInputRef.current?.focus();
 			}, 150);
 			return () => clearTimeout(timer);
 		}
 	}, [showSearch]);
-
 	const handleViewProfile = (friend: any) => {
 		setSelectedFriend(friend);
 		modals.toggleProfileFriends();
 	};
-
-	// --- FETCH DATA ---
 	const fetchData = useCallback(async () => {
 		if (!token) return;
 		try {
@@ -103,7 +93,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					}
 				})
 			]);
-
 			const friendsData = await resF.json();
 			const pendingData = await resP.json();
 			const blockedData = await resB.json();
@@ -136,7 +125,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		}
 	}, [lastNotification, fetchData]);
 
-	// --- BUSQUEDA ---
 	const handleSearch = useCallback(async () => {
 		if (searchQuery.length < 1)
 			return;
@@ -165,7 +153,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 		return () => clearTimeout(timer);
 	}, [searchQuery, handleSearch]);
 
-	// --- ACCIONES ---
 	const sendRequest = async (receiverId: number) => {
 		await fetch(`${BASE_URL}/api/friend/request`, {
 			method: 'POST',
@@ -204,8 +191,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const online = useMemo(() => Array.isArray(friends) ? friends.filter(f => f.is_online) : [], [friends]);
 	const offline = useMemo(() => Array.isArray(friends) ? friends.filter(f => !f.is_online) : [], [friends]);
 	const blockedUsers = useMemo(() => Array.isArray(blocked) ? blocked : [], [blocked]);
-	
-	// --- RENDERIZADO ---
 	return (
 		<Drawer
 			anchor="right"
@@ -222,7 +207,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				}
 			}}
 		>
-			{/* --- CABECERA --- */}
 			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'primary.dark' }}>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<GroupIcon sx={{ color: 'secondary.main' }} />
@@ -235,10 +219,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				</IconButton>
 			</Box>
 
-			{/* --- CONTENIDO SCROLLABLE --- */}
 			<Box sx={{ overflowY: 'auto', height: '100%' }}>
 
-				{/* BARRA DE BÚSQUEDA */}
 				<Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
 					<Box sx={{ display: 'flex', alignItems: 'center', mb: showSearch ? 1 : 0 }}>
 						<Typography variant="subtitle2" sx={{ flexGrow: 1, color: 'text.secondary' }}>
@@ -255,7 +237,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 					<Collapse in={showSearch}>
 						<TextField
-							inputRef={searchInputRef} // ---> 3. ASIGNAMOS LA REFERENCIA AQUÍ <---
+							inputRef={searchInputRef}
 							fullWidth
 							size="small"
 							placeholder="Username..."
@@ -287,7 +269,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					</Collapse>
 				</Box>
 
-				{/* --- LISTAS DE AMIGOS --- */}
 				{loading && friends.length === 0 ? (
 					<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
 						<Loading variant="spinner" size="md" />
@@ -375,7 +356,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 							</Box>
 						)}
 
-						{/* ONLINE FRIENDS */}
 						<Box onClick={() => setShowOnline(!showOnline)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showOnline ? <KeyboardArrowDownIcon fontSize="small" color="success" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 'bold', ml: 1 }}>
@@ -427,7 +407,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 						<Divider variant="middle" sx={{ my: 1 }} />
 
-						{/* OFFLINE FRIENDS */}
 						<Box onClick={() => setShowOffline(!showOffline)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showOffline ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
@@ -477,7 +456,6 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 							</List>
 						</Collapse>
 
-						{/* BLOCKED */}
 						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>

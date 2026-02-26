@@ -1,13 +1,12 @@
 import { OAuthButton } from "@/style/AuthModalStyle";
 
 interface Props {
-  provider: "google" | "github" | "42"; // Añade los que necesites
+  provider: "google" | "github" | "42";
   href: string;
   children: React.ReactNode;
 }
 
 const SocialLoginButton = ({ provider, href, children }: Props) => {
-  // Mapeo de iconos para no repetir el SVG en cada uso
   const iconId = `icon-${provider}`; 
   const iconSize = provider === "github" ? 24 : 20;
 
@@ -15,7 +14,6 @@ const SocialLoginButton = ({ provider, href, children }: Props) => {
     <OAuthButton
       href={href}
       sx={{
-        // Movemos aquí los estilos que tenías inline
         backgroundColor: "#000000",
         color: "#FFFFFF",
         border: "2px solid #000000",
@@ -23,7 +21,6 @@ const SocialLoginButton = ({ provider, href, children }: Props) => {
           backgroundColor: "#FFFFFF",
           color: "#000000",
         },
-        // Ajuste para asegurar que el ancho sea consistente
         width: "100%", 
         display: "flex",
         justifyContent: "center",

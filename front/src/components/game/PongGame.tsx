@@ -144,7 +144,6 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 					}
 
 					if (msg.type === 'SIDE_ASSIGNED') {
-						// SE HA ELIMINADO LA INYECCIÓN EN LA URL AQUÍ
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -275,7 +274,6 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 			window.removeEventListener('keydown', handleKeyDown);
 			window.removeEventListener('keyup', handleKeyUp);
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [mode, scoreToWin, gameLoop]);
 
 	const overlayStyle: React.CSSProperties = {

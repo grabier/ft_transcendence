@@ -4,26 +4,24 @@ import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 
-// Configuración tipográfica centralizada
 const sharedTypography = {
     fontFamily: "Montserrat, sans-serif",
-    // Aplicamos el peso 700 (Bold) a todos los títulos para dar fuerza al diseño
     h1: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
     h2: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
     h3: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
     h4: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
     h5: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
-    h6: { // Toolbar y títulos pequeños
+    h6: {
         fontFamily: "Montserrat, sans-serif",
-        fontWeight: 700, // CAMBIO: de 500 a 700
+        fontWeight: 700,
         fontSize: "20px",
         lineHeight: "28px",
         letterSpacing: "0%",
         textTransform: "none" as const,
     },
-    subtitle1: { // Menu
+    subtitle1: {
         fontFamily: "Montserrat, sans-serif",
-        fontWeight: 700, // Ya estaba en 700, perfecto
+        fontWeight: 700,
         fontSize: "14px",
         lineHeight: "28px",
         letterSpacing: "0%",
@@ -33,7 +31,7 @@ const sharedTypography = {
         fontFamily: "Montserrat, sans-serif",
         fontWeight: 700,
     },
-    body1: { // Body - El cuerpo se mantiene legible en 400 (Regular)
+    body1: {
         fontFamily: "Montserrat, sans-serif",
         fontWeight: 400,
         fontSize: "14px",
@@ -41,9 +39,9 @@ const sharedTypography = {
         letterSpacing: "0%",
         textTransform: "none" as const,
     },
-    button: { // Definición específica para texto de botones
+    button: {
         fontFamily: "Montserrat, sans-serif",
-        fontWeight: 700, // CAMBIO: Botones siempre en negrita
+        fontWeight: 700,
         textTransform: "none" as const,
     },
     displayTitle: {
@@ -63,7 +61,6 @@ const sharedTypography = {
     },
 };
 
-// Shared palette colors (Sin cambios, tus colores están bien)
 const sharedPaletteColors = {
     grey: {
         50: "#FDFDFD",
@@ -140,9 +137,9 @@ const theme: ThemeOptions = {
             styleOverrides: {
                 root: {
                     borderRadius: 0,
-                    textTransform: 'none', // Mantenemos tu preferencia de no mayúsculas
-                    fontWeight: 700,       // CAMBIO: Forzamos negrita en el componente
-                    fontSize: "1rem",      // Opcional: un poco más grande para que se lea mejor
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: "1rem",
                 },
             },
         },
@@ -150,7 +147,7 @@ const theme: ThemeOptions = {
             styleOverrides: {
                 paper: {
                     borderRadius: 0,
-                    border: "2px solid #000", // Extra: Borde negro para estilo Cyberpunk
+                    border: "2px solid #000",
                 },
             },
         },
@@ -161,7 +158,6 @@ const theme: ThemeOptions = {
                 },
             },
         },
-        // Añadido: Para que los inputs también tengan carácter
         MuiInputBase: {
             styleOverrides: {
                 root: {

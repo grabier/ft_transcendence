@@ -36,8 +36,6 @@ export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
 			for (let entry of entries) {
 				canvas.width = entry.contentRect.width;
 				canvas.height = entry.contentRect.height;
-
-				// Si la pantalla se achica y la comida queda fuera, la recolocamos
 				const cols = Math.floor(canvas.width / gridSize);
 				const rows = Math.floor(canvas.height / gridSize);
 				if (food.x >= cols || food.y >= rows) spawnFood(cols, rows);
@@ -56,7 +54,6 @@ export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
 			const cols = Math.floor(canvas.width / gridSize);
 			const rows = Math.floor(canvas.height / gridSize);
 
-			// IA CEBADA
 			const head = snake[0];
 			if (head.x < food.x && dx === 0) { dx = 1; dy = 0; }
 			else if (head.x > food.x && dx === 0) { dx = -1; dy = 0; }
@@ -78,7 +75,6 @@ export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
 				snake.pop();
 			}
 
-			// RENDERIZADO
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 			ctx.fillStyle = '#00ff66';

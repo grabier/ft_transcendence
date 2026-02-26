@@ -4,7 +4,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Slider, Typo
 
 interface ScoreModalProps {
 	open: boolean;
-	mode: 'ai' | 'player' | string | null; // Tipado más claro
+	mode: 'ai' | 'player' | string | null;
 	onClose: () => void;
 	onStart: (score: number) => void;
 }
@@ -12,15 +12,12 @@ interface ScoreModalProps {
 const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart }) => {
 	const [score, setScore] = useState<number>(5);
 	const { t } = useTranslation();
-
-	// Resetea el contador a 5 cada vez que se abre el modal
 	useEffect(() => {
 		if (open) {
 			setScore(5);
 		}
 	}, [open]);
 
-	// Lógica robusta: Comparamos con el string crudo, NO con la traducción
 	const isAI = mode?.toLowerCase() === 'ai';
 	const displayMode = isAI ? t('scoreModal.vsAI') : t('scoreModal.vsPlayer');
 
@@ -32,7 +29,7 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 			transitionDuration={300}
 			PaperProps={{
 				sx: {
-					bgcolor: '#121212', // Un oscuro más profundo y limpio
+					bgcolor: '#121212',
 					color: '#e0e0e0',
 					border: '1px solid rgba(255, 255, 255, 0.1)',
 					borderRadius: '16px',
@@ -47,7 +44,6 @@ const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart })
 			</DialogTitle>
 
 			<DialogContent sx={{ overflow: 'hidden' }}>
-				{/* Caja destacada para mostrar el modo de juego */}
 				<Box sx={{ mb: 4, mt: 1, p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
 					<Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: '1px' }}>
 						{t('scoreModal.mode')}

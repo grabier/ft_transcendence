@@ -46,16 +46,3 @@ export const validateUsername = (username: string): string => {
 
     return "";
 };
-/* TODO: Add this latter
-
-
-export const validatePasswordMatch = (password: string, confirmPassword: string): string => {
-    if (!confirmPassword) return "";
-    
-    if (password !== confirmPassword) {
-        return "Passwords do not match";
-    }
-    
-    return "";
-};
-*/

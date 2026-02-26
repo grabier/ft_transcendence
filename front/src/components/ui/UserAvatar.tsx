@@ -1,13 +1,12 @@
 import { Avatar, Badge, styled } from "@mui/material";
 
-// Colores para los estados (puedes ajustarlos a tu tema)
 const STATUS_COLORS = {
-  online: "#44b700", // Verde
-  ingame: "#ff9100", // Naranja/Amarillo
-  offline: "#bdbdbd", // Gris
+  online: "#44b700",
+  ingame: "#ff9100",
+  offline: "#bdbdbd",
 };
 
-// Estilo del puntito de estado
+
 const StyledBadge = styled(Badge)<{ statuscolor: string }>(({ theme, statuscolor }) => ({
   "& .MuiBadge-badge": {
     backgroundColor: statuscolor,
@@ -26,15 +25,13 @@ const StyledBadge = styled(Badge)<{ statuscolor: string }>(({ theme, statuscolor
   },
 }));
 
-
-
 interface UserAvatarProps {
-  src?: string;      // URL de la imagen (DiceBear o lo que sea)
-  name: string;      // Nombre de usuario (para alt y fallback de iniciales)
-  size?: number;     // Tamaño en px (default 40)
-  status?: "online" | "ingame" | "offline" | null; // Estado del usuario
-  isGroup?: boolean; // Por si es un chat de grupo (opcional)
-  sx?: any;          // Estilos extra
+  src?: string;
+  name: string;
+  size?: number;
+  status?: "online" | "ingame" | "offline" | null;
+  isGroup?: boolean;
+  sx?: any;
 }
 
 const UserAvatar = ({ 
@@ -44,8 +41,6 @@ const UserAvatar = ({
   status = null, 
   sx = {} 
 }: UserAvatarProps) => {
-  
-  // Lógica para mostrar la imagen o las iniciales con color generado
   const avatarContent = (
     <Avatar
       alt={name}
@@ -53,21 +48,16 @@ const UserAvatar = ({
       sx={{
         width: size,
         height: size,
-        fontSize: size * 0.5, // El texto escala con el avatar
+        fontSize: size * 0.5,
         bgcolor: "transparent",
         border: "1px solid rgba(0,0,0,0.1)",
         ...sx,
       }}
     >
-      {/* Si no hay src, mostramos la primera letra */}
-      {!src && name ? name.charAt(0).toUpperCase() : null}
+    {!src && name ? name.charAt(0).toUpperCase() : null}
     </Avatar>
   );
-
-  // Si no hay estado, devolvemos el avatar limpio
   if (!status) return avatarContent;
-
-  // Si hay estado, lo envolvemos en el Badge
   return (
     <StyledBadge
       overlap="circular"

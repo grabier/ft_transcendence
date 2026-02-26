@@ -15,7 +15,6 @@ interface ModalProps {
     fullWidth?: boolean;
 }
 
-// 1. Animación personalizada
 const fadeIn = keyframes`
     from { 
         opacity: 0; 
@@ -27,7 +26,6 @@ const fadeIn = keyframes`
     }
 `;
 
-// 2. El Dialog principal estilizado con tu diseño neobrutalista
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     "& .MuiDialog-paper": {
         backgroundColor: theme.palette.background.default,
@@ -48,7 +46,6 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
     },
 }));
 
-// 3. Cabecera del modal
 const ModalHeader = styled(Box)(({ theme }) => ({
     backgroundColor: theme.palette.secondary.main,
     color: theme.palette.background.default,
@@ -59,7 +56,6 @@ const ModalHeader = styled(Box)(({ theme }) => ({
     borderBottom: `3px solid ${theme.palette.secondary.main}`,
 }));
 
-// 4. Botón de cierre brutalista
 const BrutalistCloseButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.background.default,
     padding: "4px",
@@ -89,7 +85,7 @@ const Modal = ({
             PaperProps={{
                 sx: {
                     width: "100%",
-                    maxWidth: maxWidth === "xs" ? "448px" : undefined, // Usando los 448px de tu archivo de estilos
+                    maxWidth: maxWidth === "xs" ? "448px" : undefined,
                 },
             }}
         >

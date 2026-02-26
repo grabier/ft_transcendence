@@ -8,7 +8,6 @@ import Frontend from "./Frontend";
 
 import { SocketProvider } from "./context/SocketContext";
 
-// Importa tus páginas
 import MainPage from "./pages/MainPage";
 import GamesPage from "./pages/GamesPage";
 import { NotificationProvider } from "./context/NotificationContext";
