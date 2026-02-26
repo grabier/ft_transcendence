@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { Box } from '@mui/material';
 
-interface SceneProps {
+interface Props {
 	isActive: boolean;
 }
 
-export const PongPanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
+const PongPanel = ({ isActive }: Props) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	useEffect(() => {
@@ -152,4 +152,6 @@ export const PongPanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
 			/>
 		</Box>
 	);
-});
+};
+
+export default memo(PongPanel);

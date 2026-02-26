@@ -19,7 +19,7 @@ interface Props {
 	onActionSuccess?: () => void;
 }
 
-export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
+const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
 	const { deleteFriend, blockFriend } = useFriendActions(onActionSuccess);
 
 	return (

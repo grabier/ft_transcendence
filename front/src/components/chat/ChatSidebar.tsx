@@ -4,7 +4,25 @@ import CircleIcon from '@mui/icons-material/Circle';
 
 import { useChat } from '@/context/ChatContext';
 
-export const ChatSidebar = () => {
+const formatLastMessage = (message: any, t: any): string => {
+	if (!message?.content) return t('chatSidebar.newConversation');
+	
+	// Check if it's a game invite (JSON content)
+	if (message.content.startsWith('{')) {
+		try {
+			const data = JSON.parse(message.content);
+			if (data.status === 'pending') return '🎮 Game invite';
+			if (data.status === 'finished') return `🎮 Game finished: ${data.result}`;
+			if (data.status === 'accepted') return '🎮 Game accepted';
+		} catch {
+			// If JSON parse fails, fall through to return as-is
+		}
+	}
+	
+	return message.content;
+};
+
+const ChatSidebar = () => {
 	const { chats = [], activeChat, selectChat, typingChats } = useChat() || {};
 	const { t } = useTranslation();
 	if (!chats || chats.length === 0) {
@@ -59,9 +77,9 @@ export const ChatSidebar = () => {
 									secondary={
 										<Typography variant="caption" noWrap display="block" color="text.secondary">
 											{typingChats[chat.id] ? (
-												<i>Escribiendo...</i>
+											<i>{t('chatSidebar.typing')}</i>
 											) : (
-												chat.lastMessage?.content || t('chatSidebar.newConversation')
+											formatLastMessage(chat.lastMessage, t)
 											)}
 										</Typography>
 									}
@@ -74,3 +92,5 @@ export const ChatSidebar = () => {
 		</Box>
 	);
 };
+
+export default ChatSidebar;

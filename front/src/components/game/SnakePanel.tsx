@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { Box } from '@mui/material';
 
-interface SceneProps {
+interface Props {
 	isActive: boolean;
 }
 
-export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
+const SnakePanel = ({ isActive }: Props) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	useEffect(() => {
@@ -105,4 +105,6 @@ export const SnakePanel: React.FC<SceneProps> = React.memo(({ isActive }) => {
 			<canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 		</Box>
 	);
-});
+};
+
+export default memo(SnakePanel);

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { BASE_URL } from "@/config";
+import { STORAGE_KEYS } from './constants';
 
 const Frontend = ({ children }: { children: React.ReactNode }) => {
 
@@ -9,18 +10,17 @@ const Frontend = ({ children }: { children: React.ReactNode }) => {
 		const tokenFromUrl = params.get('token');
 
 		if (tokenFromUrl) {
-			console.log("🔑 Token detected. Saving to SESSION storage...");
-			localStorage.setItem('auth_token', tokenFromUrl);
+			localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, tokenFromUrl);
 			window.history.replaceState({}, document.title, window.location.pathname);
 		}
 	}, []);
 
 	useEffect(() => {
 		const handleTabClose = () => {
-			const token = localStorage.getItem('auth_token');
+			const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 			if (token) {
-				fetch(`${BASE_URL}:3000/api/auth/logout`, {
+				fetch(`${BASE_URL}/api/auth/logout`, {
 					method: 'POST',
 					headers: {
 						'Authorization': `Bearer ${token}`,

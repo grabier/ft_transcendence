@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Slider, Typography, Box, Fade } from '@mui/material';
 
-interface ScoreModalProps {
+interface Props {
 	open: boolean;
 	mode: 'ai' | 'player' | string | null;
 	onClose: () => void;
 	onStart: (score: number) => void;
 }
 
-const ScoreModal: React.FC<ScoreModalProps> = ({ open, mode, onClose, onStart }) => {
+const ScoreModal = ({ open, mode, onClose, onStart }: Props) => {
 	const [score, setScore] = useState<number>(5);
 	const { t } = useTranslation();
 	useEffect(() => {

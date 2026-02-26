@@ -4,6 +4,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     friend: any;
@@ -12,9 +13,10 @@ interface Props {
     onBlock: (id: number) => void;
 }
 
-export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: Props) => {
+const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: Props) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const { t } = useTranslation();
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         event.stopPropagation(); 
@@ -68,23 +70,25 @@ export const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock }: 
                     <ListItemIcon>
                         <AccountCircleIcon fontSize="small" sx={{ color: '#607d8b' }} />
                     </ListItemIcon>
-                    <ListItemText>Perfil</ListItemText>
+                    <ListItemText>{t('friendActionsMenu.profile')}</ListItemText>
                 </MenuItem>
 
                 <MenuItem onClick={() => handleAction(() => onRemove(friend.id))}>
                     <ListItemIcon>
                         <PersonRemoveIcon fontSize="small" sx={{ color: '#ff5252' }} />
                     </ListItemIcon>
-                    <ListItemText sx={{ color: '#ff5252' }}>Eliminar</ListItemText>
+                    <ListItemText sx={{ color: '#ff5252' }}>{t('friendActionsMenu.remove')}</ListItemText>
                 </MenuItem>
 
                 <MenuItem onClick={() => handleAction(() => onBlock(friend.id))}>
                     <ListItemIcon>
                         <BlockIcon fontSize="small" sx={{ color: '#607d8b' }} />
                     </ListItemIcon>
-                    <ListItemText>Bloquear</ListItemText>
+                    <ListItemText>{t('friendActionsMenu.block')}</ListItemText>
                 </MenuItem>
             </Menu>
         </>
     );
 };
+
+export default FriendActionsMenu;

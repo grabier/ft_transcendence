@@ -13,7 +13,7 @@ import GamesPage from "./pages/GamesPage";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
-import { ChatWidget } from "./components/chat/ChatWidget";
+import ChatWidget from "./components/chat/ChatWidget";
 import TermsOfService from "./components/layout/TermsOfService";
 import PrivacyPolicy from "./components/layout/PrivacyPolicy";
 import AboutUs from "./components/layout/AboutUs";

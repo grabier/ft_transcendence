@@ -25,7 +25,7 @@ const StyledBadge = styled(Badge)<{ statuscolor: string }>(({ theme, statuscolor
   },
 }));
 
-interface UserAvatarProps {
+interface Props {
   src?: string;
   name: string;
   size?: number;
@@ -40,7 +40,7 @@ const UserAvatar = ({
   size = 40, 
   status = null, 
   sx = {} 
-}: UserAvatarProps) => {
+}: Props) => {
   const avatarContent = (
     <Avatar
       alt={name}

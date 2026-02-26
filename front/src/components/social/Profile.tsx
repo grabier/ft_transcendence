@@ -15,25 +15,25 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 
 import { useAuth } from "@/context/AuthContext";
 import { useAuthModals } from '@/hooks/useAuthModals';
+import { AVATAR_SEEDS, FILE_LIMITS, EXTERNAL_APIS } from '../../constants';
 
 interface Props {
 	open: boolean;
 	onClose: () => void;
 }
 
-export const Profile = ({ open, onClose }: Props) => {
+const Profile = ({ open, onClose }: Props) => {
 	const { user, logout } = useAuth();
 	const modals = useAuthModals();
 	const navigate = useNavigate();
 	const { updateAvatarUrl, updateUsername, uploadAvatarFile } = useAuth();
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
 	const [, setCurrentAvatar] = useState(user?.avatarUrl);
-	const AVATAR_SEEDS = ['Felix', 'Aneka', 'Buddy', 'Max', 'Garfield', 'Lucky', 'Willow', 'Jasper'];
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const { t } = useTranslation();
 
 	const handleSelectAvatar = async (seed: string) => {
-		const newUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+		const newUrl = `${EXTERNAL_APIS.DICEBEAR_BASE_URL}?seed=${seed}`;
 
 		setCurrentAvatar(newUrl);
 
@@ -48,8 +48,8 @@ export const Profile = ({ open, onClose }: Props) => {
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (file) {
-			if (file.size > 2 * 1024 * 1024) {
-				alert("File too large (max 2MB)");
+			if (file.size > FILE_LIMITS.MAX_AVATAR_SIZE_BYTES) {
+				alert(`File too large (max ${FILE_LIMITS.MAX_AVATAR_SIZE_MB}MB)`);
 				return;
 			}
 			await uploadAvatarFile(file);
@@ -172,7 +172,7 @@ export const Profile = ({ open, onClose }: Props) => {
 						mb: 2
 					}}>
 						{AVATAR_SEEDS.map((seed) => {
-							const url = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+							const url = `${EXTERNAL_APIS.DICEBEAR_BASE_URL}?seed=${seed}`;
 							return (
 								<Avatar
 									aria-label={`Choose ${seed} as your profile avatar`}

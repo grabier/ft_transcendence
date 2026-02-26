@@ -15,7 +15,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-import { ProfileFriend } from '@/components/social/ProfileFriend';
+import ProfileFriend from '@/components/social/ProfileFriend';
 
 
 const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boolean, score?: number }) => {
@@ -64,7 +64,7 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 				{inviteData.status === 'finished' ? (
 					<Box sx={{ mt: 1, p: 1, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2, textAlign: 'center', width: '100%' }}>
 						<Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.8 }}>
-							Partida finalizada
+							{t('chatWindow.gameFinished')}
 						</Typography>
 						<Typography variant="h5" fontWeight="bold">
 							🏆 {inviteData.result}
@@ -103,7 +103,7 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 	);
 };
 
-export const ChatWindow = () => {
+const ChatWindow = () => {
 	const { t } = useTranslation();
 	const { activeChat, messages, sendMessage, closeChat, sendTyping, typingChats } = useChat();
 	const { user } = useAuth();
@@ -290,3 +290,5 @@ export const ChatWindow = () => {
 		</Box>
 	);
 };
+
+export default ChatWindow;

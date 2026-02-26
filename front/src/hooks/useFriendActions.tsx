@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import { BASE_URL } from '../config';
+import { STORAGE_KEYS } from '../constants';
 
 export const useFriendActions = (onSuccess?: () => void) => {
-	const token = localStorage.getItem('auth_token');
+	const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 	const deleteFriend = useCallback(async (friendId: number) => {
 		if (!token) return false;

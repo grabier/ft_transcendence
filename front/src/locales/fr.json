@@ -1,12 +1,13 @@
 {
 	"authErrorNotification": {
-		"systemError": "ERREUR_SYSTÈME"
+		"systemError": "SYSTEM_ERROR"
 	},
 	"chatSidebar": {
 		"title": "Mes Messages",
 		"noConversations": "Aucune conversation.",
 		"talkToFriends": "Parlez à quelqu'un de votre liste d'amis!",
-		"newConversation": "Nouvelle conversation"
+		"newConversation": "Nouvelle conversation",
+		"typing": "En train d'écrire..."
 	},
 	"chatWidget": {
 		"chat": "Chat"
@@ -26,18 +27,22 @@
 		"quickMatch": "Rapide (3 pts)",
 		"standardMatch": "Standard (5 pts)",
 		"longMatch": "Long (11 pts)",
-		"marathonMatch": "Marathon (21 pts)"
+		"marathonMatch": "Marathon (21 pts)",
+		"gameFinished": "Partie terminée"
 	},
 	"footer": {
 		"logo": "Transcendence",
-		"copyright": "© 2026 Tous Droits Réservés"
+		"copyright": "© 2026 Tous Droits Réservés",
+		"terms": "Conditions d'utilisation",
+		"privacy": "Politique de confidentialité",
+		"about": "À propos de nous"
 	},
 	"loginModal": {
 		"signInTo": "Se connecter à",
 		"title": "Transcendence",
 		"continueWithGoogle": "Continuer avec Google",
 		"continueWithGithub": "Continuer avec Github",
-		"emailLabel": "E-MAIL",
+		"emailLabel": "EMAIL",
 		"passwordLabel": "MOT DE PASSE",
 		"loginButton": "Se connecter",
 		"resetPassword": "Réinitialiser le mot de passe",
@@ -61,7 +66,7 @@
 		"signUpWithGoogle": "S'inscrire avec Google",
 		"signUpWithGithub": "S'inscrire avec Github",
 		"usernameLabel": "NOM D'UTILISATEUR",
-		"emailLabel": "E-MAIL",
+		"emailLabel": "EMAIL",
 		"passwordLabel": "MOT DE PASSE",
 		"createAccount": "Créer un Compte",
 		"alreadyHaveAccount": "Vous avez déjà un compte?",
@@ -71,7 +76,7 @@
 		"title": "Réinitialisez votre mot de passe",
 		"subtitle": "Transcendence",
 		"instructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
-		"emailLabel": "E-MAIL",
+		"emailLabel": "EMAIL",
 		"sendButton": "Envoyer le lien",
 		"sending": "Envoi...",
 		"emailSent": "E-mail envoyé!",
@@ -111,6 +116,93 @@
 	},
 	"gamesPage": {
 		"pongSubtitle": "La légende arcade originale. Pur jeu de réflexes.",
-		"snakeSubtitle": "Action rétro sous les néons. Survivez à la grille, faites grandir la lumière."
+		"snakeSubtitle": "Action rétro sous les néons. Survivez à la grille, faites grandir la lumière.",
+		"pongTitle": "PONG",
+		"pongHighlight": "CLASSIQUE",
+		"snakeTitle": "SNAKE",
+		"snakeHighlight": "NÉON",
+		"aiButton": "IA ",
+		"localButton": "Local",
+		"pvpButton": "1v1",
+		"playAgain": "REJOUER",
+		"exitToMenu": "RETOUR AU MENU",
+		"pressToContinue": "Appuyez sur P ou ESC pour continuer"
+	},
+	"header": {
+		"marquee": "Pong Tournament • Join the Arena • Win • Glory •"
+	},
+	"aboutUs": {
+		"backButton": "< RETOUR À L'ARCADE",
+		"title": "À PROPOS DE NOUS",
+		"subtitle": "L'ÉQUIPE PESCAPONG",
+		"description": "PescaPong Arcade ne serait pas possible sans les heures interminables de code, les litres de café et l'esprit du Common Core de 42. Rencontrez les créateurs de cette folie :",
+		"githubButton": "GITHUB"
+	},
+	"privacyPolicy": {
+		"backButton": "← Retour",
+		"title": "Politique de Confidentialité",
+		"subtitle": "PescaPong Arcade",
+		"intro": "Chez <strong>PescaPong</strong>, nous prenons votre confidentialité au sérieux (même en tant que projet académique !). Cette Politique de Confidentialité décrit comment nous collectons, utilisons et protégeons vos informations personnelles lorsque vous utilisez notre plateforme pour jouer à Pong, Snake et discuter avec d'autres utilisateurs.",
+		"section1Title": "1. Informations que nous collectons",
+		"section1Intro": "Pour que le jeu et les fonctionnalités sociales fonctionnent correctement, nous collectons les données suivantes :",
+		"section1Item1": "<strong>Données d'inscription :</strong> Nom d'utilisateur, adresse e-mail (le cas échéant) et mot de passe (stocké sous forme cryptée).",
+		"section1Item2": "<strong>Données de profil :</strong> Votre avatar, liste d'amis et utilisateurs bloqués.",
+		"section1Item3": "<strong>Données de jeu :</strong> Historique des matchs, scores, victoires, défaites et statistiques pour Pong et Snake.",
+		"section1Item4": "<strong>Communications :</strong> Messages envoyés via notre système de chat en temps réel.",
+		"section2Title": "2. Utilisation des informations",
+		"section2Intro": "Vos données ne seront <strong>JAMAIS vendues ou partagées avec des tiers</strong>. Toutes les informations collectées sont utilisées exclusivement et strictement pour :",
+		"section2Item1": "Permettre l'authentification et la connexion.",
+		"section2Item2": "Maintenir le système de matchmaking et les classements.",
+		"section2Item3": "Faire fonctionner le chat en direct et gérer les invitations de jeu.",
+		"section3Title": "3. Stockage local (Tokens)",
+		"section3Content": "Nous n'utilisons pas de cookies de suivi publicitaire. Cependant, PescaPong utilise le stockage local de votre navigateur (`localStorage` ou `sessionStorage`) pour stocker en toute sécurité votre <strong>Token d'authentification (JWT)</strong>. Ce token est essentiel pour maintenir votre session ouverte pendant que vous naviguez sur la page et jouez.",
+		"section4Title": "4. Sécurité et conservation des données",
+		"section4Content": "Nous mettons en œuvre des mesures de sécurité pour protéger vos informations, telles que le hachage des mots de passe. Cependant, nous vous rappelons qu'il s'agit d'un projet scolaire test. Nous nous réservons le droit de supprimer toutes les données de la base de données (y compris les comptes utilisateurs, les messages et les scores) à tout moment pour la maintenance du serveur.",
+		"footerDeveloped": "Développé avec amour, cigarettes et beaucoup de café par :",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Dernière mise à jour :"
+	},
+	"termsOfService": {
+		"backButton": "← Retour",
+		"title": "Conditions d'utilisation",
+		"subtitle": "PescaPong Arcade",
+		"intro": "Bienvenue sur <strong>PescaPong</strong>. Ce projet a été développé dans le cadre du programme académique de l'école 42. En accédant et en utilisant cette plateforme, vous acceptez d'être lié par les Conditions d'utilisation suivantes. Si vous n'êtes pas d'accord avec une partie de ces conditions, vous ne devez pas utiliser notre application.",
+		"section1Title": "1. Nature du projet",
+		"section1Content": "pescapong est un environnement de test éducatif. <strong>Ce n'est pas un produit commercial.</strong> Le service est fourni \"tel quel\" et \"selon disponibilité\". Nous nous réservons le droit absolu de modifier, suspendre ou fermer la plateforme, ainsi que de réinitialiser les bases de données, les historiques de matchs et les scores à tout moment et sans préavis.",
+		"section2Title": "2. Comptes utilisateur et sécurité",
+		"section2Para1": "Pour accéder aux fonctionnalités multijoueurs, vous devez créer un compte. Vous êtes seul responsable du maintien de la confidentialité de votre mot de passe et de toutes les activités qui se produisent sous votre compte.",
+		"section2Para2": "Nous nous réservons le droit de suspendre ou de supprimer des comptes que nous jugeons violer ces conditions, à notre seule discrétion.",
+		"section3Title": "3. Code de conduite",
+		"section3Intro": "En utilisant nos salons de chat et systèmes de matchmaking, vous vous engagez à maintenir un environnement respectueux. Les éléments suivants sont strictement interdits :",
+		"section3Item1": "Le harcèlement, les insultes, les discours de haine ou tout comportement toxique envers d'autres joueurs dans le chat ou les messages directs.",
+		"section3Item2": "Le spam, l'envoi de liens malveillants ou la saturation des canaux de communication.",
+		"section3Item3": "<strong>Utilisation de tricheries :</strong> L'utilisation de scripts, bots, macros ou tout logiciel tiers conçu pour obtenir des avantages injustes dans les matchs de Pong et Snake est strictement interdite.",
+		"section4Title": "4. Propriété intellectuelle",
+		"section4Content": "Tout le code, la conception et les mécaniques de pescapong ont été développés par l'équipe créatrice. Les droits de propriété intellectuelle du projet global sont soumis aux réglementations du programme de l'école 42.",
+		"footerDeveloped": "Développé avec amour, cigarettes et beaucoup de café par :",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Dernière mise à jour :"
+	},
+	"friendActionsMenu": {
+		"profile": "Profil",
+		"remove": "Supprimer",
+		"block": "Bloquer"
+	},
+	"socialPanel": {
+		"title": "Social Hub",
+		"findFriends": "TROUVER DES AMIS",
+		"usernamePlaceholder": "Nom d'utilisateur...",
+		"noUsersFound": "Aucun utilisateur trouvé",
+		"friendRequests": "DEMANDES D'AMI",
+		"wantsToBeFriend": "Veut être votre ami",
+		"accept": "Accepter",
+		"ignore": "Ignorer",
+		"online": "EN LIGNE",
+		"offline": "HORS LIGNE",
+		"blocked": "BLOQUÉ",
+		"nobodyOnline": "Personne en ligne",
+		"nobodyOnlineDesc": "Vos amis sont hors ligne ou jouent à Pong.",
+		"allConnected": "Tous connectés",
+		"allConnectedDesc": "Vous n'avez aucun ami hors ligne pour le moment."
 	}
 }

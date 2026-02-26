@@ -1,6 +1,8 @@
+import { NETWORK } from './constants';
+
 const PROTOCOL = window.location.protocol;
 const HOST = window.location.hostname;
-const PORT = '3000';
+const PORT = NETWORK.PORT;
 
 
 export const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`;

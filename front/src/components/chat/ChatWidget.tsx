@@ -5,26 +5,26 @@ import {
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { ChatSidebar } from '@/components/chat/ChatSidebar';
-import { ChatWindow } from '@/components/chat/ChatWindow';
+import ChatSidebar from '@/components/chat/ChatSidebar';
+import ChatWindow from '@/components/chat/ChatWindow';
 import { useChat } from '@/context/ChatContext';
 import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
 
 
-export const ChatWidget = () => {
+const ChatWidget = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const { activeChat, closeChat, refreshChats: fetchChats} = useChat();
 	const { unreadMessages, markAsReadMessage } = useSocket();
 	const { user } = useAuth();
 	const toggleOpen = () => {
-		fetchChats();
 		if (isOpen) {
-			setIsOpen(false);
 			markAsReadMessage();
 			closeChat();
-			setIsOpen(true);
+		} else {
+			fetchChats();
 		}
+		setIsOpen(!isOpen);
 	};
 	useEffect(() => {
 		if (activeChat) {
@@ -79,3 +79,5 @@ export const ChatWidget = () => {
 		</Box>
 	);
 };
+
+export default ChatWidget;

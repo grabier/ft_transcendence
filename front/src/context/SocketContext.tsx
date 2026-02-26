@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
+import { STORAGE_KEYS, NETWORK } from '../constants';
 
 interface Notification {
 	type: string;
@@ -42,7 +43,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 	const markAsReadMessage = () => setUnreadMessages(0);
 
 	const connect = useCallback(() => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 		if (socketRef.current && (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING)) {
 			console.log("🔌 Socket already active or connecting. Skipping.");
@@ -55,7 +56,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const host = window.location.hostname;
-		const port = '3000';
+		const port = NETWORK.PORT;
 		const wsUrl = `${protocol}//${host}:${port}/api/ws?token=${token}`;
 
 		console.log(`🔌 Connecting to WebSocket at ${wsUrl}...`);
@@ -87,8 +88,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 				socketRef.current = null;
 				setSocket(null);
 
-				if (localStorage.getItem('auth_token')) {
-					reconnectTimeout.current = window.setTimeout(connect, 3000);
+			if (localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)) {
+				reconnectTimeout.current = window.setTimeout(connect, NETWORK.RECONNECT_TIMEOUT);
 				}
 			}
 		};

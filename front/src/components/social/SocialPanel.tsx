@@ -15,21 +15,24 @@ import { useSocket } from "../../context/SocketContext";
 import { useChat } from '../../context/ChatContext';
 import ProfileFriend from '../social/ProfileFriend';
 import { useAuthModals } from "../../hooks/useAuthModals";
-import { FriendActionsMenu } from '../social/FriendActionsMenu';
+import FriendActionsMenu from '../social/FriendActionsMenu';
 import { BASE_URL } from '../../config';
 import { useFriendActions } from '../../hooks/useFriendActions';
-import { EmptyState } from '../ui/EmptyState';
+import EmptyState from '../ui/EmptyState';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
-import { Loading } from '../ui/Loading';
+import Loading from '../ui/Loading';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
-import { StatusBadge } from "../ui/StatusBadge";
+import StatusBadge from "../ui/StatusBadge";
+import { useTranslation } from 'react-i18next';
+import { STORAGE_KEYS } from '../../constants';
+
 
 interface Props {
 	open: boolean;
 	onClose: () => void;
 }
 
-export const SocialPanel = ({ open, onClose }: Props) => {
+const SocialPanel = ({ open, onClose }: Props) => {
 	const [friends, setFriends] = useState<any[]>([]);
 	const [pending, setPending] = useState<any[]>([]);
 	const [blocked, setBlocked] = useState<any[]>([]);
@@ -48,10 +51,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const { markAsRead, lastNotification } = useSocket();
 	const { selectChat } = useChat();
 
-	const token = localStorage.getItem('auth_token');
+	const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 	const modals = useAuthModals();
 	const [selectedFriend, setSelectedFriend] = useState<any>();
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		if (showSearch) {
@@ -134,11 +138,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			});
 			const data = await res.json();
 			setSearchResults(Array.isArray(data) ? data : []);
-		} catch (err) {
-			console.error("Error en búsqueda:", err);
-			setSearchResults([]);
-		}
-	}, [searchQuery, token]);
+			} catch (err) {
+				console.error("Error en búsqueda:", err);
+				setSearchResults([]);
+			}
+		}, [searchQuery, token]);
 
 	useEffect(() => {
 		if (searchQuery.length < 1) {
@@ -210,21 +214,20 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'primary.dark' }}>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<GroupIcon sx={{ color: 'secondary.main' }} />
-					<Typography variant="h6" color="white" fontWeight="bold">
-						Social Hub
+					<Typography variant="h6" fontWeight="bold" sx={{ color: 'white' }}>
+						{t('socialPanel.title')}
 					</Typography>
 				</Stack>
 				<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
 					<CloseIcon />
 				</IconButton>
 			</Box>
-
 			<Box sx={{ overflowY: 'auto', height: '100%' }}>
 
 				<Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
 					<Box sx={{ display: 'flex', alignItems: 'center', mb: showSearch ? 1 : 0 }}>
 						<Typography variant="subtitle2" sx={{ flexGrow: 1, color: 'text.secondary' }}>
-							FIND FRIENDS
+							{t('socialPanel.findFriends')}
 						</Typography>
 						<IconButton
 							size="small"
@@ -240,7 +243,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 							inputRef={searchInputRef}
 							fullWidth
 							size="small"
-							placeholder="Username..."
+							placeholder={t('socialPanel.usernamePlaceholder')}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							onKeyDown={(e) => (e.key === 'Enter' && handleSearch())}
@@ -263,12 +266,11 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 								</ListItem>
 							))}
 							{searchResults.length === 0 && searchQuery.length > 2 && (
-								<Typography variant="caption" sx={{ p: 1, display: 'block', textAlign: 'center' }}>No users found</Typography>
+								<Typography variant="caption" sx={{ p: 1, display: 'block', textAlign: 'center' }}>{t('socialPanel.noUsersFound')}</Typography>
 							)}
 						</List>
 					</Collapse>
 				</Box>
-
 				{loading && friends.length === 0 ? (
 					<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
 						<Loading variant="spinner" size="md" />
@@ -277,89 +279,88 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					<List component="nav" sx={{ p: 0 }}>
 
 						{pending.length > 0 && (
-							<Box sx={{ p: 2, bgcolor: 'background.default' }}>
-								<Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1.5, display: 'block', letterSpacing: 1 }}>
-									SOLICITUDES DE AMISTAD
-								</Typography>
-								<Stack spacing={2}>
-									{pending.map(p => (
-										<Box key={p.sender_id} sx={{
-											p: 2,
-											borderRadius: 2,
-											bgcolor: 'background.paper',
-											position: 'relative',
-											overflow: 'hidden',
-											border: '1px solid',
-											borderColor: 'rgba(255, 255, 255, 0.1)',
-											boxShadow: '0 4px 15px rgba(0,0,0,0.3), 0 0 5px rgba(100, 149, 237, 0.1)',
-											transition: 'all 0.3s ease-in-out',
-											'&:hover': {
-												transform: 'translateY(-3px)',
-												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', 
-											}
-										}}>
-											<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-												<Avatar
-													src={p.avatar_url}
-													sx={{
-														width: 45,
-														height: 45,
-														borderColor: 'primary.main',
-														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' 
-													}}
-												/>
-												<Box>
-													<Typography variant="body2" fontWeight="bold" sx={{ color: 'text.primary' }}>
-														{p.username}
-													</Typography>
-													<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-														Quiere ser tu amigo
-													</Typography>
-												</Box>
-											</Stack>
+						<Box sx={{ p: 2, bgcolor: 'background.default' }}>
+							<Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1.5, display: 'block', letterSpacing: 1 }}>
+								{t('socialPanel.friendRequests')}
+							</Typography>
+							<Stack spacing={2}>
+								{pending.map(p => (
+									<Box key={p.sender_id} sx={{
+										p: 2,
+										borderRadius: 2,
+										bgcolor: 'background.paper',
+										position: 'relative',
+										overflow: 'hidden',
+										border: '1px solid',
+										borderColor: 'rgba(255, 255, 255, 0.1)',
+										boxShadow: '0 4px 15px rgba(0,0,0,0.3), 0 0 5px rgba(100, 149, 237, 0.1)',
+										transition: 'all 0.3s ease-in-out',
+										'&:hover': {
+											transform: 'translateY(-3px)',
+											boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', 
+										}
+									}}>
+										<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+											<Avatar
+												src={p.avatar_url}
+												sx={{
+													width: 45,
+													height: 45,
+													borderColor: 'primary.main',
+													boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' 
+												}}
+											/>
+											<Box>
+												<Typography variant="body2" fontWeight="bold" sx={{ color: 'text.primary' }}>
+													{p.username}
+												</Typography>
+												<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+													{t('socialPanel.wantsToBeFriend')}
+												</Typography>
+											</Box>
+										</Stack>
 
-											<Stack direction="row" spacing={1}>
-												<IconButton
-													onClick={() => handleAccept(p.sender_id)}
-													sx={{
-														flex: 1,
-														borderRadius: 1.5,
-														bgcolor: 'success.main',
-														color: 'white',
-														py: 1,
-														fontSize: '0.75rem',
-														fontWeight: 'bold',
-														'&:hover': { bgcolor: 'success.dark', boxShadow: '0 0 10px rgba(76, 175, 80, 0.5)' }
-													}}
-												>
-													Aceptar
-												</IconButton>
-												<IconButton
-													onClick={() => handleReject(p.sender_id)}
-													sx={{
-														flex: 1,
-														borderRadius: 1.5,
-														bgcolor: 'rgba(255,255,255,0.05)',
-														border: '1px solid rgba(255,255,255,0.1)',
-														py: 1,
-														fontSize: '0.75rem',
-														color: 'text.secondary',
-														'&:hover': { bgcolor: 'error.dark', color: 'white' }
-													}}
-												>
-													Ignorar
-												</IconButton>
-											</Stack>
-										</Box>
-									))}
-								</Stack>
-							</Box>
-						)}
-
+										<Stack direction="row" spacing={1}>
+											<IconButton
+												onClick={() => handleAccept(p.sender_id)}
+												sx={{
+													flex: 1,
+													borderRadius: 1.5,
+													bgcolor: 'success.main',
+													color: 'white',
+													py: 1,
+													fontSize: '0.75rem',
+													fontWeight: 'bold',
+													'&:hover': { bgcolor: 'success.dark', boxShadow: '0 0 10px rgba(76, 175, 80, 0.5)' }
+												}}
+											>
+												{t('socialPanel.accept')}
+											</IconButton>
+											<IconButton
+												onClick={() => handleReject(p.sender_id)}
+												sx={{
+													flex: 1,
+													borderRadius: 1.5,
+													bgcolor: 'rgba(255,255,255,0.05)',
+													border: '1px solid rgba(255,255,255,0.1)',
+													py: 1,
+													fontSize: '0.75rem',
+													color: 'text.secondary',
+													'&:hover': { bgcolor: 'error.dark', color: 'white' }
+												}}
+											>
+												{t('socialPanel.ignore')}
+											</IconButton>
+										</Stack>
+									</Box>
+								))}
+							</Stack>
+						</Box>
+					)}
 						<Box onClick={() => setShowOnline(!showOnline)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showOnline ? <KeyboardArrowDownIcon fontSize="small" color="success" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 'bold', ml: 1 }}>
-								ONLINE ({online.length})
+							{t('socialPanel.online')} ({online.length})
 							</Typography>
 						</Box>
 						<Collapse in={showOnline}>
@@ -397,8 +398,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 									<Box sx={{ transform: 'scale(0.8)', mt: -2 }}>
 										<EmptyState
 											icon={<SentimentDissatisfiedIcon />}
-											title="Nadie en línea"
-											description="Tus amigos están desconectados o jugando al Pong."
+										title={t('socialPanel.nobodyOnline')}
+										description={t('socialPanel.nobodyOnlineDesc')}
 										/>
 									</Box>
 								)}
@@ -410,7 +411,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						<Box onClick={() => setShowOffline(!showOffline)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showOffline ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
-								OFFLINE ({offline.length})
+							{t('socialPanel.offline')} ({offline.length})
 							</Typography>
 						</Box>
 						<Collapse in={showOffline}>
@@ -448,8 +449,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 									<Box sx={{ transform: 'scale(0.8)', mt: -2 }}>
 										<EmptyState
 											icon={<WifiOffIcon />}
-											title="Todos conectados"
-											description="No tienes amigos desconectados en este momento."
+										title={t('socialPanel.allConnected')}
+										description={t('socialPanel.allConnectedDesc')}
 										/>
 									</Box>
 								)}
@@ -459,7 +460,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
 							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
-								BLOCKED ({blockedUsers.length})
+							{t('socialPanel.blocked')} ({blockedUsers.length})
 							</Typography>
 						</Box>
 						<Collapse in={showBlocked}>

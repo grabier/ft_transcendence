@@ -8,7 +8,7 @@ import { BASE_URL } from '@/config';
 import SocialLoginButton from "@/components/ui/SocialLoginButton";
 import AuthSwitchLink from "@/components/ui/AuthSwitchLink";
 import Modal from "@/components/ui/Modal";
-import { PasswordInput } from "@/components/ui/PasswordInput"
+import PasswordInput from "@/components/ui/PasswordInput"
 
 interface Props {
 	open: boolean;

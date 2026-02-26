@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { styled, keyframes } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 
-interface ModalProps {
+interface Props {
     open: boolean;
     onClose: () => void;
     title?: string;
@@ -75,7 +75,7 @@ const Modal = ({
     children,
     maxWidth = "xs",
     fullWidth = true,
-}: ModalProps) => {
+}: Props) => {
     return (
         <StyledDialog
             open={open}

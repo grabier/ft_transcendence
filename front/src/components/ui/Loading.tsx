@@ -1,12 +1,12 @@
 import { CircularProgress, Skeleton, SxProps, Theme } from '@mui/material';
 
-type LoadingProps = {
+type Props = {
 	variant?: 'spinner' | 'skeleton' | 'circle';
 	size?: 'sm' | 'md' | 'lg';
 	sx?: SxProps<Theme>;
 };
 
-export const Loading = ({ variant = 'spinner', size = 'md', sx }: LoadingProps) => {
+const Loading = ({ variant = 'spinner', size = 'md', sx }: Props) => {
 	const spinnerSizes = { sm: 16, md: 32, lg: 48 };
 
 	const circleSizes = { sm: 24, md: 40, lg: 56 };
@@ -36,3 +36,5 @@ export const Loading = ({ variant = 'spinner', size = 'md', sx }: LoadingProps) 
 		/>
 	);
 };
+
+export default Loading;

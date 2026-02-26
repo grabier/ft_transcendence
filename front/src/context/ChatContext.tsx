@@ -4,9 +4,11 @@ import { DM, Message } from '@/types/chat';
 import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
 
+import { STORAGE_KEYS, NETWORK } from '../constants';
+
 const PROTOCOL = window.location.protocol;
 const HOST = window.location.hostname;
-const PORT = '3000';
+const PORT = NETWORK.PORT;
 const BASE_URL = `${PROTOCOL}//${HOST}:${PORT}`;
 
 
@@ -31,7 +33,7 @@ export const useChat = () => useContext(ChatContext);
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const { socket } = useSocket();
 	const { user } = useAuth();
-	const token = localStorage.getItem('auth_token');
+	const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 	const [chats, setChats] = useState<DM[]>([]);
 	const [activeChat, setActiveChat] = useState<DM | null>(null);
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -162,7 +164,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 					if (typingTimeouts.current[dmId]) clearTimeout(typingTimeouts.current[dmId]);
 					typingTimeouts.current[dmId] = setTimeout(() => {
 						setTypingChats(prev => ({ ...prev, [dmId]: false }));
-					}, 3000);
+					}, NETWORK.RECONNECT_TIMEOUT);
 				}
 				else if (data.type === 'MESSAGES_READ') {
 					if (currentChat && currentChat.id === data.payload.dmId) {
@@ -184,7 +186,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
 		if (!user) {
-			console.log("🧹 Chats cleared.");
 			setActiveChat(null);
 			setMessages([]);
 			setChats([]);

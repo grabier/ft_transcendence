@@ -4,9 +4,9 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { StyledTextField } from '@/style/AuthModalStyle';
 
-type PasswordInputProps = Omit<TextFieldProps, 'type'>;
+type Props = Omit<TextFieldProps, 'type'>;
 
-export const PasswordInput = (props: PasswordInputProps) => {
+const PasswordInput = (props: Props) => {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -49,3 +49,5 @@ export const PasswordInput = (props: PasswordInputProps) => {
 		/>
 	);
 };
+
+export default PasswordInput;

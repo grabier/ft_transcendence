@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { SearchingGameLoading } from '../ui/SearchingGameLoading';
+import { useTranslation } from 'react-i18next';
+import SearchingGameLoading from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
+import { STORAGE_KEYS, NETWORK } from '../../constants';
 
-interface PongGameProps {
+interface Props {
 	mode: 'pvp' | 'ai' | 'local';
 	scoreToWin: number;
 	roomId?: string;
@@ -13,7 +15,8 @@ interface PongGameProps {
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
-const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
+const PongGame = ({ mode, scoreToWin, roomId, onExit, onRestart }: Props) => {
+	const { t } = useTranslation();
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
@@ -65,7 +68,9 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 
 	const handleRestart = () => {
 		if (socketRef.current) socketRef.current.close(1000, "Restarting");
-		onRestart();
+		if (typeof onRestart === 'function') {
+			onRestart();
+		}
 	};
 
 	const gameLoop = useCallback(() => {
@@ -115,7 +120,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 	}, []);
 
 	useEffect(() => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		const safeToken = token ? token : 'GUEST';
 		let isComponentUnmounted = false;
 		let reconnectTimeout: NodeJS.Timeout;
@@ -123,7 +128,7 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 
 		const connectWebSocket = () => {
 			if (isComponentUnmounted) return;
-			const socket = new WebSocket(`wss://${host}:3000/api/game/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
+			const socket = new WebSocket(`wss://${host}:${NETWORK.PORT}/api/game/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
 			socketRef.current = socket;
 
 			socket.onopen = () => {
@@ -350,10 +355,10 @@ const PongGame: React.FC<PongGameProps> = ({ mode, scoreToWin, roomId, onExit, o
 					<div style={overlayStyle}>
 						<h1 style={{ fontSize: '3em', marginBottom: '20px' }}>{winnerText}</h1>
 						<button style={{ ...buttonStyle, backgroundColor: '#fff', color: '#000' }} onClick={handleRestart}>
-							JUGAR OTRA VEZ
-						</button>
-						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
-							SALIR AL MENÚ
+						{t('gamesPage.playAgain')}
+					</button>
+					<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
+						{t('gamesPage.exitToMenu')}
 						</button>
 					</div>
 				)}

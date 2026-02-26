@@ -48,7 +48,7 @@ const Footer = () => {
 								cursor: 'pointer'
 							}}
 						>
-							Términos de Servicio
+							{t('footer.terms')}
 						</MuiLink>
 						<Typography sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>|</Typography>
 						<MuiLink 
@@ -62,7 +62,7 @@ const Footer = () => {
 								cursor: 'pointer'
 							}}
 						>
-							Política de Privacidad
+							{t('footer.privacy')}
 						</MuiLink>
 						<Typography sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>|</Typography>
 						<MuiLink 
@@ -76,7 +76,7 @@ const Footer = () => {
 								cursor: 'pointer'
 							}}
 						>
-							Sobre Nosotros
+							{t('footer.about')}
 						</MuiLink>
 					</Box>
 				</Box>
