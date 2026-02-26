@@ -31,8 +31,18 @@ const GameInviteBubble = ({ content, isMe, score }: { content: string, isMe: boo
 	} catch (e) {
 		inviteData.id = content;
 	}
+
+	// --- AQUI ESTA EL ARREGLO PRINCIPAL ---
 	const handleJoinGame = () => {
-		navigate(`/?game=pong&mode=pvp&roomId=${inviteData.id}&score=${pointsToWin}`);
+		// Navegamos a la raíz ('/') pero pasando los datos en el state invisible
+		navigate('/', { 
+			state: { 
+				gameParam: 'pong', 
+				modeParam: 'pvp', 
+				roomIdParam: inviteData.id, 
+				scoreParam: pointsToWin 
+			} 
+		});
 	};
 
 	return (

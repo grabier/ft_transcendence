@@ -13,14 +13,13 @@ MODULES: WEB
 
 
 - terms of service
-- que se pueda buscar a aprtir de una letra, 
 - Ocultar la url cuando entramos en una partida
 - si seleccionas el chat de un amigo o buscar amigo, automaticamente pueda escribir
 - about us con el github de cada uno
 - readme 
 - limpieza general
 - console warnings
-- Cuando seleccionas cualquier modalidad de juego (AI, Local o 1V1), en el modal que aparece a continuación siempre aparece Modo: 1 vs 1
+
 
 
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 
@@ -7,17 +7,15 @@ import GamePanel from '@/components/game/GamePanel';
 import ScoreModal from '@/components/game/ScoreModal';
 import PongGame from '@/components/game/PongGame';
 import SnakeGame from '@/components/game/SnakeGame';
-import { useAuth } from '@/context/AuthContext'; // <-- Añade esta línea
+import { useAuth } from '@/context/AuthContext';
 
 const GamesPage = () => {
 	const { t } = useTranslation();
 	const { user } = useAuth();
 	
-	// UI States
 	const [expandedPanel, setExpandedPanel] = useState<'pong' | 'snake' | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	// Game Config
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedMode, setSelectedMode] = useState<'pvp' | 'ai' | 'local' | null>(null);
 	const [selectedGame, setSelectedGame] = useState<'pong' | 'snake' | null>(null);
@@ -25,9 +23,53 @@ const GamesPage = () => {
 	const [roomId, setRoomId] = useState<string | null>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
-	const [searchParams, setSearchParams] = useSearchParams();
 	const [gameKey, setGameKey] = useState(0); 
 
+	const location = useLocation();
+	const navigate = useNavigate();
+
+	// --- 1. EL TRUCO LIMPIO PARA EL BOTÓN ATRÁS ---
+	useEffect(() => {
+		// Al arrancar la partida, metemos un evento invisible en el navegador. 
+		// ¡La URL NO cambia!
+		if (isPlaying) {
+			window.history.pushState({ internal: 'game_active' }, '');
+		}
+
+		// Si el usuario presiona la flecha de "Atrás" en su navegador, salta este evento
+		const handlePopState = () => {
+			if (isPlaying) {
+				setIsPlaying(false);
+				setRoomId(null);
+				setSelectedGame(null);
+			}
+		};
+
+		window.addEventListener('popstate', handlePopState);
+		return () => window.removeEventListener('popstate', handlePopState);
+	}, [isPlaying]);
+
+	// --- 2. EFECTO PARA LAS INVITACIONES DEL CHAT ---
+	useEffect(() => {
+		const state = location.state as any;
+		
+		if (state?.gameParam && state?.modeParam) {
+			if (state.gameParam === 'snake') setSelectedGame('snake');
+			else setSelectedGame('pong');
+
+			setSelectedMode(state.modeParam);
+			if (state.roomIdParam) setRoomId(state.roomIdParam);
+			if (state.scoreParam) setScoreToWin(parseInt(state.scoreParam));
+
+			setModalOpen(false);
+			setIsPlaying(true); // Esto lanzará automáticamente el pushState del efecto de arriba
+			
+			// Vaciamos el estado del router para no generar bucles si recargas la página
+			navigate(location.pathname, { replace: true, state: {} });
+		}
+	}, [location, navigate]);
+
+	// Cerrar paneles al hacer click fuera
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -40,33 +82,6 @@ const GamesPage = () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
-
-	// --- EFECTO MAESTRO: LA URL ES LA ÚNICA QUE MANDA ---
-	useEffect(() => {
-		const gameParam = searchParams.get('game');
-		const modeParam = searchParams.get('mode');
-		const roomIdParam = searchParams.get('roomId');
-		const scoreParam = searchParams.get('score');
-
-		// 1. Si la URL tiene juego y NO estamos jugando -> ENCENDEMOS EL JUEGO
-		if (gameParam && modeParam && !isPlaying) {
-			if (gameParam === 'snake') setSelectedGame('snake');
-			else setSelectedGame('pong');
-
-			setSelectedMode(modeParam as any);
-			if (roomIdParam) setRoomId(roomIdParam);
-			if (scoreParam) setScoreToWin(parseInt(scoreParam));
-
-			setModalOpen(false);
-			setIsPlaying(true);
-		}
-		// 2. Si la URL NO tiene juego (le dimos a Atrás o Salir) y SÍ estamos jugando -> APAGAMOS
-		else if (!gameParam && isPlaying) {
-			setIsPlaying(false);
-			setRoomId(null);
-			setSelectedGame(null);
-		}
-	}, [searchParams, isPlaying]);
 
 	// --- HANDLERS ---
 	const handleGameSelection = (game: 'pong' | 'snake', option: string) => {
@@ -82,10 +97,8 @@ const GamesPage = () => {
 			setSelectedMode(mode);
 			if (mode === 'pvp') {
 				setScoreToWin(5);
-				// Ponemos la URL. El useEffect detectará esto y arrancará la partida.
-				setSearchParams({ game, mode: 'pvp', score: '5' }); 
+				setIsPlaying(true); 
 			} else {
-				setSearchParams({});
 				setModalOpen(true);
 			}
 		}
@@ -94,25 +107,20 @@ const GamesPage = () => {
 	const handleStartGame = (score: number) => {
 		if (selectedMode && selectedGame) {
 			setScoreToWin(score);
-			// Ponemos la URL. El useEffect detectará esto y arrancará la partida.
-			setSearchParams({ game: selectedGame, mode: selectedMode, score: score.toString() });
+			setIsPlaying(true);
 			setModalOpen(false);
 		}
 	};
 
 	const handleExitGame = () => {
-		// Al limpiar la URL, el useEffect apagará el juego instantáneamente
-		setSearchParams({});
+		// En lugar de tocar estados a mano, forzamos un paso atrás en el historial.
+		// Esto dispara el 'popstate' y se encarga de apagar todo limpiamente de golpe.
+		window.history.back();
 	};
 
 	const handleRestartGame = () => {
 		if (selectedGame && selectedMode) {
-			setSearchParams({
-				game: selectedGame,
-				mode: selectedMode,
-				score: scoreToWin.toString()
-			}, { replace: true });
-			setRoomId(null);
+			setRoomId(null); 
 			setGameKey(prev => prev + 1); 
 		}
 	};

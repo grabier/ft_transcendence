@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { SearchingGameLoading } from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
 
 interface SnakeGameProps {
 	mode: 'pvp' | 'ai' | 'local';
@@ -23,8 +22,6 @@ interface SnakeState {
 }
 
 const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
-	const [searchParams, setSearchParams] = useSearchParams();
-
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
@@ -149,20 +146,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					}
 
 					if (msg.type === 'SIDE_ASSIGNED') {
-						if (msg.roomId) {
-							setSearchParams(prev => {
-								if (prev.get('roomId') !== msg.roomId) {
-									const newParams = new URLSearchParams(prev);
-									newParams.set('game', 'snake');
-									newParams.set('mode', mode);
-									newParams.set('roomId', msg.roomId);
-									newParams.set('score', scoreToWin.toString());
-									return newParams;
-								}
-								return prev;
-							}, { replace: true });
-						}
-
+						// SE HA ELIMINADO LA INYECCIÓN EN LA URL AQUÍ
 						if (msg.status === 'paused') {
 							if (msg.pauseTimeLeft !== undefined) setPauseTimer(msg.pauseTimeLeft);
 							setUiState('paused');
@@ -281,7 +265,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 		reqIdRef.current = requestAnimationFrame(gameLoop);
 
-		// --- LIMPIEZA TOTAL: SE EJECUTA AL DARLE A LA FLECHA ATRÁS ---
 		return () => {
 			isComponentUnmounted = true;
 			clearTimeout(reconnectTimeout);
