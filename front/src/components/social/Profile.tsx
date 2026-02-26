@@ -27,12 +27,10 @@ export const Profile = ({ open, onClose }: Props) => {
 	const navigate = useNavigate();
 	const { updateAvatarUrl, updateUsername, uploadAvatarFile } = useAuth();
 
-	// Independent states for editing
+	// Independent state for editing username ONLY
 	const [editName, setEditName] = useState({ open: false, value: user?.username || '' });
-	const [editEmail, setEditEmail] = useState({ open: false, value: user?.email || '' });
 
 	// avatar
-	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'Guest'}`;
 	const [, setCurrentAvatar] = useState(user?.avatarUrl);
 	console.log(`profile   : ${user?.avatarUrl}`);
 
@@ -68,7 +66,8 @@ export const Profile = ({ open, onClose }: Props) => {
 			await uploadAvatarFile(file);
 		}
 	};
-	const handleUpdate = useCallback(async (type: 'user' | 'email') => {
+
+	const handleUpdate = useCallback(async (type: 'user') => {
 		if (type === 'user') {
 			// Llamas a la función del contexto
 			const success = await updateUsername(editName.value);
@@ -262,14 +261,8 @@ export const Profile = ({ open, onClose }: Props) => {
 
 				<Divider variant="inset" component="li" />
 
-				{/* Email Field */}
-				<ListItem
-					secondaryAction={
-						<IconButton edge="end" aria-label="Edit profile email" onClick={() => setEditEmail(p => ({ ...p, open: !p.open }))}>
-							<EditIcon fontSize="small" />
-						</IconButton>
-					}
-				>
+				{/* Email Field (Solo Lectura) */}
+				<ListItem>
 					<ListItemAvatar>
 						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
 					</ListItemAvatar>
@@ -279,24 +272,6 @@ export const Profile = ({ open, onClose }: Props) => {
 						secondary={user?.email || 'Not set'}
 					/>
 				</ListItem>
-
-				<Collapse in={editEmail.open} sx={{ px: 2, mb: 2 }}>
-					<TextField
-						aria-label="Input new profile email"
-						fullWidth
-						size="small"
-						label={t('profile.newEmail')}
-						value={editEmail.value}
-						onChange={(e) => setEditEmail(p => ({ ...p, value: e.target.value }))}
-						InputProps={{
-							endAdornment: (
-								<IconButton size="small" aria-label="Save new profile email" onClick={() => handleUpdate('email')} color="primary">
-									<SaveIcon />
-								</IconButton>
-							)
-						}}
-					/>
-				</Collapse>
 			</List>
 
 			{/* Actions */}

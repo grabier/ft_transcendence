@@ -12,6 +12,7 @@ const userFullProperties = {
 	last_login: { type: 'string', format: 'date-time' }
 };
 
+
 export const getUserByIdSchema = {
 	description: 'Obtiene los detalles públicos de un usuario por su ID',
 	tags: ['User'],
