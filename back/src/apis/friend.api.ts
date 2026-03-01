@@ -219,6 +219,42 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			}
 		});
 
+		fastify.put<{ Params: FriendParams }>(
+		'/unblock/:id',
+		// { schema: unblockUserSchema }, // Acuérdate de crear y añadir este esquema en tu friend.schema.ts
+		async (request, reply) => {
+			try {
+				const user = request.user as any;
+				const userId = user.id;
+				const blockedId = (request.params as any).id;
+
+				const [result]: any = await pool.execute(
+					`UPDATE friendships 
+					 SET status = 'accepted', blocked_by = NULL
+					 WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+					 AND status = 'blocked' AND blocked_by = ?`,
+					[userId, blockedId, blockedId, userId, userId]
+				);
+
+				if (result.affectedRows === 0) {
+					return reply.code(404).send({ error: "Could not find active block" });
+				}
+
+				const blockedIdInt = parseInt(blockedId);
+				socketManager.notifyUser(blockedIdInt, 'UNBLOCKED', {
+					blockedId: blockedIdInt,
+					username: user.username,
+					message: `${user.username} has unblocked you.`
+				});
+				return { message: "User unblocked succesfully" };
+
+			} catch (error: any) {
+				console.error(error);
+				return reply.code(500).send({ error: "Error unblocking user" });
+			}
+		});
+
+
 };
 
 export default friendRoutes;

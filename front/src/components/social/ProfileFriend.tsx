@@ -13,6 +13,7 @@ import { FriendActionsMenu } from './FriendActionsMenu';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import Tooltip from '@mui/material/Tooltip';
 
 import { BASE_URL } from '../../config';
@@ -23,16 +24,16 @@ interface Props {
 	onClose: () => void;
 	friend: any;
 	onActionSuccess?: () => void;
+	isBlocked?: boolean;
 }
 
-export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
+export const ProfileFriend = ({ open, onClose, friend, onActionSuccess, isBlocked = false }: Props) => {
 	const modals = useAuthModals();
-	const { deleteFriend, blockFriend } = useFriendActions(onActionSuccess);
+	const { deleteFriend, blockFriend, unBlockFriend } = useFriendActions(onActionSuccess);
 	const token = localStorage.getItem('auth_token');
-	// avatar
-	//const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend?.username || 'Guest'}`;
+
 	const [currentAvatar, setCurrentAvatar] = useState(friend?.avatar_url || null);
-	console.log(`PrfileFriends: ${friend.username}`);
+	console.log(`ProfileFriends: ${friend?.username}`);
 
 	return (
 		<Drawer
@@ -52,7 +53,7 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 				bgcolor: 'primary.main',
 				color: 'white'
 			}}>
-				<Typography variant="h6" fontWeight="600">{friend.username}'s profile</Typography>
+				<Typography variant="h6" fontWeight="600">{friend?.username}'s profile</Typography>
 				<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
 					<CloseIcon />
 				</IconButton>
@@ -82,32 +83,52 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 					{friend?.role || 'Standard Member'}
 				</Typography>
 
-				{/* BOTONES DE ACCIÓN: Ahora centrados y con espacio */}
+				{/* BOTONES DE ACCIÓN */}
 				<Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-					<Tooltip title="Eliminar">
-						<IconButton
-							onClick={async () => {
-								await deleteFriend(friend.id);
-								onClose();
-							}}
-							color="error"
-							sx={{ bgcolor: 'action.hover' }}
-						>
-							<PersonRemoveIcon />
-						</IconButton>
-					</Tooltip>
 
-					<Tooltip title="Bloquear">
-						<IconButton
-							onClick={async () => {
-								await blockFriend(friend.id);
-								onClose();
-							}}
-							sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
-						>
-							<BlockIcon />
-						</IconButton>
-					</Tooltip>
+					{/* Si NO está bloqueado, mostramos el botón de eliminar */}
+					{!isBlocked && (
+						<Tooltip title="Eliminar">
+							<IconButton
+								onClick={async () => {
+									await deleteFriend(friend.id);
+									onClose();
+								}}
+								color="error"
+								sx={{ bgcolor: 'action.hover' }}
+							>
+								<PersonRemoveIcon />
+							</IconButton>
+						</Tooltip>
+					)}
+
+					{/* Botón condicional: Desbloquear o Bloquear */}
+					{isBlocked ? (
+						<Tooltip title="Desbloquear">
+							<IconButton
+								onClick={async () => {
+									await unBlockFriend(friend.id);
+									onClose();
+								}}
+								color="success"
+								sx={{ bgcolor: 'action.hover' }}
+							>
+								<LockOpenIcon />
+							</IconButton>
+						</Tooltip>
+					) : (
+						<Tooltip title="Bloquear">
+							<IconButton
+								onClick={async () => {
+									await blockFriend(friend.id);
+									onClose();
+								}}
+								sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
+							>
+								<BlockIcon />
+							</IconButton>
+						</Tooltip>
+					)}
 				</Box>
 			</Box>
 

@@ -12,11 +12,11 @@ const Header = () => {
 
 				{/* MARQUEE */}
 				<MarqueeContainer>
-                        <MarqueeTrack>
-                            <MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
-                            <MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
-                        </MarqueeTrack>
-                    </MarqueeContainer>
+					<MarqueeTrack>
+						<MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+						<MarqueeContent> Pong Tournament • Join the Arena • Win • Glory • Pong Tournament • Join the Arena • Win • Glory Pong Tournament • Join the Arena • Win • Glory •</MarqueeContent>
+					</MarqueeTrack>
+				</MarqueeContainer>
 				<MenuHeader />
 			</Toolbar>
 		</AppBar>

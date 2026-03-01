@@ -11,6 +11,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import GroupIcon from '@mui/icons-material/Group';
 import ChatIcon from '@mui/icons-material/Chat';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { useSocket } from "../../context/SocketContext";
 import { useChat } from '../../context/ChatContext';
 import ProfileFriend from '../social/ProfileFriend';
@@ -58,10 +59,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	const modals = useAuthModals();
 	const [selectedFriend, setSelectedFriend] = useState<any>();
 
-	// ---> 2. EFECTO PARA AUTO-FOCUS AL ABRIR EL BUSCADOR <---
 	useEffect(() => {
 		if (showSearch) {
-			// 150ms le da tiempo a la animación Collapse de MUI a abrirse
 			const timer = setTimeout(() => {
 				searchInputRef.current?.focus();
 			}, 150);
@@ -116,11 +115,13 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			setLoading(false);
 		}
 	}, [token]);
-	const { deleteFriend, blockFriend } = useFriendActions(fetchData);
+
+	// 👈 Añadimos unBlockFriend al destructuring
+	const { deleteFriend, blockFriend, unBlockFriend } = useFriendActions(fetchData);
 
 	const handleCloseProfile = useCallback(() => {
-		modals.closeAll(); 
-		fetchData();       
+		modals.closeAll();
+		fetchData();
 	}, [modals, fetchData]);
 
 	useEffect(() => {
@@ -131,7 +132,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 	}, [open, fetchData, markAsRead]);
 
 	useEffect(() => {
-		if (lastNotification?.type === 'FRIEND_REQUEST' || lastNotification?.type === 'DELETE') {
+		if (lastNotification?.type === 'FRIEND_REQUEST' || lastNotification?.type === 'DELETE' || lastNotification?.type === 'UNBLOCKED' || lastNotification?.type === 'BLOCKED') {
 			fetchData();
 		}
 	}, [lastNotification, fetchData]);
@@ -200,11 +201,16 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 			console.error(err);
 		}
 	};
-	
+
 	const online = useMemo(() => Array.isArray(friends) ? friends.filter(f => f.is_online) : [], [friends]);
 	const offline = useMemo(() => Array.isArray(friends) ? friends.filter(f => !f.is_online) : [], [friends]);
 	const blockedUsers = useMemo(() => Array.isArray(blocked) ? blocked : [], [blocked]);
-	
+
+	const isSelectedFriendBlocked = useMemo(() => {
+		if (!selectedFriend) return false;
+		return blockedUsers.some(b => b.id === selectedFriend.id);
+	}, [blockedUsers, selectedFriend]);
+
 	// --- RENDERIZADO ---
 	return (
 		<Drawer
@@ -255,7 +261,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 
 					<Collapse in={showSearch}>
 						<TextField
-							inputRef={searchInputRef} // ---> 3. ASIGNAMOS LA REFERENCIA AQUÍ <---
+							inputRef={searchInputRef}
 							fullWidth
 							size="small"
 							placeholder="Username..."
@@ -295,6 +301,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 				) : (
 					<List component="nav" sx={{ p: 0 }}>
 
+						{/* SOLICITUDES DE AMISTAD */}
 						{pending.length > 0 && (
 							<Box sx={{ p: 2, bgcolor: 'background.default' }}>
 								<Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1.5, display: 'block', letterSpacing: 1 }}>
@@ -314,7 +321,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 											transition: 'all 0.3s ease-in-out',
 											'&:hover': {
 												transform: 'translateY(-3px)',
-												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)', 
+												boxShadow: '0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(25, 118, 210, 0.3)',
 											}
 										}}>
 											<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
@@ -324,7 +331,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 														width: 45,
 														height: 45,
 														borderColor: 'primary.main',
-														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)' 
+														boxShadow: '0 0 10px rgba(25, 118, 210, 0.5)'
 													}}
 												/>
 												<Box>
@@ -480,7 +487,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 						{/* BLOCKED */}
 						<Box onClick={() => setShowBlocked(!showBlocked)} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
 							{showBlocked ? <KeyboardArrowDownIcon fontSize="small" color="disabled" /> : <KeyboardArrowRightIcon fontSize="small" color="disabled" />}
-							<Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 'bold', ml: 1 }}>
+							<Typography variant="subtitle2" sx={{ color: 'error.main', fontWeight: 'bold', ml: 1 }}>
 								BLOCKED ({blockedUsers.length})
 							</Typography>
 						</Box>
@@ -498,8 +505,8 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 													onRemove={() => deleteFriend(f.id)}
 													onBlock={() => blockFriend(f.id)}
 												/>
-												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
-													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+												<IconButton onClick={() => unBlockFriend(f.id)}>
+													<LockOpenIcon fontSize="small" color="success" />
 												</IconButton>
 											</Stack>
 										}
@@ -509,7 +516,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 										</ListItemAvatar>
 										<ListItemText
 											primary={f.username}
-											primaryTypographyProps={{ fontSize: '0.9rem' }}
+											primaryTypographyProps={{ fontSize: '0.9rem', color: 'error.main' }}
 										/>
 									</ListItem>
 								))}
@@ -526,6 +533,7 @@ export const SocialPanel = ({ open, onClose }: Props) => {
 					onClose={handleCloseProfile}
 					friend={selectedFriend}
 					onActionSuccess={fetchData}
+					isBlocked={isSelectedFriendBlocked}
 				/>
 			)}
 		</Drawer>

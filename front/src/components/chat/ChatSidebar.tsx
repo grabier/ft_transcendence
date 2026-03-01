@@ -68,7 +68,7 @@ export const ChatSidebar = () => {
 											{typingChats[chat.id] ? (
 												<i>Escribiendo...</i>
 											) : (
-												chat.lastMessage?.content || t('chatSidebar.newConversation')
+												chat.lastMessage?.type === "game_invite" ? chat.lastMessage?.content || t('chatSidebar.newConversation') : t('Invitacion a juego')
 											)}
 										</Typography>
 									}
