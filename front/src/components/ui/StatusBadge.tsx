@@ -2,7 +2,7 @@ import { Badge, styled } from '@mui/material';
 
 export type UserStatus = 'online' | 'offline' | 'in-game';
 
-interface StatusBadgeProps {
+interface Props {
   children: React.ReactNode;
   status: UserStatus;
 }
@@ -38,7 +38,7 @@ const StyledBadge = styled(Badge, {
   };
 });
 
-export const StatusBadge = ({ children, status }: StatusBadgeProps) => {
+const StatusBadge = ({ children, status }: Props) => {
   return (
     <StyledBadge
       overlap="circular"
@@ -50,3 +50,5 @@ export const StatusBadge = ({ children, status }: StatusBadgeProps) => {
     </StyledBadge>
   );
 };
+
+export default StatusBadge;

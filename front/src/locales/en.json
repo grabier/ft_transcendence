@@ -6,7 +6,8 @@
 		"title": "My Messages",
 		"noConversations": "No conversations yet.",
 		"talkToFriends": "Talk to someone from your friends list!",
-		"newConversation": "New conversation"
+		"newConversation": "New conversation",
+		"typing": "Typing..."
 	},
 	"chatWidget": {
 		"chat": "Chat"
@@ -26,11 +27,15 @@
 		"quickMatch": "Quick (3 pts)",
 		"standardMatch": "Standard (5 pts)",
 		"longMatch": "Long (11 pts)",
-		"marathonMatch": "Marathon (21 pts)"
+		"marathonMatch": "Marathon (21 pts)",
+		"gameFinished": "Game finished"
 	},
 	"footer": {
 		"logo": "Transcendence",
-		"copyright": "© 2026 All Rights Reserved"
+		"copyright": "© 2026 All Rights Reserved",
+		"terms": "Terms of Service",
+		"privacy": "Privacy Policy",
+		"about": "About Us"
 	},
 	"loginModal": {
 		"signInTo": "Sign in to",
@@ -111,6 +116,93 @@
 	},
 	"gamesPage": {
 		"pongSubtitle": "The original arcade legend. Pure reflex gaming.",
-		"snakeSubtitle": "Neon-lit retro action. Survive the grid, grow the glow."
+		"snakeSubtitle": "Neon-lit retro action. Survive the grid, grow the glow.",
+		"pongTitle": "PONG",
+		"pongHighlight": "CLASSIC",
+		"snakeTitle": "SNAKE",
+		"snakeHighlight": "NEON",
+		"aiButton": "IA ",
+		"localButton": "Local",
+		"pvpButton": "1v1",
+		"playAgain": "PLAY AGAIN",
+		"exitToMenu": "EXIT TO MENU",
+		"pressToContinue": "Press P or ESC to continue"
+	},
+	"header": {
+		"marquee": "Pong Tournament • Join the Arena • Win • Glory •"
+	},
+	"aboutUs": {
+		"backButton": "< BACK TO ARCADE",
+		"title": "ABOUT US",
+		"subtitle": "THE PESCAPONG TEAM",
+		"description": "PescaPong Arcade wouldn't be possible without the endless hours of code, liters of coffee, and the spirit of 42's Common Core. Meet the creators of this madness:",
+		"githubButton": "GITHUB"
+	},
+	"privacyPolicy": {
+		"backButton": "← Back",
+		"title": "Privacy Policy",
+		"subtitle": "PescaPong Arcade",
+		"intro": "At <strong>PescaPong</strong> we take your privacy seriously (even as an academic project!). This Privacy Policy describes how we collect, use, and protect your personal information when you use our platform to play Pong, Snake, and chat with other users.",
+		"section1Title": "1. Information We Collect",
+		"section1Intro": "For the game and social features to work properly, we collect the following data:",
+		"section1Item1": "<strong>Registration Data:</strong> Username, email address (if applicable), and password (stored in encrypted form).",
+		"section1Item2": "<strong>Profile Data:</strong> Your avatar, friends list, and blocked users.",
+		"section1Item3": "<strong>Game Data:</strong> Match history, scores, wins, losses, and statistics for Pong and Snake.",
+		"section1Item4": "<strong>Communications:</strong> Messages sent through our real-time chat system.",
+		"section2Title": "2. Use of Information",
+		"section2Intro": "Your data will <strong>NEVER be sold or shared with third parties</strong>. All collected information is used exclusively and strictly for:",
+		"section2Item1": "Enabling authentication and login.",
+		"section2Item2": "Maintaining the matchmaking system and rankings.",
+		"section2Item3": "Operating the live chat and managing game invitations.",
+		"section3Title": "3. Local Storage (Tokens)",
+		"section3Content": "We do not use advertising tracking cookies. However, PescaPong uses your browser's local storage (`localStorage` or `sessionStorage`) to securely store your <strong>Authentication Token (JWT)</strong>. This token is essential to keep your session open while browsing the page and playing.",
+		"section4Title": "4. Security and Data Retention",
+		"section4Content": "We implement security measures to protect your information, such as password hashing. However, we remind you that this is a test school project. We reserve the right to delete all database data (including user accounts, messages, and scores) at any time for server maintenance.",
+		"footerDeveloped": "Developed with love, cigars, and lots of coffee by:",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Last updated:"
+	},
+	"termsOfService": {
+		"backButton": "← Back",
+		"title": "Terms of Service",
+		"subtitle": "PescaPong Arcade",
+		"intro": "Welcome to <strong>PescaPong</strong>. This project has been developed as part of School 42's academic curriculum. By accessing and using this platform, you agree to be bound by the following Terms of Service. If you do not agree with any part of these terms, you should not use our application.",
+		"section1Title": "1. Nature of the Project",
+		"section1Content": "pescapong is an educational testing environment. <strong>It is not a commercial product.</strong> The service is provided \"as is\" and \"as available.\" We reserve the absolute right to modify, suspend, or close the platform, as well as to reset databases, match histories, and scores at any time and without prior notice.",
+		"section2Title": "2. User Accounts and Security",
+		"section2Para1": "To access multiplayer features, you must create an account. You are solely responsible for maintaining the confidentiality of your password and for all activities that occur under your account.",
+		"section2Para2": "We reserve the right to suspend or delete accounts that we deem to violate these terms, at our sole discretion.",
+		"section3Title": "3. Code of Conduct",
+		"section3Intro": "By using our chat rooms and matchmaking systems, you commit to maintaining a respectful environment. The following is strictly prohibited:",
+		"section3Item1": "Harassment, insults, hate speech, or any toxic behavior towards other players in chat or direct messages.",
+		"section3Item2": "Spamming, sending malicious links, or flooding communication channels.",
+		"section3Item3": "<strong>Use of cheats:</strong> The use of scripts, bots, macros, or any third-party software designed to gain unfair advantages in Pong and Snake matches is strictly prohibited.",
+		"section4Title": "4. Intellectual Property",
+		"section4Content": "All code, design, and mechanics of pescapong have been developed by the creator team. The intellectual property rights of the overall project are subject to the regulations of the 42 network curriculum.",
+		"footerDeveloped": "Developed with love, cigarettes, and lots of coffee by:",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Last updated:"
+	},
+	"friendActionsMenu": {
+		"profile": "Profile",
+		"remove": "Remove",
+		"block": "Block"
+	},
+	"socialPanel": {
+		"title": "Social Hub",
+		"findFriends": "FIND FRIENDS",
+		"usernamePlaceholder": "Username...",
+		"noUsersFound": "No users found",
+		"friendRequests": "FRIEND REQUESTS",
+		"wantsToBeFriend": "Wants to be your friend",
+		"accept": "Accept",
+		"ignore": "Ignore",
+		"online": "ONLINE",
+		"offline": "OFFLINE",
+		"blocked": "BLOCKED",
+		"nobodyOnline": "Nobody online",
+		"nobodyOnlineDesc": "Your friends are offline or playing Pong.",
+		"allConnected": "All connected",
+		"allConnectedDesc": "You have no offline friends at this time."
 	}
 }

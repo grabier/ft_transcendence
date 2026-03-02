@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { SearchingGameLoading } from '../ui/SearchingGameLoading';
+import { useTranslation } from 'react-i18next';
+import SearchingGameLoading from '../ui/SearchingGameLoading';
 import { Box } from '@mui/material';
+import { STORAGE_KEYS, NETWORK } from '../../constants';
 
-interface SnakeGameProps {
+interface Props {
 	mode: 'pvp' | 'ai' | 'local';
 	scoreToWin: number;
 	roomId?: string;
@@ -21,7 +23,8 @@ interface SnakeState {
 	color: string;
 }
 
-const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit, onRestart }) => {
+const SnakeGame = ({ mode, scoreToWin, roomId, onExit, onRestart }: Props) => {
+	const { t } = useTranslation();
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const reqIdRef = useRef<number>(0);
@@ -63,7 +66,9 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 	const handleRestart = () => {
 		if (socketRef.current) socketRef.current.close(1000, "Restarting");
-		onRestart();
+		if (typeof onRestart === 'function') {
+			onRestart();
+		}
 	};
 
 	const gameLoop = useCallback(() => {
@@ -117,7 +122,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 	}, [mode]);
 
 	useEffect(() => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		const safeToken = token ? token : 'GUEST';
 		let isComponentUnmounted = false;
 		let reconnectTimeout: NodeJS.Timeout;
@@ -125,7 +130,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 
 		const connectWebSocket = () => {
 			if (isComponentUnmounted) return;
-			const socket = new WebSocket(`wss://${host}:3000/api/snake/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
+			const socket = new WebSocket(`wss://${host}:${NETWORK.PORT}/api/snake/?mode=${mode}&score=${scoreToWin}&token=${safeToken}&roomId=${roomId || ''}`);
 			socketRef.current = socket;
 
 			socket.onopen = () => {
@@ -363,10 +368,10 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ mode, scoreToWin, roomId, onExit,
 					<div style={overlayStyle}>
 						<h1 style={{ fontSize: '3em', marginBottom: '20px' }}>{winnerText}</h1>
 						<button style={{ ...buttonStyle, backgroundColor: '#00ff66', color: '#000' }} onClick={handleRestart}>
-							PLAY AGAIN
-						</button>
-						<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
-							SALIR AL MENÚ
+						{t('gamesPage.playAgain')}
+					</button>
+					<button style={{ ...buttonStyle, backgroundColor: '#ff4444', color: 'white' }} onClick={onExit}>
+						{t('gamesPage.exitToMenu')}
 						</button>
 					</div>
 				)}

@@ -1,7 +1,5 @@
 import mysql from 'mysql2/promise';
 
-
-
 export let pool: mysql.Pool;
 
 export const connect = async (): Promise<void> => {

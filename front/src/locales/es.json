@@ -1,12 +1,13 @@
 {
 	"authErrorNotification": {
-		"systemError": "ERROR_DEL_SISTEMA"
+		"systemError": "SYSTEM_ERROR"
 	},
 	"chatSidebar": {
 		"title": "Mis Mensajes",
 		"noConversations": "No tienes conversaciones.",
 		"talkToFriends": "¡Habla con alguien desde la lista de amigos!",
-		"newConversation": "Nueva conversación"
+		"newConversation": "Nueva conversación",
+		"typing": "Escribiendo..."
 	},
 	"chatWidget": {
 		"chat": "Chat"
@@ -26,11 +27,15 @@
 		"quickMatch": "Rápida (3 pts)",
 		"standardMatch": "Estándar (5 pts)",
 		"longMatch": "Larga (11 pts)",
-		"marathonMatch": "Maratón (21 pts)"
+		"marathonMatch": "Maratón (21 pts)",
+		"gameFinished": "Partida finalizada"
 	},
 	"footer": {
 		"logo": "Transcendence",
-		"copyright": "© 2026 Todos los Derechos Reservados"
+		"copyright": "© 2026 Todos los Derechos Reservados",
+		"terms": "Términos de Servicio",
+		"privacy": "Política de Privacidad",
+		"about": "Sobre Nosotros"
 	},
 	"loginModal": {
 		"signInTo": "Inicia sesión en",
@@ -61,7 +66,7 @@
 		"signUpWithGoogle": "Registrarse con Google",
 		"signUpWithGithub": "Registrarse con Github",
 		"usernameLabel": "USUARIO",
-		"emailLabel": "CORREO",
+		"emailLabel": "EMAIL",
 		"passwordLabel": "CONTRASEÑA",
 		"createAccount": "Crear Cuenta",
 		"alreadyHaveAccount": "¿Ya tienes cuenta?",
@@ -71,7 +76,7 @@
 		"title": "Recupera tu contraseña",
 		"subtitle": "Transcendence",
 		"instructions": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
-		"emailLabel": "CORREO",
+		"emailLabel": "EMAIL",
 		"sendButton": "Enviar enlace",
 		"sending": "Enviando...",
 		"emailSent": "¡Correo enviado!",
@@ -111,6 +116,93 @@
 	},
 	"gamesPage": {
 		"pongSubtitle": "La leyenda arcade original. Juego de reflejos puros.",
-		"snakeSubtitle": "Acción retro en neón. Sobrevive a la cuadrícula, haz crecer el brillo."
+		"snakeSubtitle": "Acción retro en neón. Sobrevive a la cuadrícula, haz crecer el brillo.",
+		"pongTitle": "PONG",
+		"pongHighlight": "CLÁSICO",
+		"snakeTitle": "SNAKE",
+		"snakeHighlight": "NEÓN",
+		"aiButton": "IA ",
+		"localButton": "Local",
+		"pvpButton": "1v1",
+		"playAgain": "JUGAR OTRA VEZ",
+		"exitToMenu": "SALIR AL MENÚ",
+		"pressToContinue": "Pulsa P o ESC para continuar"
+	},
+	"header": {
+		"marquee": "Pong Tournament • Join the Arena • Win • Glory •"
+	},
+	"aboutUs": {
+		"backButton": "< VOLVER A LA SALA",
+		"title": "SOBRE NOSOTROS",
+		"subtitle": "EL EQUIPO DE PESCAPONG",
+		"description": "PescaPong Arcade no sería posible sin las interminables horas de código, los litros de café y el espíritu del Common Core de 42. Conoce a los creadores de esta locura:",
+		"githubButton": "GITHUB"
+	},
+	"privacyPolicy": {
+		"backButton": "← Volver",
+		"title": "Política de Privacidad",
+		"subtitle": "PescaPong Arcade",
+		"intro": "En <strong>PescaPong</strong> nos tomamos en serio tu privacidad (¡incluso siendo un proyecto académico!). Esta Política de Privacidad describe cómo recopilamos, usamos y protegemos tu información personal cuando utilizas nuestra plataforma para jugar al Pong, Snake y chatear con otros usuarios.",
+		"section1Title": "1. Información que Recopilamos",
+		"section1Intro": "Para que el juego y las funcionalidades sociales funcionen correctamente, recopilamos los siguientes datos:",
+		"section1Item1": "<strong>Datos de Registro:</strong> Nombre de usuario, dirección de correo electrónico (si aplica) y contraseña (almacenada de forma encriptada).",
+		"section1Item2": "<strong>Datos de Perfil:</strong> Tu avatar, lista de amigos y usuarios bloqueados.",
+		"section1Item3": "<strong>Datos de Juego:</strong> Historial de partidas, puntuaciones, victorias, derrotas y estadísticas de Pong y Snake.",
+		"section1Item4": "<strong>Comunicaciones:</strong> Los mensajes enviados a través de nuestro sistema de chat en tiempo real.",
+		"section2Title": "2. Uso de la Información",
+		"section2Intro": "Tus datos <strong>NUNCA serán vendidos ni compartidos con terceros</strong>. Toda la información recopilada se utiliza exclusiva y estrictamente para:",
+		"section2Item1": "Permitir la autenticación y el inicio de sesión.",
+		"section2Item2": "Mantener el sistema de emparejamiento (matchmaking) y clasificaciones.",
+		"section2Item3": "Hacer funcionar el chat en vivo y gestionar las invitaciones a partidas.",
+		"section3Title": "3. Almacenamiento Local (Tokens)",
+		"section3Content": "No utilizamos \"cookies\" de rastreo publicitarias. Sin embargo, PescaPong utiliza el almacenamiento local de tu navegador (`localStorage` o `sessionStorage`) para guardar de forma segura tu <strong>Token de Autenticación (JWT)</strong>. Este token es imprescindible para mantener tu sesión abierta mientras navegas por la página y juegas.",
+		"section4Title": "4. Seguridad y Retención de Datos",
+		"section4Content": "Implementamos medidas de seguridad para proteger tu información, como el *hashing* de contraseñas. Aún así, te recordamos que este es un proyecto escolar de prueba. Nos reservamos el derecho de eliminar todos los datos de la base de datos (incluyendo cuentas de usuario, mensajes y puntuaciones) en cualquier momento para labores de mantenimiento del servidor.",
+		"footerDeveloped": "Desarrollado con amor, cigarros y mucho café por:",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Última actualización:"
+	},
+	"termsOfService": {
+		"backButton": "← Volver",
+		"title": "Términos de Servicio",
+		"subtitle": "PescaPong Arcade",
+		"intro": "Bienvenido a <strong>PescaPong</strong>. Este proyecto ha sido desarrollado como parte del currículo académico de la escuela 42. Al acceder y utilizar esta plataforma, aceptas estar sujeto a los siguientes Términos de Servicio. Si no estás de acuerdo con alguna parte de estos términos, no debes utilizar nuestra aplicación.",
+		"section1Title": "1. Naturaleza del Proyecto",
+		"section1Content": "pescapong es un entorno de pruebas educativo. <strong>No es un producto comercial.</strong> El servicio se proporciona \"tal cual\" y \"según disponibilidad\". Nos reservamos el derecho absoluto de modificar, suspender o cerrar la plataforma, así como de reiniciar las bases de datos, historiales de partidas y puntuaciones en cualquier momento y sin previo aviso.",
+		"section2Title": "2. Cuentas de Usuario y Seguridad",
+		"section2Para1": "Para acceder a las funciones multijugador, debes crear una cuenta. Eres el único responsable de mantener la confidencialidad de tu contraseña y de todas las actividades que ocurran bajo tu cuenta.",
+		"section2Para2": "Nos reservamos el derecho de suspender o eliminar cuentas que consideremos que violan estos términos, a nuestra entera discreción.",
+		"section3Title": "3. Código de Conducta",
+		"section3Intro": "Al utilizar nuestras salas de chat y sistemas de emparejamiento (matchmaking), te comprometes a mantener un ambiente de respeto. Está estrictamente prohibido:",
+		"section3Item1": "El acoso, los insultos, los discursos de odio o cualquier comportamiento tóxico hacia otros jugadores en el chat o en los mensajes directos.",
+		"section3Item2": "Hacer spam, enviar enlaces maliciosos o saturar los canales de comunicación.",
+		"section3Item3": "<strong>Uso de trampas:</strong> Queda terminantemente prohibido el uso de scripts, bots, macros o cualquier software de terceros diseñado para obtener ventajas injustas en las partidas de Pong y Snake.",
+		"section4Title": "4. Propiedad Intelectual",
+		"section4Content": "Todo el código, diseño y mecánicas de pescapong han sido desarrollados por el equipo creador. Los derechos de propiedad intelectual del proyecto general están sujetos a las normativas del plan de estudios de la red 42.",
+		"footerDeveloped": "Desarrollado con amor, cigarros y mucho café por:",
+		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
+		"footerLastUpdate": "Última actualización:"
+	},
+	"friendActionsMenu": {
+		"profile": "Perfil",
+		"remove": "Eliminar",
+		"block": "Bloquear"
+	},
+	"socialPanel": {
+		"title": "Social Hub",
+		"findFriends": "BUSCAR AMIGOS",
+		"usernamePlaceholder": "Nombre de usuario...",
+		"noUsersFound": "No se encontraron usuarios",
+		"friendRequests": "SOLICITUDES DE AMISTAD",
+		"wantsToBeFriend": "Quiere ser tu amigo",
+		"accept": "Aceptar",
+		"ignore": "Ignorar",
+		"online": "EN LÍNEA",
+		"offline": "DESCONECTADO",
+		"blocked": "BLOQUEADO",
+		"nobodyOnline": "Nadie en línea",
+		"nobodyOnlineDesc": "Tus amigos están desconectados o jugando al Pong.",
+		"allConnected": "Todos conectados",
+		"allConnectedDesc": "No tienes amigos desconectados en este momento."
 	}
 }

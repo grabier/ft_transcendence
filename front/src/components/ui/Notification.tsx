@@ -16,9 +16,9 @@ interface Props {
 	onClose: () => void;
 }
 
-function SlideTransition(props: SlideProps) {
+const SlideTransition = (props: SlideProps) => {
 	return <Slide {...props} direction="up" />;
-}
+};
 
 const configMap = {
 	success: { icon: CheckCircleOutlineIcon, colorKey: "success.main", title: "system.success" },

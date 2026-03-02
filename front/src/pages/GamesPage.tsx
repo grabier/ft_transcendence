@@ -111,10 +111,8 @@ const GamesPage = () => {
 	};
 
 	const handleRestartGame = () => {
-		if (selectedGame && selectedMode) {
-			setRoomId(null); 
-			setGameKey(prev => prev + 1); 
-		}
+		setRoomId(null); 
+		setGameKey(prev => prev + 1);
 	};
 
 	if (isPlaying && selectedMode && selectedGame) {
@@ -162,7 +160,7 @@ const GamesPage = () => {
 				title="PONG"
 				highlightWord="CLASSIC"
 				subtitle={t('gamesPage.pongSubtitle')}
-				buttons={['IA ', 'Local', '1v1']}
+				buttons={[t('gamesPage.aiButton'), t('gamesPage.localButton'), t('gamesPage.pvpButton')]}
 				align="left"
 				isActive={expandedPanel === 'pong'}
 				isPeerActive={expandedPanel === 'snake'}
@@ -175,7 +173,7 @@ const GamesPage = () => {
 				title="SNAKE"
 				highlightWord="NEON"
 				subtitle={t('gamesPage.snakeSubtitle')}
-				buttons={['IA ', 'Local', '1v1']}
+				buttons={[t('gamesPage.aiButton'), t('gamesPage.localButton'), t('gamesPage.pvpButton')]}
 				align="right"
 				isActive={expandedPanel === 'snake'}
 				isPeerActive={expandedPanel === 'pong'}

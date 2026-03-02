@@ -12,7 +12,7 @@ const RotatingAvatar = styled('img')(({ theme }) => ({
   },
 }));
 
-export const SearchingGameLoading = () => {
+const SearchingGameLoading = () => {
   return (
     <Box
       display="flex"
@@ -30,3 +30,5 @@ export const SearchingGameLoading = () => {
     </Box>
   );
 };
+
+export default SearchingGameLoading;

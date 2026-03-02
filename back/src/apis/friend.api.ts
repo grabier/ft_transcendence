@@ -9,7 +9,8 @@ import {
 	listPendingSchema,
 	acceptFriendSchema,
 	deleteFriendSchema,
-	blockUserSchema
+	blockUserSchema,
+	unblockUserSchema
 } from "../schemas/friend.schema.js";
 
 interface FriendParams {
@@ -92,25 +93,26 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.send({ error: "Error fetching friend list" });
 		}
 	});
-	fastify.get('/blocked', { schema: listBlockedSchema }, async (request, reply) => {
-		try {
-			const userId = (request.user as any).id;
+	fastify.get('/blocked',
+		{ schema: listBlockedSchema }, async (request, reply) => {
+			try {
+				const userId = (request.user as any).id;
 
-			const [blockade] = await pool.execute(`
-                SELECT u.id, u.username, u.avatar_url, u.is_online
+				const [blockade] = await pool.execute(`
+                SELECT u.id, u.username, u.avatar_url, u.is_online, f.blocked_by
                 FROM users u
                 JOIN friendships f ON (u.id = f.sender_id OR u.id = f.receiver_id)
                 WHERE (f.sender_id = ? OR f.receiver_id = ?) 
                   AND f.status = 'blocked' 
                   AND u.id != ?
-				  AND blocked_by = ?
+				  AND f.blocked_by = ?
             `, [userId, userId, userId, userId]);
 
-			return blockade;
-		} catch (error: any) {
-			return reply.send({ error: "Error fetching friend list" });
-		}
-	});
+				return blockade;
+			} catch (error: any) {
+				return reply.send({ error: "Error fetching friend list" });
+			}
+		});
 
 	fastify.get('/pending', { schema: listPendingSchema }, async (request, reply) => {
 		try {
@@ -218,6 +220,43 @@ const friendRoutes: FastifyPluginAsync = async (fastify, opts) => {
 				return reply.code(500).send({ error: "Error blocking user" });
 			}
 		});
+
+	fastify.put<{ Params: FriendParams }>(
+		'/unblock/:id',
+		{ schema: unblockUserSchema },
+		async (request, reply) => {
+			try {
+				const user = request.user as any;
+				const userId = user.id;
+				const blockedId = (request.params as any).id;
+
+				const [result]: any = await pool.execute(
+					`UPDATE friendships 
+					 SET status = 'accepted', blocked_by = NULL
+					 WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+					 AND status = 'blocked' AND blocked_by = ?`,
+					[userId, blockedId, blockedId, userId, userId]
+				);
+
+				if (result.affectedRows === 0) {
+					return reply.code(404).send({ error: "Could not find active block" });
+				}
+
+				const blockedIdInt = parseInt(blockedId);
+				socketManager.notifyUser(blockedIdInt, 'UNBLOCKED', {
+					blockedId: blockedIdInt,
+					username: user.username,
+					message: `${user.username} has unblocked you.`
+				});
+				return { message: "User unblocked succesfully" };
+
+			} catch (error: any) {
+				console.error(error);
+				return reply.code(500).send({ error: "Error unblocking user" });
+			}
+		});
+
+
 
 };
 

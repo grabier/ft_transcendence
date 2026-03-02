@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import ButtonGame from '@/components/ui/GameButton';
-import { PongPanel } from '@/components/game/PongPanel';
-import { SnakePanel } from '@/components/game/SnakePanel';
+import PongPanel from '@/components/game/PongPanel';
+import SnakePanel from '@/components/game/SnakePanel';
 
-interface GamePanelProps {
+interface Props {
 	title: string;
 	highlightWord: string;
 	subtitle: string;
@@ -18,11 +18,11 @@ interface GamePanelProps {
 	userLoggedIn: boolean;
 }
 
-const GamePanel: React.FC<GamePanelProps> = ({
+const GamePanel = ({
 	title, highlightWord, subtitle, buttons, align,
 	isActive, isPeerActive,
 	onClick, onOptionSelect, userLoggedIn
-}) => {
+}: Props) => {
 	const isLeft = align === 'left';
 	const shadowColor = 'rgba(255, 255, 255, 0.6)';
 	const baseBgColor = isLeft ? 'common.black' : '#0a0a0a';

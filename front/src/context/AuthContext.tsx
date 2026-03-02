@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import {  jwtDecode } from "jwt-decode";
 
 import { BASE_URL } from "@/config";
-import { useNotification } from "@/context/NotificationContext"
+import { useNotification } from "@/context/NotificationContext";
+import { STORAGE_KEYS, EXTERNAL_APIS } from '../constants';
 
 interface UserPayload {
 	id: number;
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			if (!response.ok) throw new Error(data.message || data.error || 'Credential error');
 
-			localStorage.setItem('auth_token', data.token);
+		localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 			const decoded = jwtDecode<UserPayload>(data.token);
 			setUser(decoded);
 			lastTokenRef.current = data.token;
@@ -84,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const register = async (username: string, email: string, pass: string): Promise<boolean> => {
 		setIsLoading(true);
 		try {
-			const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || 'Guest'}`;
+			const defaultAvatar = `${EXTERNAL_APIS.DICEBEAR_BASE_URL}?seed=${username || 'Guest'}`;
 
 			const response = await fetch(`${BASE_URL}/api/auth/register`, {
 				method: 'POST',
@@ -109,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const logout = () => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (token) {
 			fetch(`${BASE_URL}/api/auth/logout`, {
 				method: 'POST',
@@ -117,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}).catch(console.error);
 		}
 
-		localStorage.removeItem('auth_token');
+		localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
 		setUser(null);
 		lastTokenRef.current = null;
 		notifySuccess("Logged out successfully");
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	useEffect(() => {
 		const checkToken = () => {
-			const currentToken = localStorage.getItem('auth_token');
+			const currentToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 			if (currentToken !== lastTokenRef.current) {
 				lastTokenRef.current = currentToken;
@@ -137,11 +138,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						fetch(`${BASE_URL}/api/user/persistence`, {
 							headers: { 'Authorization': `Bearer ${currentToken}` }
 						}).catch(() => {
-							localStorage.removeItem('auth_token');
-							setUser(null);
-						});
-					} catch (e) {
-						localStorage.removeItem('auth_token');
+						localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+						setUser(null);
+					});
+				} catch (e) {
+					localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
 						setUser(null);
 					}
 				} else {
@@ -155,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, []);
 
 	const updateUsername = async (newUsername: string): Promise<boolean> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return false;
 
 		try {
@@ -176,7 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			if (data.token) {
 				lastTokenRef.current = data.token;
-				localStorage.setItem('auth_token', data.token);
+				localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 			}
 			setUser(prev => prev ? { ...prev, username: newUsername } : null);
 			notifySuccess("Username updated successfully!");
@@ -188,7 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const updateAvatarUrl = async (newUrl: string): Promise<boolean> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return false;
 
 		try {
@@ -209,7 +210,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			if (data.token) {
 				lastTokenRef.current = data.token;
-				localStorage.setItem('auth_token', data.token);
+				localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 			}
 			setUser(prev => prev ? { ...prev, avatarUrl: newUrl } : null);
 			notifySuccess("Avatar updated successfully!");
@@ -221,7 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const uploadAvatarFile = async (file: File): Promise<boolean> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return false;
 		const formData = new FormData();
 		formData.append('avatar', file);
@@ -239,7 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (!response.ok) throw new Error(data.error);
 			if (data.token) {
 				lastTokenRef.current = data.token;
-				localStorage.setItem('auth_token', data.token);
+				localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 			}
 			setUser(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
 			notifySuccess("Avatar uploaded!");
@@ -251,7 +252,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const generate2FA = async (): Promise<string | null> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return null;
 
 		try {
@@ -276,7 +277,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const verify2FA = async (code: string): Promise<boolean> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return false;
 		try {
 			const response = await fetch(`${BASE_URL}/api/auth/2fa/turn-on`, {
@@ -302,7 +303,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const disable2FA = async (): Promise<boolean> => {
-		const token = localStorage.getItem('auth_token');
+		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 		if (!token) return false;
 
 		try {

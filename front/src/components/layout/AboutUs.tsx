@@ -1,6 +1,6 @@
-import React from 'react';
 import { Container, Typography, Paper, Box, Grid, Button, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const teamMembers = [
 	{
@@ -29,8 +29,9 @@ const teamMembers = [
 	}
 ];
 
-const AboutUs: React.FC = () => {
+const AboutUs = () => {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 
 	return (
 		<Container maxWidth="md" sx={{ py: 6, position: 'relative' }}>
@@ -53,7 +54,7 @@ const AboutUs: React.FC = () => {
 					}
 				}}
 			>
-				&lt; BACK TO ARCADE
+				{t('aboutUs.backButton')}
 			</Button>
 
 			<Paper
@@ -76,17 +77,16 @@ const AboutUs: React.FC = () => {
 					textShadow: '0 0 20px rgba(0, 255, 102, 0.5)',
 					textAlign: 'center'
 				}}>
-					SOBRE NOSOTROS
+					{t('aboutUs.title')}
 				</Typography>
 
 				<Typography variant="h6" sx={{ color: '#00ff66', mb: 4, letterSpacing: '4px', textAlign: 'center' }}>
-					EL EQUIPO DE PESCAPONG
+					{t('aboutUs.subtitle')}
 				</Typography>
 
 				<Box sx={{ mb: 6, textAlign: 'center' }}>
 					<Typography variant="body1" sx={{ lineHeight: 1.8, opacity: 0.8 }}>
-						PescaPong Arcade no sería posible sin las interminables horas de código,
-						los litros de café y el espíritu del Common Core de 42. Conoce a los creadores de esta locura:
+						{t('aboutUs.description')}
 					</Typography>
 				</Box>
 
@@ -129,7 +129,7 @@ const AboutUs: React.FC = () => {
 										'&:hover': { bgcolor: '#e0e0e0' }
 									}}
 								>
-									GITHUB
+									{t('aboutUs.githubButton')}
 								</Button>
 							</Box>
 						</Grid>

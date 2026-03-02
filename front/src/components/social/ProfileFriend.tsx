@@ -9,6 +9,7 @@ import { useFriendActions } from '../../hooks/useFriendActions';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 
 
@@ -17,10 +18,11 @@ interface Props {
 	onClose: () => void;
 	friend: any;
 	onActionSuccess?: () => void;
+	isBlocked?: boolean;
 }
 
-export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props) => {
-	const { deleteFriend, blockFriend } = useFriendActions(onActionSuccess);
+const ProfileFriend = ({ open, onClose, friend, onActionSuccess, isBlocked }: Props) => {
+	const { deleteFriend, blockFriend, unBlockFriend } = useFriendActions(onActionSuccess);
 
 	return (
 		<Drawer
@@ -82,17 +84,33 @@ export const ProfileFriend = ({ open, onClose, friend, onActionSuccess }: Props)
 						</IconButton>
 					</Tooltip>
 
-					<Tooltip title="Bloquear">
-						<IconButton
-							onClick={async () => {
-								await blockFriend(friend.id);
-								onClose();
-							}}
-							sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
-						>
-							<BlockIcon />
-						</IconButton>
-					</Tooltip>
+					{/* Botón condicional: Desbloquear o Bloquear */}
+					{isBlocked ? (
+						<Tooltip title="Desbloquear">
+							<IconButton
+								onClick={async () => {
+									await unBlockFriend(friend.id);
+									onClose();
+								}}
+								color="success"
+								sx={{ bgcolor: 'action.hover' }}
+							>
+								<LockOpenIcon />
+							</IconButton>
+						</Tooltip>
+					) : (
+						<Tooltip title="Bloquear">
+							<IconButton
+								onClick={async () => {
+									await blockFriend(friend.id);
+									onClose();
+								}}
+								sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}
+							>
+								<BlockIcon />
+							</IconButton>
+						</Tooltip>
+					)}
 				</Box>
 			</Box>
 

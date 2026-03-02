@@ -1,12 +1,12 @@
 import { Typography, Link } from "@mui/material";
 
-interface AuthSwitchLinkProps {
+interface Props {
   text: string;
   actionText: string;
   onAction: () => void;
 }
 
-const AuthSwitchLink = ({ text, actionText, onAction }: AuthSwitchLinkProps) => {
+const AuthSwitchLink = ({ text, actionText, onAction }: Props) => {
   return (
     <Typography variant="body1" sx={{ textAlign: "center", mt: 3 }}>
       {text}{" "}

@@ -9,7 +9,7 @@ const languages = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' }
 ];
 
-export const LanguageSwitcher = () => {
+const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -56,3 +56,5 @@ export const LanguageSwitcher = () => {
     </>
   );
 };
+
+export default LanguageSwitcher;

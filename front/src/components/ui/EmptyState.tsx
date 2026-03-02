@@ -1,6 +1,6 @@
 import { Box, Typography, Button, SvgIconProps } from '@mui/material';
 
-interface EmptyStateProps {
+interface Props {
 	icon?: React.ReactElement<SvgIconProps>;
 	title: string;
 	description?: string;
@@ -8,13 +8,13 @@ interface EmptyStateProps {
 	onAction?: () => void;
 }
 
-export const EmptyState = ({
+const EmptyState = ({
 	icon,
 	title,
 	description,
 	actionText,
 	onAction
-}: EmptyStateProps) => {
+}: Props) => {
 	return (
 		<Box
 			sx={{
@@ -52,3 +52,5 @@ export const EmptyState = ({
 		</Box>
 	);
 };
+
+export default EmptyState;

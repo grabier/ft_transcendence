@@ -1,9 +1,10 @@
-import React from 'react';
 import { Container, Typography, Paper, Box, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-const TermsOfService: React.FC = () => {
+const TermsOfService = () => {
 	const navigate = useNavigate();
+	const { t, i18n } = useTranslation();
 
 	return (
 		<Container maxWidth="md" sx={{ py: 6 }}>
@@ -11,7 +12,7 @@ const TermsOfService: React.FC = () => {
 				onClick={() => navigate(-1)}
 				sx={{ mb: 4, color: 'grey.400', '&:hover': { color: 'white' } }}
 			>
-				&larr; Volver
+				{t('termsOfService.backButton')}
 			</Button>
 
 			<Paper
@@ -25,68 +26,61 @@ const TermsOfService: React.FC = () => {
 				}}
 			>
 				<Typography variant="h3" component="h1" sx={{ color: 'white', fontWeight: 'bold', mb: 1, fontFamily: '"Montserrat", sans-serif' }}>
-					Términos de Servicio
+					{t('termsOfService.title')}
 				</Typography>
 				<Typography variant="subtitle1" sx={{ color: '#00ff66', mb: 4, fontFamily: '"Montserrat", sans-serif' }}>
-					PescaPong Arcade
+					{t('termsOfService.subtitle')}
 				</Typography>
 
 				<Box sx={{ mb: 4 }}>
-					<Typography variant="body1" paragraph>
-						Bienvenido a <strong>PescaPong</strong>. Este proyecto ha sido desarrollado como parte del currículo académico de la escuela 42.
-						Al acceder y utilizar esta plataforma, aceptas estar sujeto a los siguientes Términos de Servicio. Si no estás de acuerdo con alguna parte de estos términos, no debes utilizar nuestra aplicación.
-					</Typography>
+					<Typography variant="body1" paragraph dangerouslySetInnerHTML={{ __html: t('termsOfService.intro') }} />
 				</Box>
 
 				<Divider sx={{ borderColor: 'grey.800', mb: 4 }} />
 
 				<Box sx={{ mb: 4 }}>
 					<Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
-						1. Naturaleza del Proyecto
+						{t('termsOfService.section1Title')}
+					</Typography>
+					<Typography variant="body2" paragraph dangerouslySetInnerHTML={{ __html: t('termsOfService.section1Content') }} />
+				</Box>
+
+				<Box sx={{ mb: 4 }}>
+					<Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
+						{t('termsOfService.section2Title')}
 					</Typography>
 					<Typography variant="body2" paragraph>
-						pescapong es un entorno de pruebas educativo. <strong>No es un producto comercial.</strong> El servicio se proporciona "tal cual" y "según disponibilidad". Nos reservamos el derecho absoluto de modificar, suspender o cerrar la plataforma, así como de reiniciar las bases de datos, historiales de partidas y puntuaciones en cualquier momento y sin previo aviso.
+						{t('termsOfService.section2Para1')}
+					</Typography>
+					<Typography variant="body2" paragraph>
+						{t('termsOfService.section2Para2')}
 					</Typography>
 				</Box>
 
 				<Box sx={{ mb: 4 }}>
 					<Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
-						2. Cuentas de Usuario y Seguridad
+						{t('termsOfService.section3Title')}
 					</Typography>
 					<Typography variant="body2" paragraph>
-						Para acceder a las funciones multijugador, debes crear una cuenta. Eres el único responsable de mantener la confidencialidad de tu contraseña y de todas las actividades que ocurran bajo tu cuenta.
-					</Typography>
-					<Typography variant="body2" paragraph>
-						Nos reservamos el derecho de suspender o eliminar cuentas que consideremos que violan estos términos, a nuestra entera discreción.
-					</Typography>
-				</Box>
-
-				<Box sx={{ mb: 4 }}>
-					<Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
-						3. Código de Conducta
-					</Typography>
-					<Typography variant="body2" paragraph>
-						Al utilizar nuestras salas de chat y sistemas de emparejamiento (matchmaking), te comprometes a mantener un ambiente de respeto. Está estrictamente prohibido:
+						{t('termsOfService.section3Intro')}
 					</Typography>
 					<Box component="ul" sx={{ pl: 3, mb: 2 }}>
 						<Typography component="li" variant="body2" sx={{ mb: 1 }}>
-							El acoso, los insultos, los discursos de odio o cualquier comportamiento tóxico hacia otros jugadores en el chat o en los mensajes directos.
+							{t('termsOfService.section3Item1')}
 						</Typography>
 						<Typography component="li" variant="body2" sx={{ mb: 1 }}>
-							Hacer spam, enviar enlaces maliciosos o saturar los canales de comunicación.
+							{t('termsOfService.section3Item2')}
 						</Typography>
-						<Typography component="li" variant="body2" sx={{ mb: 1 }}>
-							<strong>Uso de trampas:</strong> Queda terminantemente prohibido el uso de scripts, bots, macros o cualquier software de terceros diseñado para obtener ventajas injustas en las partidas de Pong y Snake.
-						</Typography>
+						<Typography component="li" variant="body2" sx={{ mb: 1 }} dangerouslySetInnerHTML={{ __html: t('termsOfService.section3Item3') }} />
 					</Box>
 				</Box>
 
 				<Box sx={{ mb: 4 }}>
 					<Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
-						4. Propiedad Intelectual
+						{t('termsOfService.section4Title')}
 					</Typography>
 					<Typography variant="body2" paragraph>
-						Todo el código, diseño y mecánicas de pescapong han sido desarrollados por el equipo creador. Los derechos de propiedad intelectual del proyecto general están sujetos a las normativas del plan de estudios de la red 42.
+						{t('termsOfService.section4Content')}
 					</Typography>
 				</Box>
 
@@ -94,13 +88,13 @@ const TermsOfService: React.FC = () => {
 
 				<Box sx={{ textAlign: 'center', opacity: 0.7 }}>
 					<Typography variant="body2">
-						Desarrollado con amor, cigarros y mucho café por:
+						{t('termsOfService.footerDeveloped')}
 					</Typography>
 					<Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold', mt: 1 }}>
-						ppeckham | jose-rig | jormoral | gmontoro
+						{t('termsOfService.footerTeam')}
 					</Typography>
 					<Typography variant="caption" display="block" sx={{ mt: 2 }}>
-						Última actualización: {new Date().toLocaleDateString('es-ES')}
+						{t('termsOfService.footerLastUpdate')} {new Date().toLocaleDateString(i18n.language)}
 					</Typography>
 				</Box>
 			</Paper>
