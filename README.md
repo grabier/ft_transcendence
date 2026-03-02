@@ -1,231 +1,191 @@
-# trascendence
-pesca montañera
-Todo: chat , notification system
-Real time collaborative features? que es? 1v1??
-Uploading an image with a specific format for Profile Pic? + validations, deletions, only .png .jpg etc
+# ft_transcendence
 
-MODULES: WEB
-- Major Framework
-- Major Websockets(falta chat) (Efficient message broadcasting.)
-- 
+> A full-stack web application featuring real-time multiplayer games, social features, and a complete user management system — built from scratch as a team's first real web project.
 
------------TODOLIST-----------
-- readme 
-- limpieza general
-- console warnings
+---
 
+## Table of Contents
 
+- [Overview](#overview)
+- [Team](#team)
+- [Tech Stack](#tech-stack)
+- [Modules](#modules)
+- [Database Schema](#database-schema)
+- [Getting Started](#getting-started)
+- [API](#api)
+- [Browser Support](#browser-support)
+- [Internationalization](#internationalization)
+- [AI Usage](#ai-usage)
 
+---
 
+## Overview
 
------------TERMINADO-----------19 points
-2 - Use a framework for both the frontend and backend
-2 - Implement real-time features using WebSockets or similar technology.
-2 - Allow users to interact with other users.
-2 - Introduce an AI Opponent for games.
-2 - Implement a complete web-based game where users can play against each other
-2 - Remote players — Enable two players on separate computers to play the same game in real-time
-2 - A public API to interact with the database
-2 - Standard user management and authentication.
-1 - Implement remote authentication with OAuth 2.0
-1 - Advanced chat features(acces profile from chat, typing indicator and read receipst)
-1 - Custom-made design system with reusable components, including a proper color palette, typography, and icons(hay que hacer cuentas de cuantos tenemos)
+ft_transcendence is a web platform where users can play **Pong** and **Snake** against each other or an AI opponent in real time, chat with friends, manage their profiles, and interact through a full social system — all in a single-page application.
 
+**21 points** across 13 modules (7 Major + 6 Minor).
 
-----------EN PROGRESO----------5 points
-1 - Support for additional browsers(funciona todo en chrome, firefox y opera, faltaria documentar)
-1 - Support for multiple languages
+---
 
------------NO EMPEZADO----------------8 points
-2 - Multiplayer game (more than two players).
-2 - Complete accessibility compliance (WCAG 2.1 AA) with screen reader support, keyboard navigation, and assistive technologies.
-1 - Right-to-left (RTL) language support
-1 - Game statistics and match history
-1 - Implement a tournament system
-1 - Implement spectator mode for games.
+## Team
 
+| Login | Role | Main Contributions |
+|---|---|---|
+| [jose-rig](https://github.com/jose-rig) | Architect · Scrum Master | User profiles, social panel, API design, database |
+| [jormoral](https://github.com/jormoral) | Developer · Architect | Main page, UI/UX & layout, icon system, Snake game |
+| [gmontoro](https://github.com/gmontoro) | Product Owner · Developer | Pong game, API design, database |
+| [ppeckham](https://github.com/ppeckham) | Product Owner · Project Manager | Backend, server config, code standards & architecture |
 
+> Everyone worked across the full stack. The above reflects where each person invested the most.
 
-1 - O AUTH
-SUBJECT MODULES 
--------Web-----------
-Major Use a framework for both the frontend and backend.
+---
 
-Major: Implement real-time features using WebSockets or similar technology.
-◦ Real-time updates across clients.
-◦ Handle connection/disconnection gracefully.
-!!◦ Efficient message broadcasting OJO -> con sockets?
+## Tech Stack
 
-Major: Allow users to interact with other users. The minimum requirements are:
-◦ A basic chat system (send/receive messages between users).
-!!A profile system (view user information). poner boton pa ver profile de otros
-!! ◦ A friends system (add/remove friends, see friends list). FALTA remove friends
+| Layer | Technology |
+|---|---|
+| Frontend | React |
+| Backend | Express |
+| Database | MariaDB |
+| Auth | GitHub OAuth 2.0 |
+| Real-time | WebSockets |
+| Deployment | Docker · Make |
 
-!!Major: A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints: FALTA DOCUMENTATION
-◦ GET /api/{something}
-◦ POST /api/{something}
-◦ PUT /api/{something}
-◦ DELETE /api/{something}
+---
 
-???• Minor: A complete notification system for all creation, update, and deletion actions ????
+## Modules
 
-??• Minor: Real-time collaborative features (shared workspaces, live editing, collaborative drawing, etc.). 2V1 CONTRA IA??
+### Major (7)
 
-??Minor: Server-Side Rendering (SSR) for improved performance and SEO.
+| Module | Description |
+|---|---|
+| 🎮 Web-based game | Two games: **Pong** and **Snake**. Clear rules, win/loss conditions, 2D. |
+| 🌐 Remote players | Two players on separate computers in real time. Latency handling, disconnection recovery, reconnection logic. |
+| 🤖 AI Opponent | AI available for both games. Simulates human-like behavior — not perfect play. Adapts to customization options. |
+| ⚡ Real-time features | WebSocket-based real-time updates across clients. Graceful connection/disconnection handling. Efficient message broadcasting. |
+| 👥 User interaction | Chat (send/receive messages), user profile system, friends system (add/remove, friends list). |
+| 🔐 User management & auth | Profile editing, avatar upload (default if none), friends with online status, profile pages. |
+| 🔌 Public API | Secured REST API with API key, rate limiting, documentation, and 5+ endpoints (GET / POST / PUT / DELETE). |
 
-???• Minor: Progressive Web App (PWA) with offline support and installability.???
+### Minor (7)
 
-??• Minor: Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components).
+| Module | Description |
+|---|---|
+| ⚛️ Frontend framework | Built with **React** |
+| 🚀 Backend framework | Built with **Fastify** |
+| 🎨 Design system | Custom component library: 10+ reusable components, color palette, typography, and icon set. |
+| 🌍 i18n | 3 languages: **English**, **Spanish**, **French**. Full translations, language switcher in UI. |
+| 🌐 Browser support | Full compatibility with **Chrome**, **Firefox**, and **Opera**. Consistent UI/UX across all three. |
+| 💬 Advanced chat | Block users, invite to games from chat, tournament notifications, profile access from chat, history persistence, typing indicators & read receipts. |
+| 🔑 OAuth 2.0 | Remote authentication via **GitHub**. |
 
-???Minor: Implement advanced search functionality with filters, sorting, and pagination.??
+> **Total: 21 points**
 
-??Minor: File upload and management system.
-◦ Support multiple file types (images, documents, etc.).
-◦ Client-side and server-side validation (type, size, format).
-◦ Secure file storage with proper access control.
-◦ File preview functionality where applicable.
-◦ Progress indicators for uploads.
-◦ Ability to delete uploaded files.??
+---
 
-----Accessibility and Internationalization---
-<PATRICK
-Major: Complete accessibility compliance (WCAG 2.1 AA) with screen reader support, keyboard navigation, and assistive technologies. CIEGOS
-• Minor: Support for multiple languages (at least 3 languages).
-	Implement i18n (internationalization) system.
-	At least 3 complete language translations.
-	Language switcher in the UI.
-	All user-facing text must be translatable.
-??• Minor: Right-to-left (RTL) language support. ?? PATRICK>
+## Database Schema
 
-?? Minor: Support for additional browsers.
-◦ Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge,
-etc.).
-◦ Test and fix all features in each browser.
-◦ Document any browser-specific limitations.
-◦ Consistent UI/UX across all supported browsers.??
+| Table | Description |
+|---|---|
+| `Users` | Account info: username, avatar, stats, preferences, OAuth data |
+| `Friendships` | Log of friendship and block relationships between users |
+| `DMs` | Chat room records between users |
+| `Messages` | Individual messages within each chat room |
 
-----User Management-------
+---
 
-Major: Standard user management and authentication.
-◦ Users can update their profile information.
-◦ Users can upload an avatar (with a default avatar if none provided). OJO
-◦ Users can add other users as friends and see their online status.
-◦ Users have a profile page displaying their information.
+## Getting Started
 
-Minor: Game statistics and match history (requires a game module).
-◦ Track user game statistics (wins, losses, ranking, level, etc.).
-◦ Display match history (1v1 games, dates, results, opponents).
-◦ Show achievements and progression.
-◦ Leaderboard integration.
+### Prerequisites
 
-Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42,
-etc.).
+- Docker & Docker Compose
+- A configured `.env` file
 
-Major: An organization system:
-◦ Create, edit, and delete organizations.
-◦ Add users to organizations.
-◦ Remove users from organizations.
-◦ View organizations and allow users to perform specific actions within an or-
-ganization (minimum: create, read, update).
+### Setup
 
-??Minor: Implement a complete 2FA (Two-Factor Authentication) system for the
-users??
+1. **Clone the repository**
+```bash
+   git clone https://github.com/<org>/ft_transcendence.git
+   cd ft_transcendence
+```
 
-??Minor: User activity analytics and insights dashboard. GRAFANA??
+2. **Configure environment variables**
 
-----Cybersecurity------
-Major: Implement WAF/ModSecurity (hardened) + HashiCorp Vault for secrets:
-◦ Configure strict ModSecurity/WAF.
-◦ Manage secrets in Vault (API keys, credentials, environment variables), en-
-crypted and isolated.
+   Place your `.env` file inside the backend directory (`/back/.env`).
+```env
+   # GitHub OAuth
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   GITHUB_CALLBACK_URL=http://<YOUR_IP>:PORT/auth/github/callback
 
+   # Remote play
+   APP_HOST=<YOUR_IP>
 
-----Gaming and user experience-------
+   # Database
+   DB_HOST=...
+   DB_PORT=...
+   DB_USER=...
+   DB_PASSWORD=...
+   DB_NAME=...
 
-• Major: Implement a complete web-based game where users can play against each
-other.
-◦ The game can be real-time multiplayer (e.g., Pong, Chess, Tic-Tac-Toe, Card
-games, etc.).
-◦ Players must be able to play live matches.
-◦ The game must have clear rules and win/loss conditions.
-◦ The game can be 2D or 3D
+   # API
+   API_SECRET_KEY=...
+```
 
-FALTA Major: Remote players — Enable two players on separate computers to play thesame game in real-time.
-◦ Handle network latency and disconnections gracefully.
-◦ Provide a smooth user experience for remote gameplay.
-◦ Implement reconnection logic.
+   > ⚠️ Set your machine's IP for the GitHub OAuth redirect and for remote multiplayer.
 
-FALTA Major: Multiplayer game (more than two players).
-◦ Support for three or more players simultaneously.
-◦ Fair gameplay mechanics for all participants.
-◦ Proper synchronization across all clients.
-???Major: Add another game with user history and matchmaking.
-◦ Implement a second distinct game.
-◦ Track user history and statistics for this game.
-◦ Implement a matchmaking system.
-◦ Maintain performance and responsiveness.??
+3. **Launch**
+```bash
+   make
+```
 
-Minor: Advanced chat features (enhances the basic chat from "User interaction"
-module).
-◦ Ability to block users from messaging you.
-◦ Invite users to play games directly from chat.
-◦ Game/tournament notifications in chat.
-◦ Access to user profiles from chat interface.
-◦ Chat history persistence.
-◦ Typing indicators and read receipt
+---
 
-FALTA Minor: Implement a tournament system.
-◦ Clear matchup order and bracket system.
-◦ Track who plays against whom.
-◦ Matchmaking system for tournament participants.
-◦ Tournament registration and management
+## API
 
-FALTA Minor: Game customization options.
-◦ Power-ups, attacks, or special abilities.
-◦ Different maps or themes.
-◦ Customizable game settings.
-◦ Default options must be available
+Secured with an API key and rate limiting. Documentation available at `/api/docs` once the server is running.
+```
+GET    /api/{resource}
+POST   /api/{resource}
+PUT    /api/{resource}
+DELETE /api/{resource}
+```
 
-FALTA? Minor: A gamification system to reward users for their actions.
-◦ Implement at least 3 of the following: achievements, badges, leaderboards,
-XP/level system, daily challenges, rewards
-◦ System must be persistent (stored in database)
-◦ Visual feedback for users (notifications, progress bars, etc.)
-◦ Clear rules and progression mechanics
+Include your key in the header:
+```
+Authorization: Bearer <API_SECRET_KEY>
+```
 
-Minor: Implement spectator mode for games.
-◦ Allow users to watch ongoing games.
-◦ Real-time updates for spectators.
-◦ Optional: spectator chat.
+---
 
---DEVOPS----xD
---Data and Analytics---
+## Browser Support
 
+| Browser | Status |
+|---|---|
+| Chrome | ✅ Fully supported |
+| Firefox | ✅ Fully supported |
+| Opera | ✅ Fully supported |
 
------Artificial Intelligence-----
+---
 
-• Major: Introduce an AI Opponent for games.
-◦ The AI must be challenging and able to win occasionally.
-◦ The AI should simulate human-like behavior (not perfect play).
-◦ If you implement game customization options, the AI must be able to use
-them.
-◦ You must be able to explain your AI implementation during evaluation
+## Internationalization
 
-??Major: Implement a complete RAG (Retrieval-Augmented Generation) system.
-◦ Interact with a large dataset of information.
-◦ Users can ask questions and get relevant answers.
-◦ Implement proper context retrieval and response generation??
+| Language | Status |
+|---|---|
+| 🇬🇧 English | ✅ Complete |
+| 🇪🇸 Spanish | ✅ Complete |
+| 🇫🇷 French | ✅ Complete |
 
-• Major: Implement a complete LLM system interface.
-◦ Generate text and/or images based on user input.
-◦ Handle streaming responses properly.
-◦ Implement error handling and rate limiting.
-• Major: Recommendation system using machine learning.
-◦ Personalized recommendations based on user behavior.
-◦ Collaborative filtering or content-based filtering.
-◦ Continuously improve recommendations over time.
-• Minor: Content moderation AI (auto moderation, auto deletion, auto warning,
-etc.)
-• Minor: Voice/speech integration for accessibility or interaction.
-• Minor: Sentiment analysis for user-generated content.
-• Minor: Image recognition and tagging system????
+Language switcher available in the UI. All user-facing text is translatable.
+
+---
+
+## AI Usage
+
+AI tools were used **didactically** throughout the project: to learn new concepts, unblock technical problems, and verify this README against the subject's requirements.
+
+> All implementations are fully understood and can be explained by the team during evaluation.
+
+---
+
+*ft_transcendence — 42 School · Chapter VI*
