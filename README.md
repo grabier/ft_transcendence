@@ -31,10 +31,10 @@ ft_transcendence is a web platform where users can play **Pong** and **Snake** a
 
 | Login | Role | Main Contributions |
 |---|---|---|
-| [jose-rig](https://github.com/jose-rig) | Architect · Scrum Master | User profiles, social panel, API design, database |
-| [jormoral](https://github.com/jormoral) | Developer · Architect | Main page, UI/UX & layout, icon system, Snake game |
-| [gmontoro](https://github.com/gmontoro) | Product Owner · Developer | Pong game, API design, database |
-| [ppeckham](https://github.com/ppeckham) | Product Owner · Project Manager | Backend, server config, code standards & architecture |
+| [jose-rig](https://github.com/C42joseri) | Architect · Scrum Master | User profiles, social panel, API design, database |
+| [jormoral](https://github.com/Baldizzone42) | Developer · Architect | Main page, UI/UX & layout, icon system, Snake game |
+| [gmontoro](https://github.com/grabier) | Product Owner · Developer | Pong game, API design, database |
+| [ppeckham](https://github.com/patrixampm) | Product Owner · Project Manager | Backend, server config, code standards & architecture |
 
 > Everyone worked across the full stack. The above reflects where each person invested the most.
 
