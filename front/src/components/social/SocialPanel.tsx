@@ -67,6 +67,9 @@ const SocialPanel = ({ open, onClose }: Props) => {
 	}, [showSearch]);
 	const handleViewProfile = (friend: any) => {
 		setSelectedFriend(friend);
+		console.log(`blocccccked : ${selectedFriend.blocked_by}`);
+		console.log(`blocccccked bool: ${selectedFriend.blocked_by ? true : false}`);
+		
 		modals.toggleProfileFriends();
 	};
 	const fetchData = useCallback(async () => {
@@ -109,7 +112,7 @@ const SocialPanel = ({ open, onClose }: Props) => {
 			setLoading(false);
 		}
 	}, [token]);
-	const { deleteFriend, blockFriend } = useFriendActions(fetchData);
+	const { deleteFriend, blockFriend, unBlockFriend } = useFriendActions(fetchData);
 
 	const handleCloseProfile = useCallback(() => {
 		modals.closeAll(); 
@@ -475,7 +478,7 @@ const SocialPanel = ({ open, onClose }: Props) => {
 													friend={f}
 													onViewProfile={() => handleViewProfile(f)}
 													onRemove={() => deleteFriend(f.id)}
-													onBlock={() => blockFriend(f.id)}
+													onBlock={() => unBlockFriend(f.id)}
 												/>
 												<IconButton onClick={() => { selectChat(f.id, f); onClose(); }}>
 													<ChatIcon fontSize="small" sx={{ color: 'text.disabled' }} />
@@ -505,6 +508,7 @@ const SocialPanel = ({ open, onClose }: Props) => {
 					onClose={handleCloseProfile}
 					friend={selectedFriend}
 					onActionSuccess={fetchData}
+					isBlocked={selectedFriend.blocked_by ? true : false }
 				/>
 			)}
 		</Drawer>

@@ -41,5 +41,23 @@ export const useFriendActions = (onSuccess?: () => void) => {
 		}
 	}, [token, onSuccess]);
 
-	return { deleteFriend, blockFriend };
+	const unBlockFriend = useCallback(async (friendId: number) => {
+		if (!token) return false;
+		try {
+			const res = await fetch(`${BASE_URL}/api/friend/unblock/${friendId}`, {
+				method: 'PUT',
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (res.ok) {
+				if (onSuccess) onSuccess();
+				return true;
+			}
+			return false;
+		} catch (err) {
+			console.error("Error unblocking friend:", err);
+			return false;
+		}
+	}, [token, onSuccess]);
+
+	return { deleteFriend, blockFriend, unBlockFriend };
 };

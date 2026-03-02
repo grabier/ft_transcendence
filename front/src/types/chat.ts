@@ -22,4 +22,5 @@ export interface DM {
 	otherUser: ChatUser;
 	lastMessage?: Message;
 	unreadCount?: number;
+	is_blocked? : boolean;
 }

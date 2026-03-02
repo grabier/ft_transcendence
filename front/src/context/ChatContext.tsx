@@ -17,7 +17,7 @@ interface ChatContextType {
 	activeChat: DM | null;
 	messages: Message[];
 	isLoading: boolean;
-	selectChat: (targetUserId: number, targetUser?: any) => Promise<void>;
+	selectChat: (targetUserId: number, targetUser?: any, is_blocked?: boolean) => Promise<void>;
 	sendMessage: (content: string, points: number, type?: 'text' | 'game_invite') => void;
 	closeChat: () => void;
 	refreshChats: () => void;
@@ -77,7 +77,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 		fetchChats();
 	}, [fetchChats, messages]);
 
-	const selectChat = useCallback(async (targetUserId: number, targetUserData?: any) => {
+	const selectChat = useCallback(async (targetUserId: number, targetUserData?: any, is_blocked? : boolean) => {
 		if (!token) return;
 		setIsLoading(true);
 		try {
@@ -107,7 +107,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 			const activeDM: DM = {
 				id: data.dmId,
-				otherUser: otherUser!
+				otherUser: otherUser!,
+				is_blocked : is_blocked
 			};
 
 			setActiveChat(activeDM);

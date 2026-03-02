@@ -1,8 +1,9 @@
 const userSummaryProperties = {
 	id: { type: 'number' },
 	username: { type: 'string' },
-	avatar_url: { type: 'string' },
-	is_online: { type: 'boolean' }
+	avatar_url: { type: 'string', nullable: true }, 
+	is_online: { type: ['number', 'boolean'] },
+	blocked_by: { type: ['number', 'null'], nullable: true }
 };
 
 export const sendRequestSchema = {
@@ -75,7 +76,7 @@ export const listPendingSchema = {
 					friendship_id: { type: 'number' },
 					sender_id: { type: 'number' },
 					username: { type: 'string' },
-					avatar_url: { type: 'string' },
+					avatar_url: { type: 'string', nullable: true }, 
 					created_at: { type: 'string', format: 'date-time' }
 				}
 			}
@@ -131,6 +132,28 @@ export const blockUserSchema = {
 		type: 'object',
 		properties: {
 			id: { type: 'number', description: 'ID del usuario a bloquear' }
+		}
+	},
+	response: {
+		200: {
+			type: 'object',
+			properties: { message: { type: 'string' } }
+		},
+		404: {
+			type: 'object',
+			properties: { error: { type: 'string' } }
+		}
+	}
+};
+
+export const unblockUserSchema = {
+	description: 'Desbloquea a un usuario',
+	tags: ['Friends'],
+	security: [{ bearerAuth: [] }],
+	params: {
+		type: 'object',
+		properties: {
+			id: { type: 'number', description: 'ID del usuario a desbloquear' }
 		}
 	},
 	response: {

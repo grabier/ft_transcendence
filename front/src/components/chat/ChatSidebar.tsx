@@ -1,12 +1,17 @@
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, List, ListItem, ListItemButton, ListItemAvatar, Avatar, ListItemText, Typography, Badge, Paper } from '@mui/material';
+import { Box, List, ListItem, ListItemButton, ListItemAvatar, Avatar, ListItemText, Typography, Badge, Paper, IconButton, Tooltip } from '@mui/material';
 import CircleIcon from '@mui/icons-material/Circle';
+import BlockIcon from '@mui/icons-material/Block';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 import { useChat } from '@/context/ChatContext';
+import { useFriendActions } from '@/hooks/useFriendActions';
+import { BASE_URL } from '@/config';
 
 const formatLastMessage = (message: any, t: any): string => {
 	if (!message?.content) return t('chatSidebar.newConversation');
-	
+
 	// Check if it's a game invite (JSON content)
 	if (message.content.startsWith('{')) {
 		try {
@@ -18,13 +23,42 @@ const formatLastMessage = (message: any, t: any): string => {
 			// If JSON parse fails, fall through to return as-is
 		}
 	}
-	
+
 	return message.content;
 };
 
 const ChatSidebar = () => {
 	const { chats = [], activeChat, selectChat, typingChats } = useChat() || {};
 	const { t } = useTranslation();
+	const token = localStorage.getItem('auth_token');
+
+	// --- ESTADO PARA SABER QUIÉN ESTÁ BLOQUEADO ---
+	const [blockedIds, setBlockedIds] = useState<number[]>([]);
+
+	const fetchBlocked = useCallback(async () => {
+		if (!token) return;
+		try {
+			const res = await fetch(`${BASE_URL}/api/friend/blocked`, {
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Cache-Control': 'no-cache, no-store, must-revalidate'
+				}
+			});
+			if (res.ok) {
+				const data = await res.json();
+				setBlockedIds(Array.isArray(data) ? data.map((u: any) => u.id) : []);
+			}
+		} catch (err) {
+			console.error("Error fetching blocked users in sidebar:", err);
+		}
+	}, [token]);
+
+	useEffect(() => {
+		fetchBlocked();
+	}, [fetchBlocked]);
+
+	const { blockFriend, unBlockFriend } = useFriendActions(fetchBlocked);
+
 	if (!chats || chats.length === 0) {
 		return (
 			<Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -50,14 +84,38 @@ const ChatSidebar = () => {
 			<List sx={{ p: 0, overflowY: 'auto', flexGrow: 1 }}>
 				{chats.map((chat) => {
 					const isActive = activeChat?.id === chat.id;
+					const isBlocked = blockedIds.includes(chat.otherUser.id);
+
 					return (
-						<ListItem key={chat.id} disablePadding>
+						<ListItem
+							key={chat.id}
+							disablePadding
+							secondaryAction={
+								isBlocked ? (
+									<Tooltip title="Desbloquear">
+										<IconButton edge="end" onClick={() => unBlockFriend(chat.otherUser.id)} size="small" sx={{ color: 'success.main' }}>
+											<LockOpenIcon fontSize="small" />
+										</IconButton>
+									</Tooltip>
+								) : (
+									<Tooltip title="Bloquear">
+										<IconButton edge="end" onClick={(e) => {
+											e.stopPropagation();
+											blockFriend(chat.otherUser.id);
+										}} size="small" sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+											<BlockIcon fontSize="small" />
+										</IconButton>
+									</Tooltip>
+								)
+							}
+						>
 							<ListItemButton
 								selected={isActive}
-								onClick={() => selectChat(chat.otherUser.id, chat.otherUser)}
+								onClick={() => selectChat(chat.otherUser.id, chat.otherUser, isBlocked)}
 								sx={{
 									borderBottom: '1px solid #eee',
-									bgcolor: isActive ? 'action.selected' : 'inherit'
+									bgcolor: isActive ? 'action.selected' : 'inherit',
+									pr: 6 
 								}}
 							>
 								<ListItemAvatar>
@@ -65,21 +123,38 @@ const ChatSidebar = () => {
 										overlap="circular"
 										anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 										badgeContent={
-											<CircleIcon sx={{ fontSize: 12, color: chat.otherUser.is_online ? '#44b700' : '#bdbdbd' }} />
+											!isBlocked && <CircleIcon sx={{ fontSize: 12, color: chat.otherUser.is_online ? '#44b700' : '#bdbdbd' }} />
 										}
 									>
-										<Avatar src={chat.otherUser.avatar_url} alt={chat.otherUser.username} />
+										<Avatar
+											src={chat.otherUser.avatar_url}
+											alt={chat.otherUser.username}
+											sx={{ filter: isBlocked ? 'grayscale(1)' : 'none', opacity: isBlocked ? 0.5 : 1 }}
+										/>
 									</Badge>
 								</ListItemAvatar>
 
 								<ListItemText
-									primary={chat.otherUser.username}
+									primary={
+										<Typography
+											variant="body1"
+											sx={{
+												color: isBlocked ? 'error.main' : 'inherit',
+												textDecoration: isBlocked ? 'line-through' : 'none',
+												fontWeight: isActive ? 'bold' : 'normal'
+											}}
+										>
+											{chat.otherUser.username}
+										</Typography>
+									}
 									secondary={
 										<Typography variant="caption" noWrap display="block" color="text.secondary">
-											{typingChats[chat.id] ? (
-											<i>{t('chatSidebar.typing')}</i>
+											{isBlocked ? (
+												<span style={{ color: '#d32f2f' }}>Usuario bloqueado</span>
+											) : typingChats[chat.id] ? (
+												<i>{t('chatSidebar.typing')}</i>
 											) : (
-											formatLastMessage(chat.lastMessage, t)
+												formatLastMessage(chat.lastMessage, t)
 											)}
 										</Typography>
 									}

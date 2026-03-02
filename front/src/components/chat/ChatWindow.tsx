@@ -286,6 +286,7 @@ const ChatWindow = () => {
 				onClose={() => setProfileOpen(false)}
 				friend={activeChat.otherUser}
 				onActionSuccess={() => { closeChat(); }}
+				isBlocked={activeChat.is_blocked ? true : false }
 			/>
 		</Box>
 	);
