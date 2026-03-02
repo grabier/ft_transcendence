@@ -143,9 +143,9 @@ export const uploadAvatarSchema = {
 	security: [{ bearerAuth: [] }],
 	consumes: ['multipart/form-data'],
 	body: {
-		type: 'object',
+		type: ['object', 'null', 'string'],
 		properties: {
-			file: { type: 'string', format: 'binary', description: 'La imagen a subir' }
+			file: { type: 'string', format: 'binary' }
 		}
 	},
 	response: {

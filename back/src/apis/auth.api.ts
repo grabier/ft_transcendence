@@ -110,7 +110,7 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
 		if (!frontendRedirectUrl) {
 			const protocol = request.protocol;
 			const hostIp = request.hostname.split(':')[0];
-			frontendRedirectUrl = `${protocol}://${hostIp}:5173`;
+			frontendRedirectUrl = `${protocol}://${hostIp}:4443`;
 		}
 
 		if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {

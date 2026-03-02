@@ -19,8 +19,8 @@ const formatLastMessage = (message: any, t: any): string => {
 			if (data.status === 'pending') return '🎮 Game invite';
 			if (data.status === 'finished') return `🎮 Game finished: ${data.result}`;
 			if (data.status === 'accepted') return '🎮 Game accepted';
-		} catch {
-			// If JSON parse fails, fall through to return as-is
+		} catch(err) {
+			console.error("Error fetching blocked users in sidebar:", err);
 		}
 	}
 

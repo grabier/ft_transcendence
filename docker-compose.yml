@@ -4,7 +4,7 @@ services:
       context: ./front
       dockerfile: Dockerfile
     ports:
-      - "5173:443"
+      - "4443:443"
     depends_on:
       - backend
     volumes:

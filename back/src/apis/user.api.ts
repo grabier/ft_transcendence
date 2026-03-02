@@ -27,7 +27,7 @@ const getServerIp = () => {
 			}
 		}
 	}
-	return 'localhost'; 
+	return 'localhost';
 };
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,7 +96,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 			schema: persistenceSchema
 		},
 		async (req, reply) => {
-			const userToken = req.user as any; 
+			const userToken = req.user as any;
 			await userRepository.updateOnlineStatus(userToken.id, true);
 			await userRepository.updateLastLogin(userToken.id);
 		});
@@ -189,8 +189,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
 		const protocol = request.protocol;
 		const serverIp = getServerIp();
-		const newAvatarUrl = `${protocol}://${serverIp}:3000/public/avatars/${fileName}`;
-		await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);
+		const newAvatarUrl = `${request.protocol}://${request.hostname}:3000/public/avatars/${fileName}`; await userRepository.updateAvatarUrl(currentUser.id, newAvatarUrl);
 		const newToken = jwt.sign(
 			{
 				id: currentUser.id,

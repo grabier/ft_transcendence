@@ -13,7 +13,7 @@ export default defineConfig(({ command }) => {
 		},
 		server: {
 			host: true,
-			port: 5173
+			port: 8443
 		}
 	};
 
