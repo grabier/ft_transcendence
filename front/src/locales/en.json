@@ -158,7 +158,7 @@
 		"section3Content": "We do not use advertising tracking cookies. However, PescaPong uses your browser's local storage (`localStorage` or `sessionStorage`) to securely store your <strong>Authentication Token (JWT)</strong>. This token is essential to keep your session open while browsing the page and playing.",
 		"section4Title": "4. Security and Data Retention",
 		"section4Content": "We implement security measures to protect your information, such as password hashing. However, we remind you that this is a test school project. We reserve the right to delete all database data (including user accounts, messages, and scores) at any time for server maintenance.",
-		"footerDeveloped": "Developed with love, cigars, and lots of coffee by:",
+		"footerDeveloped": "Developed with love, cigarretes, and lots of coffee by:",
 		"footerTeam": "ppeckham | jose-rig | jormoral | gmontoro",
 		"footerLastUpdate": "Last updated:"
 	},
