@@ -46,7 +46,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 		const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 		if (socketRef.current && (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING)) {
-			console.log("🔌 Socket already active or connecting. Skipping.");
 			return;
 		}
 
@@ -59,13 +58,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 		const port = NETWORK.PORT;
 		const wsUrl = `${protocol}//${host}:${port}/api/ws?token=${token}`;
 
-		console.log(`🔌 Connecting to WebSocket at ${wsUrl}...`);
 		const ws = new WebSocket(wsUrl);
 
 		socketRef.current = ws;
 
 		ws.onopen = () => {
-			console.log("✅ WebSocket Connected");
 			setSocket(ws);
 		};
 
@@ -83,7 +80,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 		};
 
 		ws.onclose = () => {
-			console.log("❌ WebSocket Disconnected");
 			if (socketRef.current === ws) {
 				socketRef.current = null;
 				setSocket(null);
@@ -101,7 +97,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 			connect();
 		} else {
 			if (socketRef.current) {
-				console.log("🔌 Closing socket due to logout");
 				socketRef.current.close();
 				socketRef.current = null;
 				setSocket(null);

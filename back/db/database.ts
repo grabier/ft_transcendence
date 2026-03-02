@@ -18,13 +18,11 @@ export const connect = async (): Promise<void> => {
 		pool = mysql.createPool(dbConfig);
 
 		const connection = await pool.getConnection();
-		console.log(`✓ Connected to MariaDB at ${dbConfig.host}:${dbConfig.port}`);
 
 		connection.release();
 
 		await initializeTables();
 
-		console.log('✓ Database connected and initialized');
 	} catch (error) {
 		console.error('✗ Error connecting to MariaDB:', error);
 		throw error;
@@ -34,7 +32,6 @@ export const connect = async (): Promise<void> => {
 export const disconnect = async (): Promise<void> => {
 	if (pool) {
 		await pool.end();
-		console.log('✓ MariaDB connection closed');
 	}
 };
 
@@ -101,7 +98,6 @@ const initializeTables = async (): Promise<void> => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
-		console.log('✓ Tables verified/created: users, friendships, direct_messages, messages');
 	} finally {
 		connection.release();
 	}

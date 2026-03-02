@@ -151,13 +151,10 @@ try {
   }
 
   const password = req.body.password;
-  console.log('Password original:', password);
 
   const salt = await bcrypt.genSalt(10);
-  console.log('Salt generado:', salt);
 
   const hashedPassword = await bcrypt.hash(password, salt);
-  console.log('Password hasheado:', hashedPassword);
 
   req.body.password = hashedPassword;
 

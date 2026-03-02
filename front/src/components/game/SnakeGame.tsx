@@ -134,7 +134,6 @@ const SnakeGame = ({ mode, scoreToWin, roomId, onExit, onRestart }: Props) => {
 			socketRef.current = socket;
 
 			socket.onopen = () => {
-				console.log("Snake WS Connected ✅");
 				if (mode === 'pvp') {
 					setUiState(prev => prev === 'reconnecting' ? 'loading' : prev);
 					setStatusMessage('Looking for opponent...');

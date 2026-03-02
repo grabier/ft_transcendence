@@ -32,11 +32,8 @@ export const seedDatabase = async (): Promise<void> => {
 		const isEmpty = await isUsersTableEmpty();
 
 		if (!isEmpty) {
-			console.log('⚠ The users table already contains data, skipping seed');
 			return;
 		}
-
-		console.log('📦 Inserting test data...');
 
 		for (const user of seedUsers) {
 			const salt = await bcrypt.genSalt(10);
@@ -47,12 +44,6 @@ export const seedDatabase = async (): Promise<void> => {
 				[user.username, user.email, hashedPassword]
 			);
 		}
-
-		console.log(`✓ ${seedUsers.length} test users inserted`);
-		console.log('  Available credentials:');
-		seedUsers.forEach(u => {
-			console.log(`    - ${u.email} / ${u.password}`);
-		});
 
 	} catch (error) {
 		console.error('✗ Error inserting test data:', error);

@@ -11,7 +11,7 @@ services:
       - ./.certs:/etc/nginx/ssl
       - ./front/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - trascendence-network
+      - transcendence-network
 
 
   backend:
@@ -31,7 +31,7 @@ services:
       - DB_HOST=mariadb
     restart: on-failure
     networks:
-      - trascendence-network
+      - transcendence-network
     depends_on:
       mariadb:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
-      - trascendence-network
+      - transcendence-network
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -66,11 +66,11 @@ services:
       - 8081:8080
     container_name: adminer
     networks:
-      - trascendence-network
+      - transcendence-network
 
 volumes:
     mariadb_data:
 
 networks:
-  trascendence-network:
+  transcendence-network:
     driver: bridge

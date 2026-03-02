@@ -49,4 +49,4 @@ Or rename it: docker rename mariadb mariadb_old
 If your backend port is allready allocated:
 make fclean
 or:
-docker rm -f trascendence-backend (backend container)
+docker rm -f transcendence-backend (backend container)

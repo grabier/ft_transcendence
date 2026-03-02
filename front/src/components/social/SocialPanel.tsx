@@ -67,8 +67,6 @@ const SocialPanel = ({ open, onClose }: Props) => {
 	}, [showSearch]);
 	const handleViewProfile = (friend: any) => {
 		setSelectedFriend(friend);
-		console.log(`blocccccked : ${selectedFriend.blocked_by}`);
-		console.log(`blocccccked bool: ${selectedFriend.blocked_by ? true : false}`);
 		
 		modals.toggleProfileFriends();
 	};

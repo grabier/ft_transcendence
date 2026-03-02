@@ -40,7 +40,6 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		);
 
 		if (blockCheck.length > 0 || isfriend.length < 1) {
-			console.log(`🚫 Mensaje bloqueado de ${senderId} a ${receiverId}`);
 			return;
 		}
 
@@ -52,7 +51,6 @@ export const handleChatMessage = async (senderId: number, payload: ChatPayload) 
 		let inviteScore = null;
 		let finalContent = content;
 
-		console.log(`🚫 🚫 🚫 🚫 🚫 🚫 Score: ${score}`);
 		if (type === 'game_invite') {
 			inviteScore = score || 5;
 		}

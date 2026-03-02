@@ -1,4 +1,4 @@
-NAME = trascendence
+NAME = transcendence
 
 all: certs
 	@printf "Building and setting configuration for ${NAME}...\n"
