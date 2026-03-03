@@ -56,6 +56,24 @@ const router = createBrowserRouter([
 	},
 ]);
 
+
+const rootNode = document.getElementById("root");
+if (rootNode) {
+	const observer = new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			if (
+				mutation.type === "attributes" &&
+				mutation.attributeName === "aria-hidden" &&
+				rootNode.hasAttribute("aria-hidden")
+			) {
+				rootNode.removeAttribute("aria-hidden");
+			}
+		});
+	});
+	observer.observe(rootNode, { attributes: true });
+}
+
+
 createRoot(document.getElementById("root")!).render(
 	<Frontend>
 		<ThemeProvider theme={muiTheme}>

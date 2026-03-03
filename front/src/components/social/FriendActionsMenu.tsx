@@ -41,21 +41,14 @@ const FriendActionsMenu = ({ friend, onViewProfile, onRemove, onBlock, isBlocked
 	return (
 		<>
 			<IconButton
-				aria-label="more"
-				id="long-button"
-				aria-controls={open ? 'long-menu' : undefined}
-				aria-expanded={open ? 'true' : undefined}
-				aria-haspopup="true"
 				onClick={handleClick}
 			>
 				<MoreVertIcon />
 			</IconButton>
 
 			<Menu
-				id="long-menu"
-				MenuListProps={{
-					'aria-labelledby': 'long-button',
-				}}
+				disableScrollLock
+				MenuListProps={{}}
 				anchorEl={anchorEl}
 				open={open}
 				onClose={(e: any) => handleClose(e)}

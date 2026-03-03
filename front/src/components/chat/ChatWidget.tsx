@@ -64,7 +64,6 @@ const ChatWidget = () => {
 			<Tooltip title="Chat">
 				<Fab
 					color="primary"
-					aria-label="chat"
 					onClick={toggleOpen}
 				>
 					{isOpen ? (

@@ -89,7 +89,6 @@ const Notification = ({ open, message, type = "info", onClose }: Props) => {
 					</Box>
 					<IconButton
 						size="small"
-						aria-label="close"
 						color="inherit"
 						onClick={onClose}
 						sx={{ padding: 0 }}

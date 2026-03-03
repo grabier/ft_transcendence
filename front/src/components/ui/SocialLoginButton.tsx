@@ -27,7 +27,7 @@ const SocialLoginButton = ({ provider, href, children }: Props) => {
         textDecoration: "none"
       }}
       startIcon={
-        <svg width={iconSize} height={iconSize} aria-label={provider}>
+        <svg width={iconSize} height={iconSize}>
           <use href={`/assets/sprites.svg#${iconId}`} />
         </svg>
       }

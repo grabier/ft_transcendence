@@ -1,5 +1,3 @@
-// src/components/ui/Modal.tsx
-
 import React from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -82,6 +80,7 @@ const Modal = ({
             onClose={onClose}
             maxWidth={maxWidth}
             fullWidth={fullWidth}
+            disableEnforceFocus
             PaperProps={{
                 sx: {
                     width: "100%",

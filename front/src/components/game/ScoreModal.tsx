@@ -25,6 +25,8 @@ const ScoreModal = ({ open, mode, onClose, onStart }: Props) => {
 		<Dialog
 			open={open}
 			onClose={onClose}
+			disableAutoFocus
+			disableEnforceFocus
 			TransitionComponent={Fade}
 			transitionDuration={300}
 			PaperProps={{

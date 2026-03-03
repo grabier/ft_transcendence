@@ -88,8 +88,8 @@ const Profile = ({ open, onClose }: Props) => {
 				bgcolor: 'primary.main',
 				color: 'white'
 			}}>
-				<Typography aria-label="Profile modal" variant="h6" fontWeight="600">{t('profile.title')}</Typography>
-				<IconButton onClick={onClose} aria-label="Close profile modal" size="small" sx={{ color: 'white' }}>
+			<Typography variant="h6" fontWeight="600">{t('profile.title')}</Typography>
+			<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
 					<CloseIcon />
 				</IconButton>
 			</Box>
@@ -159,7 +159,7 @@ const Profile = ({ open, onClose }: Props) => {
 				</Box>
 
 				<Collapse in={showAvatarPicker} sx={{ width: '100%', px: 3 }}>
-					<Typography aria-label="Choose from the pictures bellow:" variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
+					<Typography variant="caption" display="block" textAlign="center" sx={{ mb: 1, color: 'text.secondary' }}>
 						{t('profile.selectAvatar')}
 					</Typography>
 					<Box sx={{
@@ -175,7 +175,7 @@ const Profile = ({ open, onClose }: Props) => {
 							const url = `${EXTERNAL_APIS.DICEBEAR_BASE_URL}?seed=${seed}`;
 							return (
 								<Avatar
-									aria-label={`Choose ${seed} as your profile avatar`}
+
 									key={seed}
 									src={url}
 									onClick={() => handleSelectAvatar(seed)}
@@ -191,10 +191,10 @@ const Profile = ({ open, onClose }: Props) => {
 						})}
 					</Box>
 				</Collapse>
-				<Typography variant="h5" fontWeight="bold" aria-label="Profile username">
+				<Typography variant="h5" fontWeight="bold">
 					{user?.username || 'Guest'}
 				</Typography>
-				<Typography variant="body2" color="text.secondary" aria-label="Profile role">
+				<Typography variant="body2" color="text.secondary">
 					{t('profile.role') || 'Standard Member'}
 				</Typography>
 			</Box>
@@ -202,7 +202,7 @@ const Profile = ({ open, onClose }: Props) => {
 			<List sx={{ p: 2 }}>
 				<ListItem
 					secondaryAction={
-						<IconButton edge="end" aria-label="Edit profile username" onClick={() => setEditName(p => ({ ...p, open: !p.open }))}>
+						<IconButton edge="end" onClick={() => setEditName(p => ({ ...p, open: !p.open }))}>
 							<EditIcon fontSize="small" />
 						</IconButton>
 					}
@@ -211,7 +211,7 @@ const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'primary.light' }}><PersonOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
-						aria-label="Profile username"
+
 						primary={t('profile.username')}
 						secondary={user?.username || 'Not set'}
 					/>
@@ -219,7 +219,6 @@ const Profile = ({ open, onClose }: Props) => {
 
 				<Collapse in={editName.open} sx={{ px: 2, mb: 2 }}>
 					<TextField
-						aria-label="Input new username"
 						fullWidth
 						size="small"
 						label={t('profile.newUsername')}
@@ -227,7 +226,7 @@ const Profile = ({ open, onClose }: Props) => {
 						onChange={(e) => setEditName(p => ({ ...p, value: e.target.value }))}
 						InputProps={{
 							endAdornment: (
-								<IconButton size="small" aria-label="Save new profile username" onClick={() => handleUpdate('user')} color="primary">
+								<IconButton size="small" onClick={() => handleUpdate('user')} color="primary">
 									<SaveIcon />
 								</IconButton>
 							)
@@ -242,7 +241,7 @@ const Profile = ({ open, onClose }: Props) => {
 						<Avatar sx={{ bgcolor: 'secondary.light' }}><MailOutlineIcon /></Avatar>
 					</ListItemAvatar>
 					<ListItemText
-						aria-label="Profile email"
+
 						primary={t('profile.email')}
 						secondary={user?.email || 'Not set'}
 					/>
@@ -251,7 +250,6 @@ const Profile = ({ open, onClose }: Props) => {
 
 			<Box sx={{ mt: 'auto', p: 3 }}>
 				<Button
-					aria-label="Close profile modal"
 					fullWidth
 					variant="contained"
 					color="error"
